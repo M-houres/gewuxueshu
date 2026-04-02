@@ -2,11 +2,10 @@ import base64
 from io import BytesIO
 
 import qrcode
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.deps import current_user, db_dep
 from app.models import CreditTransaction, Notification, ReferralRelation, ReferralReward, User, UserInviteCode
 from app.pagination import paginate
@@ -15,7 +14,6 @@ from app.schemas import APIResp
 from app.services.referral_service import mask_phone
 
 router = APIRouter()
-settings = get_settings()
 
 
 def _build_invite_qrcode(link: str) -> str:
@@ -24,6 +22,15 @@ def _build_invite_qrcode(link: str) -> str:
     img.save(buffer, format="PNG")
     encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
     return f"data:image/png;base64,{encoded}"
+
+
+def _frontend_base_url(request: Request) -> str:
+    forwarded_proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip()
+    forwarded_host = request.headers.get("x-forwarded-host", "").split(",")[0].strip()
+    if forwarded_host:
+        scheme = forwarded_proto or request.url.scheme or "https"
+        return f"{scheme}://{forwarded_host}".rstrip("/")
+    return str(request.base_url).rstrip("/")
 
 
 @router.get("/me", response_model=APIResp)
@@ -63,26 +70,26 @@ def update_me(
 
 
 @router.get("/me/invite-code", response_model=APIResp)
-def my_invite_code(user: User = Depends(current_user), db: Session = Depends(db_dep)) -> APIResp:
+def my_invite_code(request: Request, user: User = Depends(current_user), db: Session = Depends(db_dep)) -> APIResp:
     row = db.query(UserInviteCode).filter(UserInviteCode.user_id == user.id).first()
     if row is None:
         row = UserInviteCode(user_id=user.id, invite_code=f"U{user.id:07d}")
         db.add(row)
         db.commit()
-    base = settings.frontend_base_url.rstrip("/") + "/register"
+    base = _frontend_base_url(request) + "/register"
     link = f"{base}?ref={row.invite_code}"
     return ok(data={"invite_code": row.invite_code, "invite_link": link, "qrcode_data_url": _build_invite_qrcode(link)})
 
 
 @router.get("/me/invite-qrcode", response_model=APIResp)
-def my_invite_qrcode(user: User = Depends(current_user), db: Session = Depends(db_dep)) -> APIResp:
+def my_invite_qrcode(request: Request, user: User = Depends(current_user), db: Session = Depends(db_dep)) -> APIResp:
     row = db.query(UserInviteCode).filter(UserInviteCode.user_id == user.id).first()
     if row is None:
         row = UserInviteCode(user_id=user.id, invite_code=f"U{user.id:07d}")
         db.add(row)
         db.commit()
 
-    link = f"{settings.frontend_base_url.rstrip('/')}/register?ref={row.invite_code}"
+    link = f"{_frontend_base_url(request)}/register?ref={row.invite_code}"
     return ok(
         data={
             "invite_code": row.invite_code,

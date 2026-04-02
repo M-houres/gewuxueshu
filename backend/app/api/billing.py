@@ -268,8 +268,22 @@ def _calc_remain_seconds(order: Order) -> int:
     return max(0, ORDER_PAY_TIMEOUT_SECONDS - elapsed)
 
 
-def _default_mock_pay_url(order_no: str) -> str:
-    return f"{settings.frontend_base_url.rstrip('/')}/app/buy?order_no={order_no}&provider=mock"
+def _frontend_base_url(request: Request | None = None) -> str:
+    if request is not None:
+        forwarded_proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip()
+        forwarded_host = request.headers.get("x-forwarded-host", "").split(",")[0].strip()
+        if forwarded_host:
+            scheme = forwarded_proto or request.url.scheme or "https"
+            return f"{scheme}://{forwarded_host}".rstrip("/")
+        return str(request.base_url).rstrip("/")
+    raw = str(settings.frontend_base_url or "").strip()
+    if raw:
+        return raw.rstrip("/")
+    return "http://localhost"
+
+
+def _default_mock_pay_url(order_no: str, request: Request | None = None) -> str:
+    return f"{_frontend_base_url(request)}/app/buy?order_no={order_no}&provider=mock"
 
 
 def _trigger_referral_reward(order: Order, *, idempotent: bool) -> None:
@@ -363,7 +377,7 @@ def create_order(
     db.add(order)
     db.flush()
 
-    pay_url = _default_mock_pay_url(order_no)
+    pay_url = _default_mock_pay_url(order_no, request)
     if provider != "mock":
         session = create_payment_session(db, order=order, package_name=req.package_name)
         pay_url = str(session.get("pay_url", "")).strip()

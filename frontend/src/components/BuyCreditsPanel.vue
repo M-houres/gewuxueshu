@@ -127,7 +127,7 @@ const packages = ref([])
 const loading = ref(false)
 const errorText = ref("")
 const okText = ref("")
-const paymentTestMode = ref(String(import.meta.env.VITE_PAYMENT_TEST_MODE || "true") === "true")
+const paymentTestMode = ref(false)
 const supportedProviderValues = ref([])
 
 const showModal = ref(false)

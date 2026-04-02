@@ -199,7 +199,10 @@ def _canonical_payload(payload: Mapping[str, Any]) -> str:
 
 def _resolve_payment_secret(db=None) -> str:
     if db is None:
-        return settings.payment_sign_secret
+        secret = str(settings.payment_sign_secret or "").strip()
+        if secret and secret != "change_me_payment_sign_key":
+            return secret
+        return settings.jwt_secret
     row = (
         db.query(SystemConfig)
         .filter(SystemConfig.category == "system", SystemConfig.config_key == "payment")
@@ -209,7 +212,10 @@ def _resolve_payment_secret(db=None) -> str:
         from_db = str(row.config_value.get("callback_secret", "")).strip()
         if from_db:
             return from_db
-    return settings.payment_sign_secret
+    secret = str(settings.payment_sign_secret or "").strip()
+    if secret and secret != "change_me_payment_sign_key":
+        return secret
+    return settings.jwt_secret
 
 
 def sign_payload(payload: Mapping[str, Any], db=None) -> str:

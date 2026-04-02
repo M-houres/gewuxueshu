@@ -25,10 +25,14 @@ cp .env.prod.example .env.prod
 
 - `JWT_SECRET`
 - `MYSQL_PASSWORD`
-- `PAYMENT_SIGN_SECRET`
 - `ADMIN_INIT_PASSWORD`
-- `FRONTEND_BASE_URL`
-- 短信、微信登录、支付、大模型相关密钥
+
+以下配置可以部署后在后台再填：
+
+- 支付参数
+- 短信参数
+- 微信登录参数
+- 大模型参数
 
 ## 启动
 
@@ -63,4 +67,6 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 - 生产环境必须 `DB_FALLBACK_SQLITE=false`
 - 首次启动会自动执行 Alembic 迁移
 - 算法包、上传文件、输出结果已经通过 Docker volume 持久化
+- 邀请链接默认按当前请求域名生成，不再强依赖 `FRONTEND_BASE_URL`
+- 支付回调签名优先使用后台支付配置中的 `callback_secret`
 - 如果需要 HTTPS，建议前面再挂阿里云 SLB/Nginx/Caddy

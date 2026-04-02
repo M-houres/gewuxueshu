@@ -123,8 +123,6 @@ def assert_production_secrets() -> None:
     weak_items = []
     if settings.jwt_secret == "change_me_in_prod":
         weak_items.append("JWT_SECRET")
-    if settings.payment_sign_secret == "change_me_payment_sign_key":
-        weak_items.append("PAYMENT_SIGN_SECRET")
     if settings.admin_init_password == "admin123456":
         weak_items.append("ADMIN_INIT_PASSWORD")
     if weak_items:

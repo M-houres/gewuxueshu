@@ -59,6 +59,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        VITE_ENABLE_WECHAT_LOGIN: ${VITE_ENABLE_WECHAT_LOGIN:-true}
+        VITE_PAYMENT_TEST_MODE: ${VITE_PAYMENT_TEST_MODE:-false}
     container_name: wuhongai-frontend
     restart: unless-stopped
     depends_on:
