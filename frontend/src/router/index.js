@@ -34,7 +34,9 @@ const router = createRouter({
     { path: "/rewrite", redirect: "/app/rewrite" },
     { path: "/history", redirect: "/app/history" },
     { path: "/buy", redirect: "/app/buy" },
+    { path: "/credits", redirect: "/app/credits" },
     { path: "/profile", redirect: "/app/profile" },
+    { path: "/referral", redirect: "/app/referral" },
     { path: "/app/detect", component: UserDetectPage, meta: { auth: "user", title: "AIGC检测" } },
     { path: "/app/dedup", component: UserDedupPage, meta: { auth: "user", title: "降重复率" } },
     { path: "/app/rewrite", component: UserRewritePage, meta: { auth: "user", title: "降AIGC率" } },
@@ -43,6 +45,7 @@ const router = createRouter({
     { path: "/app/credits", component: UserCreditsPage, meta: { auth: "user", title: "积分流水" } },
     { path: "/app/buy", component: UserBuyPage, meta: { auth: "user", title: "购买积分" } },
     { path: "/app/profile", component: UserProfilePage, meta: { auth: "user", title: "个人中心" } },
+    { path: "/admin", redirect: "/admin/dashboard" },
     { path: "/admin/login", component: AdminLoginPage },
     { path: "/admin/dashboard", component: AdminDashboardPage, meta: { auth: "admin", title: "后台总览" } },
     { path: "/admin/users", component: AdminUserPage, meta: { auth: "admin", title: "用户管理" } },
@@ -57,8 +60,12 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (to.path === "/login" && getUserToken()) return "/app/detect"
-  if (to.path === "/admin/login" && getAdminToken()) return "/admin/dashboard"
+  if ((to.path === "/login" || to.path === "/register") && getUserToken()) {
+    return resolveAuthenticatedRedirect(to.query.redirect, "/app/detect", "/app/")
+  }
+  if (to.path === "/admin/login" && getAdminToken()) {
+    return resolveAuthenticatedRedirect(to.query.redirect, "/admin/dashboard", "/admin/")
+  }
   if (to.meta.auth === "admin" && !getAdminToken()) {
     const redirect = encodeURIComponent(to.fullPath || "/admin/dashboard")
     return `/admin/login?redirect=${redirect}`
@@ -76,5 +83,12 @@ router.beforeEach((to) => {
   }
   return true
 })
+
+function resolveAuthenticatedRedirect(rawRedirect, fallback, allowedPrefix) {
+  if (typeof rawRedirect === "string" && rawRedirect.startsWith(allowedPrefix)) {
+    return rawRedirect
+  }
+  return fallback
+}
 
 export default router
