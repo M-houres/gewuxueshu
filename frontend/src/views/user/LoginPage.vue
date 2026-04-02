@@ -1,32 +1,74 @@
 <template>
-  <div class="scholar-auth academic-shell-enter">
-    <div class="scholar-auth__frame">
+  <div class="scholar-auth scholar-auth--login academic-shell-enter">
+    <div class="scholar-auth__frame scholar-auth__frame--editorial">
       <section class="scholar-auth__poster scholar-auth__poster--login">
         <div class="scholar-auth__content scholar-auth__content--login">
-          <div>
-            <div class="scholar-auth__eyebrow">GEWU ACADEMIC</div>
-            <div class="scholar-login__meta">学术文本工作流平台</div>
+          <div class="scholar-auth__masthead">
+            <div>
+              <div class="scholar-auth__eyebrow">GEWU ACADEMIC</div>
+              <div class="scholar-login__meta">学术文本工作流平台</div>
+            </div>
+            <span class="scholar-auth__signal">Research Workflow / 24H</span>
           </div>
 
-          <div>
+          <div class="scholar-auth__headline">
             <h1 class="scholar-auth__title scholar-auth__title--login">格物学术</h1>
             <p class="scholar-auth__lead scholar-auth__lead--login">
               论文检测、降重与文本优化，在一套更清晰、更稳定的工作流内完成。
             </p>
           </div>
 
-          <div class="scholar-login__matrix">
-            <article class="scholar-login__cell">
-              <div class="scholar-login__cell-code">S01</div>
-              <div class="scholar-login__cell-title">AIGC 检测</div>
+          <div class="scholar-auth__ledger">
+            <div class="scholar-auth__ledger-label">从检测到交付</div>
+            <div class="scholar-auth__ledger-grid">
+              <article class="scholar-auth__ledger-card">
+                <div class="scholar-auth__ledger-index">01</div>
+                <strong>AIGC 检测</strong>
+                <p>先识别文本生成痕迹，再决定是否进入降重或改写流程。</p>
+              </article>
+              <article class="scholar-auth__ledger-card">
+                <div class="scholar-auth__ledger-index">02</div>
+                <strong>降重复率</strong>
+                <p>按目标平台选择算法，保留学术表达的结构稳定性。</p>
+              </article>
+              <article class="scholar-auth__ledger-card">
+                <div class="scholar-auth__ledger-index">03</div>
+                <strong>结果交付</strong>
+                <p>处理完成后回到同一工作台，统一下载结果与历史记录。</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="scholar-auth__timeline">
+            <article class="scholar-auth__timeline-item">
+              <span class="scholar-auth__timeline-dot"></span>
+              <div>
+                <div class="scholar-auth__timeline-code">STEP 01</div>
+                <div class="scholar-auth__timeline-title">提交正文或报告</div>
+                <p class="scholar-auth__timeline-copy">
+                  支持先查看页面结构，再决定是否登录创建任务。
+                </p>
+              </div>
             </article>
-            <article class="scholar-login__cell">
-              <div class="scholar-login__cell-code">S02</div>
-              <div class="scholar-login__cell-title">降重复率</div>
+            <article class="scholar-auth__timeline-item">
+              <span class="scholar-auth__timeline-dot"></span>
+              <div>
+                <div class="scholar-auth__timeline-code">STEP 02</div>
+                <div class="scholar-auth__timeline-title">执行检测与优化</div>
+                <p class="scholar-auth__timeline-copy">
+                  按字符精确计费，失败自动退回积分，过程状态全程可见。
+                </p>
+              </div>
             </article>
-            <article class="scholar-login__cell">
-              <div class="scholar-login__cell-code">S03</div>
-              <div class="scholar-login__cell-title">降 AIGC 率</div>
+            <article class="scholar-auth__timeline-item">
+              <span class="scholar-auth__timeline-dot"></span>
+              <div>
+                <div class="scholar-auth__timeline-code">STEP 03</div>
+                <div class="scholar-auth__timeline-title">回到同一工作台交付</div>
+                <p class="scholar-auth__timeline-copy">
+                  下载结果、查看积分流水和回溯历史任务都在一个入口内完成。
+                </p>
+              </div>
             </article>
           </div>
 
@@ -37,13 +79,28 @@
       </section>
 
       <section class="scholar-auth__panel">
-        <div class="scholar-stack">
-          <div>
+        <div class="scholar-auth__form-shell scholar-stack">
+          <div class="scholar-auth__panel-head">
             <span class="scholar-badge scholar-badge--info">统一登录入口</span>
             <h2>登录</h2>
-            <p class="scholar-lead" style="margin-top: 10px">
+            <p class="scholar-lead">
               {{ wechatLoginEnabled ? "支持短信验证码与微信扫码登录。" : "当前使用短信验证码登录。" }}
             </p>
+          </div>
+
+          <div class="scholar-auth__quickline">
+            <article class="scholar-auth__quickitem">
+              <span>访问方式</span>
+              <strong>{{ wechatLoginEnabled ? "短信 / 微信" : "短信验证码" }}</strong>
+            </article>
+            <article class="scholar-auth__quickitem">
+              <span>试用方式</span>
+              <strong>游客可先浏览</strong>
+            </article>
+            <article class="scholar-auth__quickitem">
+              <span>结果管理</span>
+              <strong>任务全程可追踪</strong>
+            </article>
           </div>
 
           <div class="scholar-switch" v-if="phoneLoginEnabled || wechatLoginEnabled">
@@ -67,7 +124,7 @@
             </button>
           </div>
 
-          <form v-if="mode === 'phone'" class="scholar-stack" @submit.prevent="login">
+          <form v-if="mode === 'phone'" class="scholar-stack scholar-stack--compact" @submit.prevent="login">
             <label class="scholar-field">
               <span class="scholar-field__label">手机号</span>
               <input
@@ -99,47 +156,46 @@
               </div>
             </label>
 
-            <button class="scholar-button" :disabled="loading">
+            <button class="scholar-button scholar-button--block" :disabled="loading">
               {{ loading ? "登录中..." : "登录并进入工作台" }}
             </button>
           </form>
 
-          <div v-else class="scholar-panel scholar-panel--soft">
-            <div class="scholar-panel__body">
-              <div class="scholar-stack">
-                <div class="scholar-note">
-                  使用微信扫码完成授权。若当前是开发联调环境，可通过“模拟扫码成功”走通整条登录链路。
-                </div>
+          <div v-else class="scholar-auth__wx-shell">
+            <div class="scholar-note">
+              使用微信扫码完成授权。若当前是开发联调环境，可通过“模拟扫码成功”走通整条登录链路。
+            </div>
 
-                <div class="scholar-inline-actions" style="align-items: center">
-                  <img
-                    v-if="wxQrcodeDataUrl"
-                    :src="wxQrcodeDataUrl"
-                    alt="wx login qrcode"
-                    class="rounded-[20px] border border-[var(--line)] bg-white"
-                    style="height: 168px; width: 168px"
-                  />
+            <div class="scholar-auth__wx-board">
+              <div class="scholar-auth__qr">
+                <img
+                  v-if="wxQrcodeDataUrl"
+                  :src="wxQrcodeDataUrl"
+                  alt="wx login qrcode"
+                  class="scholar-auth__qr-image"
+                />
+                <span v-else class="scholar-auth__qr-empty">等待生成二维码</span>
+              </div>
 
-                  <div class="scholar-stack" style="min-width: 180px">
-                    <span class="scholar-badge scholar-badge--info">状态：{{ wxStatusText }}</span>
-                    <span class="scholar-pill">二维码剩余 {{ wxCountdown }} 秒</span>
-                    <button
-                      type="button"
-                      class="scholar-button scholar-button--secondary"
-                      @click="loadWxQrcode"
-                    >
-                      刷新二维码
-                    </button>
-                    <button
-                      v-if="wxMockEnabled"
-                      type="button"
-                      class="scholar-button"
-                      @click="mockWxAuthorize"
-                    >
-                      模拟扫码成功
-                    </button>
-                  </div>
-                </div>
+              <div class="scholar-auth__wx-meta">
+                <span class="scholar-badge scholar-badge--info">状态：{{ wxStatusText }}</span>
+                <span class="scholar-pill">二维码剩余 {{ wxCountdown }} 秒</span>
+                <p class="scholar-auth__microcopy">授权成功后会自动跳转到工作台。</p>
+                <button
+                  type="button"
+                  class="scholar-button scholar-button--secondary scholar-button--block"
+                  @click="loadWxQrcode"
+                >
+                  刷新二维码
+                </button>
+                <button
+                  v-if="wxMockEnabled"
+                  type="button"
+                  class="scholar-button scholar-button--block"
+                  @click="mockWxAuthorize"
+                >
+                  模拟扫码成功
+                </button>
               </div>
             </div>
           </div>
@@ -147,7 +203,7 @@
           <p v-if="errorText" class="scholar-note scholar-note--danger">{{ errorText }}</p>
           <p v-if="hintText" class="scholar-note scholar-note--success">{{ hintText }}</p>
 
-          <div class="scholar-inline-actions">
+          <div class="scholar-inline-actions scholar-inline-actions--spread">
             <RouterLink class="scholar-button scholar-button--ghost" :to="registerLink">
               新用户注册
             </RouterLink>

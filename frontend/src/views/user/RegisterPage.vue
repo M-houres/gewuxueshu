@@ -1,35 +1,108 @@
 <template>
-  <div class="scholar-auth academic-shell-enter">
-    <div class="scholar-auth__frame">
+  <div class="scholar-auth scholar-auth--register academic-shell-enter">
+    <div class="scholar-auth__frame scholar-auth__frame--editorial">
       <section class="scholar-auth__poster">
-        <div class="scholar-auth__content">
-          <div class="scholar-auth__eyebrow">格物学术</div>
-          <h1 class="scholar-auth__title">格物学术</h1>
-          <p class="scholar-auth__lead">
-            注册成功后自动登录，可直接进入检测、降重、降 AIGC 率和积分购买流程。
-          </p>
+        <div class="scholar-auth__content scholar-auth__content--login">
+          <div class="scholar-auth__masthead">
+            <div>
+              <div class="scholar-auth__eyebrow">GEWU ACADEMIC</div>
+              <div class="scholar-login__meta">Invite / Auto Onboarding</div>
+            </div>
+            <span class="scholar-auth__signal">Invite Tracking / Auto Login</span>
+          </div>
 
-          <div class="scholar-auth__points">
-            <div class="scholar-auth__point">支持邀请链接自动带入推荐码，注册关系和奖励按后台规则自动生效。</div>
-            <div class="scholar-auth__point">手机号验证通过后立即创建账户，无需再走额外资料流程。</div>
-            <div class="scholar-auth__point">后续账号、昵称、积分流水和历史任务都在个人中心统一维护。</div>
+          <div class="scholar-auth__headline">
+            <h1 class="scholar-auth__title scholar-auth__title--login">格物学术</h1>
+            <p class="scholar-auth__lead scholar-auth__lead--login">
+              两步完成注册，成功后自动登录，直接进入检测、降重、降 AIGC 率和积分购买流程。
+            </p>
+          </div>
+
+          <div class="scholar-auth__ledger">
+            <div class="scholar-auth__ledger-label">注册后的账户结构</div>
+            <div class="scholar-auth__ledger-grid">
+              <article class="scholar-auth__ledger-card">
+                <div class="scholar-auth__ledger-index">01</div>
+                <strong>邀请关系</strong>
+                <p>邀请链接可自动带入推荐码，奖励按后台规则结算。</p>
+              </article>
+              <article class="scholar-auth__ledger-card">
+                <div class="scholar-auth__ledger-index">02</div>
+                <strong>手机号开通</strong>
+                <p>验证通过后立即创建账户，不再额外收集注册资料。</p>
+              </article>
+              <article class="scholar-auth__ledger-card">
+                <div class="scholar-auth__ledger-index">03</div>
+                <strong>统一归档</strong>
+                <p>账号、积分流水和历史任务都回到个人中心统一维护。</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="scholar-auth__timeline">
+            <article class="scholar-auth__timeline-item">
+              <span class="scholar-auth__timeline-dot"></span>
+              <div>
+                <div class="scholar-auth__timeline-code">STEP 01</div>
+                <div class="scholar-auth__timeline-title">识别邀请码</div>
+                <p class="scholar-auth__timeline-copy">
+                  支持链接自动带入推荐码，也支持从本地缓存继续注册。
+                </p>
+              </div>
+            </article>
+            <article class="scholar-auth__timeline-item">
+              <span class="scholar-auth__timeline-dot"></span>
+              <div>
+                <div class="scholar-auth__timeline-code">STEP 02</div>
+                <div class="scholar-auth__timeline-title">短信验证创建账户</div>
+                <p class="scholar-auth__timeline-copy">
+                  无需额外填写昵称或资料，注册完成后直接可用。
+                </p>
+              </div>
+            </article>
+            <article class="scholar-auth__timeline-item">
+              <span class="scholar-auth__timeline-dot"></span>
+              <div>
+                <div class="scholar-auth__timeline-code">STEP 03</div>
+                <div class="scholar-auth__timeline-title">自动进入工作台</div>
+                <p class="scholar-auth__timeline-copy">
+                  立即开始检测、降重和积分购买，不中断任务流程。
+                </p>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
       <section class="scholar-auth__panel">
-        <div class="scholar-stack">
-          <div>
+        <div class="scholar-auth__form-shell scholar-stack">
+          <div class="scholar-auth__panel-head">
+            <span class="scholar-badge scholar-badge--info">账户创建</span>
             <h2>注册</h2>
-            <p class="scholar-lead" style="margin-top: 10px">
+            <p class="scholar-lead">
               输入手机号和验证码即可创建账号。
             </p>
-            <p v-if="referrerCode" class="scholar-note scholar-note--success" style="margin-top: 14px">
+            <p v-if="referrerCode" class="scholar-note scholar-note--success">
               当前邀请码：{{ referrerCode }}
             </p>
           </div>
 
-          <form class="scholar-stack" @submit.prevent="register">
+          <div class="scholar-auth__quickline">
+            <article class="scholar-auth__quickitem">
+              <span>登录状态</span>
+              <strong>注册后自动登录</strong>
+            </article>
+            <article class="scholar-auth__quickitem">
+              <span>邀请关系</span>
+              <strong>{{ referrerCode ? "已自动识别" : "可稍后补充" }}</strong>
+            </article>
+            <article class="scholar-auth__quickitem">
+              <span>可用范围</span>
+              <strong>立即进入工作台</strong>
+            </article>
+          </div>
+
+          <form class="scholar-stack scholar-stack--compact" @submit.prevent="register">
             <label class="scholar-field">
               <span class="scholar-field__label">手机号</span>
               <input
@@ -61,7 +134,7 @@
               </div>
             </label>
 
-            <button class="scholar-button" :disabled="loading">
+            <button class="scholar-button scholar-button--block" :disabled="loading">
               {{ loading ? "注册中..." : "注册并进入工作台" }}
             </button>
           </form>
@@ -69,7 +142,7 @@
           <p v-if="errorText" class="scholar-note scholar-note--danger">{{ errorText }}</p>
           <p v-if="hintText" class="scholar-note scholar-note--success">{{ hintText }}</p>
 
-          <div class="scholar-inline-actions">
+          <div class="scholar-inline-actions scholar-inline-actions--spread">
             <RouterLink class="scholar-button scholar-button--ghost" to="/login">
               返回登录
             </RouterLink>
