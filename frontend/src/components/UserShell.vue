@@ -3,8 +3,8 @@
     <div class="scholar-shell">
       <aside class="scholar-sidebar">
         <div class="scholar-brand">
-          <div class="scholar-brand__eyebrow">WuhongAI Academic Suite</div>
-          <div class="scholar-brand__title">学术文本处理工作台</div>
+          <div class="scholar-brand__eyebrow">格物学术</div>
+          <div class="scholar-brand__title">格物学术</div>
           <p class="scholar-brand__lead">
             面向论文修改与检测场景的统一入口，覆盖 AIGC 检测、降重复率、降 AIGC 率、积分结算与结果回溯。
           </p>
@@ -68,7 +68,7 @@
         <header class="scholar-topbar">
           <div class="scholar-topbar__meta">
             <div>
-              <div class="scholar-topbar__eyebrow">Academic Workspace</div>
+              <div class="scholar-topbar__eyebrow">格物学术</div>
               <div class="scholar-topbar__title">{{ title }}</div>
               <p class="scholar-topbar__lead">
                 {{ subtitle || "统一管理论文处理任务、结果下载、积分消费与账户资料。" }}

@@ -1,18 +1,37 @@
 <template>
   <div class="scholar-auth academic-shell-enter">
     <div class="scholar-auth__frame">
-      <section class="scholar-auth__poster">
-        <div class="scholar-auth__content">
-          <div class="scholar-auth__eyebrow">WuhongAI Academic Writing</div>
-          <h1 class="scholar-auth__title">让论文修改、检测与交付回到同一工作流。</h1>
-          <p class="scholar-auth__lead">
-            面向学术文本处理的统一入口，支持 AIGC 检测、降重复率、降 AIGC 率、积分购买和任务记录回溯。
-          </p>
+      <section class="scholar-auth__poster scholar-auth__poster--login">
+        <div class="scholar-auth__content scholar-auth__content--login">
+          <div>
+            <div class="scholar-auth__eyebrow">GEWU ACADEMIC</div>
+            <div class="scholar-login__meta">学术文本工作流平台</div>
+          </div>
 
-          <div class="scholar-auth__points">
-            <div class="scholar-auth__point">短信登录、微信扫码登录、游客浏览三种路径并存，先看后用。</div>
-            <div class="scholar-auth__point">任务按字符精确计费，失败自动退款，状态与结果支持全程追踪。</div>
-            <div class="scholar-auth__point">部署后支付、短信、微信登录、大模型都可在后台配置，无需反复改环境变量。</div>
+          <div>
+            <h1 class="scholar-auth__title scholar-auth__title--login">格物学术</h1>
+            <p class="scholar-auth__lead scholar-auth__lead--login">
+              论文检测、降重与文本优化，在一套更清晰、更稳定的工作流内完成。
+            </p>
+          </div>
+
+          <div class="scholar-login__matrix">
+            <article class="scholar-login__cell">
+              <div class="scholar-login__cell-code">S01</div>
+              <div class="scholar-login__cell-title">AIGC 检测</div>
+            </article>
+            <article class="scholar-login__cell">
+              <div class="scholar-login__cell-code">S02</div>
+              <div class="scholar-login__cell-title">降重复率</div>
+            </article>
+            <article class="scholar-login__cell">
+              <div class="scholar-login__cell-code">S03</div>
+              <div class="scholar-login__cell-title">降 AIGC 率</div>
+            </article>
+          </div>
+
+          <div class="scholar-login__footnote">
+            适用于毕业论文、课程论文、期刊初稿等常见学术文本场景。
           </div>
         </div>
       </section>
@@ -20,6 +39,7 @@
       <section class="scholar-auth__panel">
         <div class="scholar-stack">
           <div>
+            <span class="scholar-badge scholar-badge--info">统一登录入口</span>
             <h2>登录</h2>
             <p class="scholar-lead" style="margin-top: 10px">
               {{ wechatLoginEnabled ? "支持短信验证码与微信扫码登录。" : "当前使用短信验证码登录。" }}

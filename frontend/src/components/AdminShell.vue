@@ -3,7 +3,7 @@
     <div class="scholar-shell">
       <aside class="scholar-sidebar">
         <div class="scholar-brand">
-          <div class="scholar-brand__eyebrow">WuhongAI Operations</div>
+          <div class="scholar-brand__eyebrow">格物学术</div>
           <div class="scholar-brand__title">运营控制台</div>
           <p class="scholar-brand__lead">
             统一处理计费、支付、登录、算法包、推广和任务审计，面向上线运营的后台工作流。
@@ -50,7 +50,7 @@
         <header class="scholar-topbar">
           <div class="scholar-topbar__meta">
             <div>
-              <div class="scholar-topbar__eyebrow">Operations Console</div>
+              <div class="scholar-topbar__eyebrow">格物学术</div>
               <div class="scholar-topbar__title">{{ title }}</div>
               <p class="scholar-topbar__lead">
                 {{ subtitle || "后台配置尽量收拢到管理界面，部署时减少环境变量依赖。" }}

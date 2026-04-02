@@ -3,8 +3,8 @@
     <div class="scholar-auth__frame">
       <section class="scholar-auth__poster">
         <div class="scholar-auth__content">
-          <div class="scholar-auth__eyebrow">WuhongAI New Account</div>
-          <h1 class="scholar-auth__title">创建学术工作台账号。</h1>
+          <div class="scholar-auth__eyebrow">格物学术</div>
+          <h1 class="scholar-auth__title">格物学术</h1>
           <p class="scholar-auth__lead">
             注册成功后自动登录，可直接进入检测、降重、降 AIGC 率和积分购买流程。
           </p>

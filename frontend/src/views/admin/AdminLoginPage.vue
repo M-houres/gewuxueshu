@@ -3,8 +3,8 @@
     <div class="scholar-auth__frame" style="grid-template-columns: minmax(0, 1fr) minmax(380px, 430px)">
       <section class="scholar-auth__poster">
         <div class="scholar-auth__content">
-          <div class="scholar-auth__eyebrow">WuhongAI Operations Access</div>
-          <h1 class="scholar-auth__title">进入运营控制台。</h1>
+          <div class="scholar-auth__eyebrow">格物学术</div>
+          <h1 class="scholar-auth__title">格物学术运营后台</h1>
           <p class="scholar-auth__lead">
             管理登录配置、支付配置、计费策略、算法包、任务审计和推广规则。生产环境下所有关键设置应从后台统一维护。
           </p>

@@ -12,7 +12,7 @@ from urllib.request import Request, urlopen
 
 def build_handler(*, dist_dir: Path, api_base: str):
     class PreviewHandler(BaseHTTPRequestHandler):
-        server_version = "WuhongAIPreview/1.0"
+        server_version = "GewuAcademicPreview/1.0"
 
         def do_GET(self):
             self._handle()
