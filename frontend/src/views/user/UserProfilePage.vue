@@ -1,79 +1,111 @@
 <template>
-  <UserShell title="个人中心" subtitle="账户信息与积分流水" :credits="userCredits" @buy="goBuy">
-    <div class="space-y-4">
-      <section v-if="isGuest" class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-        <h3 class="text-base font-semibold">游客模式</h3>
-        <p class="mt-2 text-sm leading-6 text-[#556470]">个人中心需要登录后查看。登录后可管理昵称、查看积分明细与账户信息。</p>
-        <button class="mt-4 rounded-lg bg-[#0f7a5f] px-4 py-2 text-sm text-white" @click="goLogin">
+  <UserShell title="个人中心" subtitle="维护账号信息、积分总览与积分流水。" :credits="userCredits" @buy="goBuy">
+    <section v-if="isGuest" class="scholar-panel scholar-panel--soft">
+      <div class="scholar-panel__body">
+        <div class="scholar-kicker">Guest Mode</div>
+        <h3 class="scholar-subtitle">登录后查看个人资料</h3>
+        <p class="scholar-lead">
+          个人中心仅在登录后开放，可维护昵称、查看积分变化和账户基本信息。
+        </p>
+        <button class="scholar-button" type="button" style="margin-top: 18px" @click="goLogin">
           登录后进入个人中心
         </button>
+      </div>
+    </section>
+
+    <template v-else>
+      <section class="scholar-grid scholar-grid--halves">
+        <article class="scholar-panel scholar-panel--soft">
+          <div class="scholar-panel__body">
+            <div class="scholar-kicker">Account</div>
+            <h3 class="scholar-subtitle">账户信息</h3>
+            <div class="scholar-stack" style="margin-top: 18px">
+              <div class="scholar-note">手机号：{{ user.value?.phone || "-" }}</div>
+              <div class="scholar-note">注册时间：{{ formatTime(user.value?.created_at) }}</div>
+              <label class="scholar-field">
+                <span class="scholar-field__label">昵称</span>
+                <div class="scholar-inline-actions">
+                  <input v-model.trim="nickname" class="scholar-input" style="flex: 1" />
+                  <button class="scholar-button" type="button" @click="saveNickname">保存昵称</button>
+                </div>
+              </label>
+            </div>
+          </div>
+        </article>
+
+        <article class="scholar-panel scholar-panel--soft">
+          <div class="scholar-panel__body">
+            <div class="scholar-kicker">Credits Overview</div>
+            <h3 class="scholar-subtitle">积分概览</h3>
+            <div class="scholar-grid md:grid-cols-3" style="margin-top: 18px">
+              <div class="scholar-stat">
+                <div class="scholar-stat__label">当前余额</div>
+                <div class="scholar-stat__value" style="font-size: 26px">{{ typeof userCredits === "number" ? userCredits : 0 }}</div>
+              </div>
+              <div class="scholar-stat">
+                <div class="scholar-stat__label">累计入账</div>
+                <div class="scholar-stat__value" style="font-size: 26px">{{ summary.income }}</div>
+              </div>
+              <div class="scholar-stat">
+                <div class="scholar-stat__label">累计支出</div>
+                <div class="scholar-stat__value" style="font-size: 26px">{{ summary.outcome }}</div>
+              </div>
+            </div>
+            <div class="scholar-inline-actions" style="margin-top: 18px">
+              <button class="scholar-button" type="button" @click="goBuy">去充值</button>
+            </div>
+          </div>
+        </article>
       </section>
 
-      <template v-else>
-      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-        <h3 class="text-base font-semibold">账户信息</h3>
-        <div class="mt-3 grid gap-3 text-sm md:grid-cols-2">
-          <div>手机号：{{ user.value?.phone || "-" }}</div>
-          <div>注册时间：{{ formatTime(user.value?.created_at) }}</div>
-          <div class="md:col-span-2">
-            <div class="mb-1">昵称</div>
-            <div class="flex gap-2">
-              <input v-model.trim="nickname" class="min-w-0 flex-1 rounded-lg border border-[#ccd5dd] px-3 py-2 outline-none" />
-              <button class="rounded-lg bg-[#0f7a5f] px-3 py-2 text-white" @click="saveNickname">保存昵称</button>
+      <section class="scholar-panel">
+        <div class="scholar-panel__header">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div class="scholar-kicker">Credit Transactions</div>
+              <h3 class="scholar-subtitle">积分流水</h3>
             </div>
+            <button class="scholar-button scholar-button--secondary" type="button" @click="loadTransactions">
+              刷新
+            </button>
+          </div>
+        </div>
+
+        <div class="scholar-panel__body">
+          <div class="overflow-x-auto">
+            <table class="scholar-table">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>类型</th>
+                  <th>变化</th>
+                  <th>前余额</th>
+                  <th>后余额</th>
+                  <th>备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in txRows" :key="row.id">
+                  <td>{{ formatTime(row.created_at) }}</td>
+                  <td>{{ mapType(row.tx_type) }}</td>
+                  <td :style="{ color: row.delta >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }">
+                    {{ row.delta }}
+                  </td>
+                  <td>{{ row.balance_before }}</td>
+                  <td>{{ row.balance_after }}</td>
+                  <td>{{ row.reason || "-" }}</td>
+                </tr>
+                <tr v-if="txRows.length === 0">
+                  <td colspan="6">
+                    <div class="scholar-empty">暂无流水</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
-
-      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-        <div class="mb-3 flex items-center justify-between">
-          <h3 class="text-base font-semibold">积分概览</h3>
-          <button class="rounded-lg bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="goBuy">去充值</button>
-        </div>
-        <div class="grid gap-3 md:grid-cols-3">
-          <div class="rounded-lg bg-[#f5f8fb] px-3 py-2 text-sm">当前余额：{{ typeof userCredits === "number" ? userCredits : 0 }}</div>
-          <div class="rounded-lg bg-[#f5f8fb] px-3 py-2 text-sm">累计入账：{{ summary.income }}</div>
-          <div class="rounded-lg bg-[#f5f8fb] px-3 py-2 text-sm">累计支出：{{ summary.outcome }}</div>
-        </div>
-      </section>
-
-      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-        <div class="mb-3 flex items-center justify-between">
-          <h3 class="text-base font-semibold">积分流水</h3>
-          <button class="rounded-lg bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="loadTransactions">刷新</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <thead>
-              <tr class="border-b border-[#e1e6eb] text-left text-[#5a6671]">
-                <th class="px-2 py-2">时间</th>
-                <th class="px-2 py-2">类型</th>
-                <th class="px-2 py-2">变动</th>
-                <th class="px-2 py-2">前余额</th>
-                <th class="px-2 py-2">后余额</th>
-                <th class="px-2 py-2">备注</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in txRows" :key="row.id" class="border-b border-[#eef2f5]">
-                <td class="px-2 py-2">{{ formatTime(row.created_at) }}</td>
-                <td class="px-2 py-2">{{ mapType(row.tx_type) }}</td>
-                <td class="px-2 py-2">
-                  <span :class="row.delta >= 0 ? 'text-[#106c4f]' : 'text-[#b14133]'">{{ row.delta }}</span>
-                </td>
-                <td class="px-2 py-2">{{ row.balance_before }}</td>
-                <td class="px-2 py-2">{{ row.balance_after }}</td>
-                <td class="px-2 py-2">{{ row.reason || "-" }}</td>
-              </tr>
-              <tr v-if="txRows.length === 0">
-                <td class="px-2 py-3 text-[#5b6771]" colspan="6">暂无流水</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      </template>
-    </div>
+    </template>
   </UserShell>
 </template>
 
@@ -141,12 +173,12 @@ async function saveNickname() {
 function mapType(type) {
   const map = {
     init: "初始积分",
-    task_consume: "任务消耗",
-    task_refund: "任务退回",
+    task_consume: "任务消费",
+    task_refund: "任务退款",
     package_pay: "积分充值",
     referral_invite: "邀请奖励",
-    referral_bonus: "邀请福利",
-    referral_first_pay: "首充奖励",
+    referral_bonus: "被邀请福利",
+    referral_first_pay: "首充返佣",
     referral_recurring: "持续返利",
     admin_adjust: "管理员调整",
   }

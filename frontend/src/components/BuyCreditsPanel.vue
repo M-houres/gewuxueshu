@@ -1,108 +1,135 @@
 <template>
-  <section class="rounded-3xl border border-[#d9dee4] bg-white p-6 shadow-[0_14px_30px_rgba(23,35,48,0.08)]">
-    <div class="flex items-center justify-between">
-      <h3 class="text-lg font-semibold">积分套餐</h3>
-      <span class="text-xs text-[#5b6771]">{{ paymentTipText }}</span>
+  <section class="scholar-panel">
+    <div class="scholar-panel__header">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div class="scholar-kicker">Credits Packages</div>
+          <h3 class="scholar-subtitle">积分套餐</h3>
+          <p class="scholar-lead">
+            充值页与后台套餐配置自动同步，支持微信支付、支付宝和联调模式。
+          </p>
+        </div>
+        <span class="scholar-badge" :class="paymentTestMode ? 'scholar-badge--warn' : 'scholar-badge--info'">
+          {{ paymentTipText }}
+        </span>
+      </div>
     </div>
-    <p
-      v-if="paymentTestMode"
-      class="mt-2 rounded-xl bg-[#fff3e8] px-3 py-2 text-xs leading-5 text-[#93521f]"
-    >
-      当前为联调支付模式，二维码仅用于测试链路，不代表真实扣款。
-    </p>
-    <div class="mt-4 grid gap-3 md:grid-cols-2">
-      <button
-        v-for="item in packages"
-        :key="item.name"
-        class="rounded-2xl border border-[#d8e0e7] bg-[linear-gradient(145deg,#f7fafc,#fdfdfc)] p-4 text-left transition hover:border-[#0f7a5f] hover:shadow-[0_10px_24px_rgba(20,38,52,0.1)]"
-        :disabled="loading"
-        @click="openPay(item)"
-      >
-        <div class="flex items-start justify-between gap-2">
-          <div class="text-base font-semibold">{{ item.name }}</div>
-          <span
-            v-if="item.badge"
-            class="rounded-full bg-[#e8f4ef] px-2 py-1 text-[11px] tracking-[0.04em] text-[#0f6c53]"
-          >
-            {{ item.badge }}
-          </span>
-        </div>
-        <div class="mt-2 min-h-[38px] text-xs leading-5 text-[#5c6974]">
-          {{ packageDescription(item) }}
-        </div>
-        <div class="mt-3 flex items-center justify-between">
-          <div class="text-sm font-semibold text-[#2f3f4a]">¥{{ Number(item.price).toFixed(2) }}</div>
-          <div class="text-xs text-[#0f7a5f]">{{ Number(item.credits).toLocaleString() }} 积分</div>
-        </div>
-      </button>
-    </div>
-    <p v-if="errorText" class="mt-3 text-sm text-[#af3f33]">{{ errorText }}</p>
-    <p v-if="okText" class="mt-3 text-sm text-[#106c4f]">{{ okText }}</p>
 
-    <div
-      v-if="showModal"
-      class="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4"
-      @click.self="closeModal"
-    >
-      <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-[0_18px_40px_rgba(0,0,0,0.16)]">
-        <div class="flex items-center justify-between">
-          <h4 class="text-base font-semibold">支付订单</h4>
-          <button class="rounded bg-[#edf2f6] px-2 py-1 text-xs text-[#344250]" @click="closeModal">
-            关闭
-          </button>
-        </div>
-        <div class="mt-2 text-sm text-[#4f5f6b]">
-          {{ selectedPackage?.name || "-" }} / ¥{{ selectedPackage?.price || "-" }}
-        </div>
-        <div class="mt-3 flex gap-2">
-          <button
-            v-for="p in providers"
-            :key="p.value"
-            class="rounded px-3 py-1.5 text-sm"
-            :class="provider === p.value ? 'bg-[#0f7a5f] text-white' : 'bg-[#edf2f6] text-[#344250]'"
-            @click="switchProvider(p.value)"
-          >
-            {{ p.label }}
-          </button>
-        </div>
+    <div class="scholar-panel__body">
+      <p v-if="paymentTestMode" class="scholar-note scholar-note--warn">
+        当前为联调支付模式，二维码仅用于测试链路，不代表真实扣款。
+      </p>
 
-        <div
-          v-if="isGuest"
-          class="mt-4 rounded-xl border border-[#dce4eb] bg-[#f8fbff] p-4 text-sm text-[#4f5f6b]"
+      <div class="scholar-option-grid md:grid-cols-2" style="margin-top: 18px">
+        <button
+          v-for="item in packages"
+          :key="item.name"
+          type="button"
+          class="scholar-option-card"
+          :disabled="loading"
+          @click="openPay(item)"
         >
-          <div>游客可以先看套餐和支付方式，真正创建订单时再登录。</div>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <button class="rounded bg-[#0f7a5f] px-3 py-2 text-sm text-white" @click="goLoginForOrder">
-              登录后创建订单
-            </button>
-            <button class="rounded bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="closeModal">
-              继续浏览
+          <div class="flex items-start justify-between gap-3">
+            <div class="text-base font-semibold text-[var(--ink)]">{{ item.name }}</div>
+            <span v-if="item.badge" class="scholar-badge scholar-badge--success">{{ item.badge }}</span>
+          </div>
+          <div class="mt-3 text-sm leading-7 text-[var(--ink-soft)]">
+            {{ packageDescription(item) }}
+          </div>
+          <div class="mt-5 flex items-end justify-between gap-3">
+            <div class="text-3xl font-semibold text-[var(--ink)]">¥{{ Number(item.price).toFixed(2) }}</div>
+            <div class="text-sm font-medium text-[var(--accent)]">
+              {{ Number(item.credits).toLocaleString() }} 积分
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <p v-if="errorText" class="scholar-note scholar-note--danger" style="margin-top: 18px">
+        {{ errorText }}
+      </p>
+      <p v-if="okText" class="scholar-note scholar-note--success" style="margin-top: 18px">
+        {{ okText }}
+      </p>
+    </div>
+
+    <div v-if="showModal" class="scholar-modal" @click.self="closeModal">
+      <div class="scholar-modal__dialog">
+        <div class="scholar-panel__header">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div class="scholar-kicker">Payment Order</div>
+              <h3 class="scholar-subtitle">支付订单</h3>
+              <p class="scholar-lead">
+                {{ selectedPackage?.name || "-" }} / ¥{{ selectedPackage?.price || "-" }}
+              </p>
+            </div>
+            <button class="scholar-button scholar-button--secondary" type="button" @click="closeModal">
+              关闭
             </button>
           </div>
         </div>
 
-        <div v-else class="mt-4 rounded-xl border border-[#dce4eb] bg-[#f8fbff] p-4">
-          <div class="text-xs text-[#5f6d79]">订单号：{{ orderNo || "-" }}</div>
-          <div class="mt-3 flex items-center gap-4">
-            <img
-              v-if="qrCodeDataUrl"
-              :src="qrCodeDataUrl"
-              class="h-40 w-40 rounded border border-[#dbe3ea]"
-              alt="payment qrcode"
-            />
-            <div class="space-y-2 text-sm">
-              <div>倒计时：{{ remainSeconds }} 秒</div>
-              <div>状态：{{ orderStatusText }}</div>
-              <button class="rounded bg-[#edf2f6] px-3 py-1.5 text-xs text-[#344250]" @click="refreshOrder">
-                刷新二维码
+        <div class="scholar-panel__body">
+          <div class="scholar-inline-actions">
+            <button
+              v-for="p in providers"
+              :key="p.value"
+              type="button"
+              class="scholar-chip"
+              :class="{ 'is-active': provider === p.value }"
+              @click="switchProvider(p.value)"
+            >
+              {{ p.label }}
+            </button>
+          </div>
+
+          <div v-if="isGuest" class="scholar-note" style="margin-top: 18px">
+            <div>游客可先查看套餐与支付方式，真正创建订单时再登录。</div>
+            <div class="scholar-inline-actions" style="margin-top: 14px">
+              <button class="scholar-button" type="button" @click="goLoginForOrder">登录后创建订单</button>
+              <button class="scholar-button scholar-button--secondary" type="button" @click="closeModal">
+                继续浏览
               </button>
-              <button
-                v-if="paymentTestMode"
-                class="rounded bg-[#0f7a5f] px-3 py-1.5 text-xs text-white"
-                @click="mockPay"
-              >
-                模拟已支付
-              </button>
+            </div>
+          </div>
+
+          <div v-else class="scholar-grid scholar-grid--halves" style="margin-top: 18px; align-items: start">
+            <div class="scholar-panel scholar-panel--soft">
+              <div class="scholar-panel__body">
+                <div class="scholar-stack">
+                  <span class="scholar-pill">订单号：{{ orderNo || "-" }}</span>
+                  <span class="scholar-badge" :class="orderStatusBadgeClass">{{ orderStatusText }}</span>
+                  <span class="scholar-pill">剩余 {{ remainSeconds }} 秒</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="scholar-panel scholar-panel--soft">
+              <div class="scholar-panel__body">
+                <div class="scholar-inline-actions" style="align-items: center">
+                  <img
+                    v-if="qrCodeDataUrl"
+                    :src="qrCodeDataUrl"
+                    alt="payment qrcode"
+                    class="rounded-[20px] border border-[var(--line)] bg-white"
+                    style="height: 180px; width: 180px"
+                  />
+                  <div class="scholar-stack">
+                    <button class="scholar-button scholar-button--secondary" type="button" @click="refreshOrder">
+                      刷新二维码
+                    </button>
+                    <button
+                      v-if="paymentTestMode"
+                      class="scholar-button"
+                      type="button"
+                      @click="mockPay"
+                    >
+                      模拟已支付
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -164,8 +191,18 @@ const orderStatusText = computed(() => {
   return map[orderStatus.value] || orderStatus.value
 })
 
+const orderStatusBadgeClass = computed(() => {
+  const map = {
+    created: "scholar-badge--warn",
+    paid: "scholar-badge--success",
+    closed: "scholar-badge--danger",
+    refunded: "scholar-badge--info",
+  }
+  return map[orderStatus.value] || "scholar-badge--info"
+})
+
 const paymentTipText = computed(() =>
-  paymentTestMode.value ? "联调支付模式（模拟）" : "支持微信 / 支付宝"
+  paymentTestMode.value ? "联调支付模式" : "支持微信 / 支付宝"
 )
 
 onMounted(loadPackages)
@@ -191,7 +228,7 @@ function packageDescription(item) {
   if (text) {
     return text
   }
-  return "适合常规论文处理场景，可用于AIGC检测、降重复率和降AIGC率任务。"
+  return "适合常规论文处理场景，可用于 AIGC 检测、降重复率和降 AIGC 率任务。"
 }
 
 async function openPay(item) {

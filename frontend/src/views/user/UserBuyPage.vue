@@ -1,16 +1,43 @@
 <template>
-  <UserShell title="购买积分" subtitle="选择套餐并充值" :credits="userCredits" @buy="noop">
-    <div class="space-y-4">
-      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5 text-sm text-[#4e5d68]">
-        <div class="font-semibold text-[#1a2730]">游客模式说明</div>
-        <div class="mt-2 leading-6">可先查看套餐与计费规则；真正创建支付订单时，系统才会要求登录。</div>
-      </section>
-      <BuyCreditsPanel @paid="afterPaid" />
-      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5 text-sm text-[#4e5d68]">
-        <div>计费规则：AIGC检测 {{ rates.aigc_rate }} 积分/字符，降重 {{ rates.dedup_rate }} 积分/字符，降AIGC率 {{ rates.rewrite_rate }} 积分/字符。</div>
-        <div class="mt-1">退款规则：任务失败自动退回对应积分。</div>
-      </section>
-    </div>
+  <UserShell title="购买积分" subtitle="前台套餐与后台计费规则实时同步，游客也可先浏览支付方案。" :credits="userCredits" @buy="noop">
+    <section class="scholar-panel scholar-panel--soft">
+      <div class="scholar-panel__body">
+        <div class="scholar-kicker">Purchase Notes</div>
+        <h3 class="scholar-subtitle">购买前说明</h3>
+        <p class="scholar-lead">
+          游客可以先查看套餐与计费口径，真正创建支付订单时系统会要求登录。支付成功后积分会自动到账，并同步刷新到前台余额。
+        </p>
+      </div>
+    </section>
+
+    <BuyCreditsPanel @paid="afterPaid" />
+
+    <section class="scholar-panel scholar-panel--soft">
+      <div class="scholar-panel__body">
+        <div class="scholar-kicker">Billing Rules</div>
+        <h3 class="scholar-subtitle">当前计费规则</h3>
+        <div class="scholar-grid md:grid-cols-3" style="margin-top: 18px">
+          <div class="scholar-stat">
+            <div class="scholar-stat__label">AIGC 检测</div>
+            <div class="scholar-stat__value" style="font-size: 26px">{{ rates.aigc_rate }}</div>
+            <div class="scholar-stat__hint">积分 / 字符</div>
+          </div>
+          <div class="scholar-stat">
+            <div class="scholar-stat__label">降重复率</div>
+            <div class="scholar-stat__value" style="font-size: 26px">{{ rates.dedup_rate }}</div>
+            <div class="scholar-stat__hint">积分 / 字符</div>
+          </div>
+          <div class="scholar-stat">
+            <div class="scholar-stat__label">降 AIGC 率</div>
+            <div class="scholar-stat__value" style="font-size: 26px">{{ rates.rewrite_rate }}</div>
+            <div class="scholar-stat__hint">积分 / 字符</div>
+          </div>
+        </div>
+        <p class="scholar-note" style="margin-top: 18px">
+          任务失败会自动退回对应积分，实际扣费以任务最终解析出的字符数为准。
+        </p>
+      </div>
+    </section>
   </UserShell>
 </template>
 

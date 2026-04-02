@@ -1,58 +1,66 @@
 <template>
-  <AdminShell title="后台仪表盘" subtitle="每30秒自动刷新">
-    <div class="space-y-4">
-      <section
-        v-if="switchStatus.current_mode === 'ALGO_ONLY'"
-        class="rounded-2xl border border-[#f1c6c3] bg-[#fff1f0] px-4 py-3 text-sm text-[#8e302c]"
-      >
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span>当前运行于仅算法降级模式，原因：{{ switchStatus.last_switch_reason || "LLM异常" }}</span>
-          <button class="rounded bg-[#bc4138] px-3 py-1.5 text-white" @click="recoverMode">手动恢复大模型模式</button>
+  <AdminShell title="后台总览" subtitle="每 30 秒自动刷新一次，关注任务、收入与模式状态。">
+    <section
+      v-if="switchStatus.current_mode === 'ALGO_ONLY'"
+      class="scholar-note scholar-note--danger"
+    >
+      当前系统处于算法降级模式，原因：{{ switchStatus.last_switch_reason || "大模型异常" }}。
+      <button class="scholar-button scholar-button--danger" type="button" style="margin-left: 12px" @click="recoverMode">
+        手动恢复大模型模式
+      </button>
+    </section>
+
+    <section class="scholar-grid scholar-grid--stats">
+      <article class="scholar-stat" v-for="item in statCards" :key="item.label">
+        <div class="scholar-stat__label">{{ item.label }}</div>
+        <div class="scholar-stat__value">{{ item.value }}</div>
+        <div class="scholar-stat__hint">{{ item.hint }}</div>
+      </article>
+    </section>
+
+    <section class="scholar-hero-grid">
+      <article class="scholar-chart-card">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="scholar-kicker">Task Trend</div>
+            <h3 class="scholar-subtitle">近 7 天任务趋势</h3>
+          </div>
+          <button class="scholar-button scholar-button--secondary" type="button" @click="loadData">刷新</button>
         </div>
-      </section>
+        <div ref="taskChartEl" class="mt-4 h-72 w-full"></div>
+      </article>
 
-      <section class="grid gap-4 md:grid-cols-4">
-        <article class="rounded-2xl border border-[#d9dee4] bg-white p-4" v-for="item in statCards" :key="item.label">
-          <div class="text-xs text-[#5b6771]">{{ item.label }}</div>
-          <div class="mt-2 text-2xl font-semibold">{{ item.value }}</div>
-        </article>
-      </section>
-
-      <div class="grid gap-4 xl:grid-cols-2">
-        <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-          <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-base font-semibold">近7天任务趋势</h3>
-            <button class="rounded-lg bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="loadData">刷新</button>
+      <article class="scholar-chart-card">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="scholar-kicker">Revenue Trend</div>
+            <h3 class="scholar-subtitle">近 7 天收入趋势</h3>
           </div>
-          <div ref="taskChartEl" class="h-64 w-full"></div>
-        </section>
+          <button class="scholar-button scholar-button--secondary" type="button" @click="loadData">刷新</button>
+        </div>
+        <div ref="revenueChartEl" class="mt-4 h-72 w-full"></div>
+      </article>
+    </section>
 
-        <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-          <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-base font-semibold">近7天收入趋势</h3>
-            <button class="rounded-lg bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="loadData">刷新</button>
-          </div>
-          <div ref="revenueChartEl" class="h-64 w-full"></div>
-        </section>
-      </div>
+    <section class="scholar-grid scholar-grid--halves">
+      <article class="scholar-chart-card">
+        <div class="scholar-kicker">Usage Distribution</div>
+        <h3 class="scholar-subtitle">功能使用占比</h3>
+        <div ref="taskTypeChartEl" class="mt-4 h-60 w-full"></div>
+      </article>
 
-      <div class="grid gap-4 xl:grid-cols-2">
-        <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-          <h3 class="mb-3 text-base font-semibold">功能使用占比</h3>
-          <div ref="taskTypeChartEl" class="h-56 w-full"></div>
-        </section>
+      <article class="scholar-chart-card">
+        <div class="scholar-kicker">Platform Distribution</div>
+        <h3 class="scholar-subtitle">平台使用量对比</h3>
+        <div ref="platformChartEl" class="mt-4 h-60 w-full"></div>
+      </article>
+    </section>
 
-        <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-          <h3 class="mb-3 text-base font-semibold">平台使用量对比</h3>
-          <div ref="platformChartEl" class="h-56 w-full"></div>
-        </section>
-      </div>
-
-      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-        <h3 class="mb-3 text-base font-semibold">用户转化对比</h3>
-        <div ref="funnelChartEl" class="h-48 w-full"></div>
-      </section>
-    </div>
+    <section class="scholar-chart-card">
+      <div class="scholar-kicker">Conversion Funnel</div>
+      <h3 class="scholar-subtitle">用户转化对比</h3>
+      <div ref="funnelChartEl" class="mt-4 h-56 w-full"></div>
+    </section>
   </AdminShell>
 </template>
 
@@ -90,10 +98,10 @@ const statCards = computed(() => {
   const totalOrders = typeof overview.total_orders === "number" ? overview.total_orders : 0
   const totalRevenue = typeof overview.total_revenue === "number" ? overview.total_revenue : 0
   return [
-    { label: "总用户数", value: totalUsers },
-    { label: "总任务量", value: totalTasks },
-    { label: "支付订单数", value: totalOrders },
-    { label: "累计收入", value: totalRevenue },
+    { label: "累计用户", value: totalUsers, hint: "注册用户总量" },
+    { label: "累计任务", value: totalTasks, hint: "含检测、降重、降 AIGC 率" },
+    { label: "支付订单", value: totalOrders, hint: "已创建订单总数" },
+    { label: "累计收入", value: totalRevenue, hint: "订单支付后的累计金额" },
   ]
 })
 
@@ -136,7 +144,7 @@ async function recoverMode() {
     window.alert("仅 super_admin 可执行手动恢复")
     return
   }
-  const confirmed = window.confirm("确认手动切换回大模型+算法模式吗？")
+  const confirmed = window.confirm("确认切换回大模型 + 算法模式吗？")
   if (!confirmed) {
     return
   }
@@ -152,6 +160,15 @@ function initChart(el, chartRef) {
     return chartRef
   }
   return echarts.init(el)
+}
+
+function baseAxisStyle() {
+  return {
+    axisLine: { show: false },
+    axisTick: { show: false },
+    splitLine: { lineStyle: { color: "rgba(107, 119, 130, 0.12)" } },
+    axisLabel: { color: "#6a7782" },
+  }
 }
 
 function renderCharts() {
@@ -171,38 +188,79 @@ function renderCharts() {
 
   if (taskChart) {
     taskChart.setOption({
-      grid: { left: 36, right: 12, top: 16, bottom: 28 },
-      xAxis: { type: "category", data: dates },
-      yAxis: { type: "value" },
+      grid: { left: 36, right: 16, top: 16, bottom: 28 },
+      xAxis: { type: "category", data: dates, ...baseAxisStyle(), splitLine: { show: false } },
+      yAxis: { type: "value", ...baseAxisStyle() },
       tooltip: { trigger: "axis" },
-      series: [{ type: "line", smooth: true, data: taskSeries, areaStyle: {}, lineStyle: { width: 3, color: "#0f7a5f" } }],
+      series: [
+        {
+          type: "line",
+          smooth: true,
+          data: taskSeries,
+          areaStyle: { color: "rgba(23, 74, 82, 0.14)" },
+          lineStyle: { width: 3, color: "#174a52" },
+          symbol: "circle",
+          symbolSize: 8,
+          itemStyle: { color: "#174a52" },
+        },
+      ],
     })
   }
   if (revenueChart) {
     revenueChart.setOption({
-      grid: { left: 36, right: 12, top: 16, bottom: 28 },
-      xAxis: { type: "category", data: dates },
-      yAxis: { type: "value" },
+      grid: { left: 36, right: 16, top: 16, bottom: 28 },
+      xAxis: { type: "category", data: dates, ...baseAxisStyle(), splitLine: { show: false } },
+      yAxis: { type: "value", ...baseAxisStyle() },
       tooltip: { trigger: "axis" },
-      series: [{ type: "line", smooth: true, data: revenueSeries, lineStyle: { width: 3, color: "#1d5ea8" }, areaStyle: {} }],
+      series: [
+        {
+          type: "line",
+          smooth: true,
+          data: revenueSeries,
+          areaStyle: { color: "rgba(138, 100, 53, 0.16)" },
+          lineStyle: { width: 3, color: "#8a6435" },
+          symbol: "circle",
+          symbolSize: 8,
+          itemStyle: { color: "#8a6435" },
+        },
+      ],
     })
   }
   if (taskTypeChart) {
     taskTypeChart.setOption({
-      grid: { left: 56, right: 12, top: 8, bottom: 24 },
-      xAxis: { type: "value" },
-      yAxis: { type: "category", data: taskTypeDist.map((r) => r.task_type) },
+      grid: { left: 72, right: 16, top: 12, bottom: 24 },
+      xAxis: { type: "value", ...baseAxisStyle() },
+      yAxis: {
+        type: "category",
+        data: taskTypeDist.map((r) => r.task_type),
+        ...baseAxisStyle(),
+        splitLine: { show: false },
+      },
       tooltip: { trigger: "axis" },
-      series: [{ type: "bar", data: taskTypeDist.map((r) => r.count), itemStyle: { color: "#0f7a5f" }, barWidth: 18 }],
+      series: [
+        {
+          type: "bar",
+          data: taskTypeDist.map((r) => r.count),
+          itemStyle: { color: "#174a52", borderRadius: [0, 8, 8, 0] },
+          barWidth: 18,
+        },
+      ],
     })
   }
   if (platformChart) {
     platformChart.setOption({
-      grid: { left: 36, right: 12, top: 8, bottom: 28 },
-      xAxis: { type: "category", data: platformDist.map((r) => r.platform) },
-      yAxis: { type: "value" },
+      grid: { left: 36, right: 16, top: 12, bottom: 28 },
+      xAxis: { type: "category", data: platformDist.map((r) => r.platform), ...baseAxisStyle(), splitLine: { show: false } },
+      yAxis: { type: "value", ...baseAxisStyle() },
       tooltip: { trigger: "axis" },
-      series: [{ type: "bar", data: platformDist.map((r) => r.count), itemStyle: { color: "#2f7bde" }, barWidth: 34 }],
+      series: [
+        {
+          type: "bar",
+          data: platformDist.map((r) => r.count),
+          itemStyle: { color: "#4e7283", borderRadius: [8, 8, 0, 0] },
+          barWidth: 34,
+        },
+      ],
     })
   }
   if (funnelChart) {
@@ -211,15 +269,20 @@ function renderCharts() {
     const paidUsers = funnel.paid_users || 0
     const taskUsers = funnel.task_users || 0
     funnelChart.setOption({
-      grid: { left: 56, right: 12, top: 10, bottom: 24 },
-      xAxis: { type: "value" },
-      yAxis: { type: "category", data: ["访问用户", "注册用户", "支付用户", "任务用户"] },
+      grid: { left: 70, right: 16, top: 12, bottom: 24 },
+      xAxis: { type: "value", ...baseAxisStyle() },
+      yAxis: {
+        type: "category",
+        data: ["访问用户", "注册用户", "支付用户", "任务用户"],
+        ...baseAxisStyle(),
+        splitLine: { show: false },
+      },
       tooltip: { trigger: "axis" },
       series: [
         {
           type: "bar",
           data: [visitors, registered, paidUsers, taskUsers],
-          itemStyle: { color: "#2f7bde" },
+          itemStyle: { color: "#8a6435", borderRadius: [0, 8, 8, 0] },
           barWidth: 20,
         },
       ],

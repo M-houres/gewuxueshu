@@ -1,90 +1,106 @@
 <template>
-  <AdminShell title="用户管理" subtitle="查询用户与积分调整">
-    <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-      <div class="mb-3 flex flex-wrap items-center gap-2">
-        <input v-model.trim="keyword" class="rounded-lg border border-[#ccd5dd] px-3 py-2 text-sm outline-none focus:border-[#0f7a5f]" placeholder="按手机号搜索" />
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="item in statusFilters"
-            :key="item.value || 'all'"
-            type="button"
-            :class="chipClass(activeStatusFilter, item.value)"
-            @click="activeStatusFilter = item.value"
-          >
-            {{ item.label }}
-          </button>
-        </div>
-        <button class="rounded-lg bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="loadData">查询</button>
+  <AdminShell title="用户管理" subtitle="查询用户、封禁状态与积分调整。">
+    <section class="scholar-panel">
+      <div class="scholar-panel__header">
+        <div class="scholar-kicker">User Search</div>
+        <h3 class="scholar-subtitle">检索与筛选</h3>
       </div>
-      <div class="mb-3 grid gap-3 rounded-xl border border-[#e1e8ee] bg-[#f8fbff] p-3 text-sm md:grid-cols-3">
-        <div>
-          <div class="text-xs text-[#6b7782]">当前加载用户</div>
-          <div class="mt-1 text-lg font-semibold">{{ rows.length }}</div>
+
+      <div class="scholar-panel__body">
+        <div class="scholar-inline-actions">
+          <input v-model.trim="keyword" class="scholar-input" style="max-width: 320px" placeholder="按手机号搜索" />
+          <div class="scholar-inline-actions">
+            <button
+              v-for="item in statusFilters"
+              :key="item.value || 'all'"
+              type="button"
+              class="scholar-chip"
+              :class="{ 'is-active': activeStatusFilter === item.value }"
+              @click="activeStatusFilter = item.value"
+            >
+              {{ item.label }}
+            </button>
+          </div>
+          <button class="scholar-button" type="button" @click="loadData">查询</button>
         </div>
-        <div>
-          <div class="text-xs text-[#6b7782]">正常用户</div>
-          <div class="mt-1 text-lg font-semibold text-[#106c4f]">{{ activeCount }}</div>
+
+        <div class="scholar-grid md:grid-cols-3" style="margin-top: 18px">
+          <div class="scholar-stat">
+            <div class="scholar-stat__label">当前加载用户</div>
+            <div class="scholar-stat__value" style="font-size: 26px">{{ rows.length }}</div>
+          </div>
+          <div class="scholar-stat">
+            <div class="scholar-stat__label">正常用户</div>
+            <div class="scholar-stat__value" style="font-size: 26px; color: var(--success)">{{ activeCount }}</div>
+          </div>
+          <div class="scholar-stat">
+            <div class="scholar-stat__label">封禁用户</div>
+            <div class="scholar-stat__value" style="font-size: 26px; color: var(--danger)">{{ bannedCount }}</div>
+          </div>
         </div>
-        <div>
-          <div class="text-xs text-[#6b7782]">封禁用户</div>
-          <div class="mt-1 text-lg font-semibold text-[#b14133]">{{ bannedCount }}</div>
+
+        <div class="overflow-x-auto" style="margin-top: 18px">
+          <table class="scholar-table">
+            <thead>
+              <tr>
+                <th>用户 ID</th>
+                <th>手机号</th>
+                <th>昵称</th>
+                <th>积分</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in displayRows" :key="row.id">
+                <td>{{ row.id }}</td>
+                <td>{{ row.phone }}</td>
+                <td>{{ row.nickname }}</td>
+                <td>{{ row.credits }}</td>
+                <td>
+                  <span class="scholar-badge" :class="row.is_banned ? 'scholar-badge--danger' : 'scholar-badge--success'">
+                    {{ row.is_banned ? "已封禁" : "正常" }}
+                  </span>
+                </td>
+                <td>{{ formatTime(row.created_at) }}</td>
+                <td>
+                  <div class="scholar-inline-actions">
+                    <button class="scholar-button scholar-button--secondary" type="button" @click="goDetail(row)">
+                      查看详情
+                    </button>
+                    <button class="scholar-button scholar-button--ghost" type="button" @click="toggleBan(row)">
+                      {{ row.is_banned ? "解封" : "封禁" }}
+                    </button>
+                    <button class="scholar-button" type="button" @click="openAdjust(row)">
+                      调整积分
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="displayRows.length === 0">
+                <td colspan="7">
+                  <div class="scholar-empty">暂无用户数据</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr class="border-b border-[#e1e6eb] text-left text-[#5a6671]">
-              <th class="px-2 py-2">用户ID</th>
-              <th class="px-2 py-2">手机号</th>
-              <th class="px-2 py-2">昵称</th>
-              <th class="px-2 py-2">积分</th>
-              <th class="px-2 py-2">状态</th>
-              <th class="px-2 py-2">创建时间</th>
-              <th class="px-2 py-2">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in displayRows" :key="row.id" class="border-b border-[#eef2f5]">
-              <td class="px-2 py-2">{{ row.id }}</td>
-              <td class="px-2 py-2">{{ row.phone }}</td>
-              <td class="px-2 py-2">{{ row.nickname }}</td>
-              <td class="px-2 py-2">{{ row.credits }}</td>
-              <td class="px-2 py-2">
-                <span
-                  :class="row.is_banned ? 'border-[#f4c5c1] bg-[#ffe1df] text-[#9c2d2a]' : 'border-[#cfe6db] bg-[#e8f4ef] text-[#106c4f]'"
-                  class="inline-flex rounded-full border px-2 py-1 text-xs"
-                >
-                  {{ row.is_banned ? "已封禁" : "正常" }}
-                </span>
-              </td>
-              <td class="px-2 py-2">{{ formatTime(row.created_at) }}</td>
-              <td class="px-2 py-2">
-                <div class="flex gap-2">
-                  <button class="rounded bg-[#0f7a5f] px-2 py-1 text-xs text-white" @click="goDetail(row)">查看详情</button>
-                  <button class="rounded bg-[#edf2f6] px-2 py-1 text-xs text-[#344250]" @click="toggleBan(row)">
-                    {{ row.is_banned ? "解封" : "封禁" }}
-                  </button>
-                  <button class="rounded bg-[#0f7a5f] px-2 py-1 text-xs text-white" @click="openAdjust(row)">调整积分</button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="displayRows.length === 0">
-              <td class="px-2 py-3 text-[#5b6771]" colspan="7">暂无用户数据</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </section>
 
-    <section v-if="editing" class="mt-4 rounded-2xl border border-[#d9dee4] bg-white p-5">
-      <h3 class="text-base font-semibold">调整积分：{{ editing.phone }}</h3>
-      <div class="mt-3 grid gap-3 md:grid-cols-3">
-        <input v-model.number="delta" class="rounded-lg border border-[#ccd5dd] px-3 py-2 text-sm outline-none focus:border-[#0f7a5f]" placeholder="输入正负积分" />
-        <input v-model.trim="reason" class="rounded-lg border border-[#ccd5dd] px-3 py-2 text-sm outline-none focus:border-[#0f7a5f]" placeholder="调整原因" />
-        <button class="rounded-lg bg-[#0f7a5f] px-3 py-2 text-sm text-white" @click="submitAdjust">确认调整</button>
+    <section v-if="editing" class="scholar-panel scholar-panel--soft">
+      <div class="scholar-panel__body">
+        <div class="scholar-kicker">Credits Adjust</div>
+        <h3 class="scholar-subtitle">调整积分：{{ editing.phone }}</h3>
+        <div class="scholar-grid md:grid-cols-3" style="margin-top: 18px">
+          <input v-model.number="delta" class="scholar-input" placeholder="输入正负积分" />
+          <input v-model.trim="reason" class="scholar-input" placeholder="调整原因" />
+          <button class="scholar-button" type="button" @click="submitAdjust">确认调整</button>
+        </div>
+        <p v-if="hintText" class="scholar-note scholar-note--success" style="margin-top: 18px">{{ hintText }}</p>
+        <p v-if="errorText" class="scholar-note scholar-note--danger" style="margin-top: 18px">{{ errorText }}</p>
       </div>
-      <p v-if="hintText" class="mt-2 text-sm text-[#106c4f]">{{ hintText }}</p>
-      <p v-if="errorText" class="mt-2 text-sm text-[#af3f33]">{{ errorText }}</p>
     </section>
   </AdminShell>
 </template>
@@ -138,7 +154,7 @@ function openAdjust(row) {
 async function submitAdjust() {
   if (!editing.value) return
   if (!delta.value) {
-    errorText.value = "调整值不能为0"
+    errorText.value = "调整值不能为 0"
     return
   }
   if (!reason.value) {
@@ -170,13 +186,5 @@ async function toggleBan(row) {
 
 function formatTime(value) {
   return value ? String(value).slice(0, 19).replace("T", " ") : "-"
-}
-
-function chipClass(current, value) {
-  const active = current === value
-  if (active) {
-    return "rounded-xl border border-[#0f7a5f] bg-[#e8f4ef] px-3 py-1.5 text-sm font-medium text-[#0f6c53]"
-  }
-  return "rounded-xl border border-[#cfd8e0] bg-white px-3 py-1.5 text-sm text-[#485864] hover:border-[#98adbb]"
 }
 </script>

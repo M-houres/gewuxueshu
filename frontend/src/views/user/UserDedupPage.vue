@@ -1,34 +1,34 @@
 <template>
-  <UserShell title="降重复率" subtitle="仅替换文本内容，保留文档格式" :credits="userCredits" @buy="showBuy = !showBuy">
-    <div class="space-y-4">
-      <TaskSubmitPanel
-        title="新建降重复率任务"
-        hint="主文件仅支持 Word 文档。上传全文查重报告后，系统会优先针对高重复内容处理。"
-        action-text="开始降重"
-        task-type="dedup"
-        :cost-rate="dedupRate"
-        :need-report="true"
-        report-label="查重报告（可选）"
-        paper-hint="为了尽量保留论文排版与样式，降重任务目前仅接受 .docx 原文。"
-        report-hint="支持上传 .docx / .pdf 查重报告。后端会校验是否为全文报告。"
-        report-help="不上传报告时按全文降重；上传全文报告时按命中段落优先处理。"
-        :paper-accept="['.docx']"
-        :report-accept="['.docx', '.pdf']"
-        :credits="userCredits"
-        @submitted="afterTaskSubmit"
-        @go-history="goHistory"
-      />
-      <TaskRecentList
-        title="近期降重记录"
-        description="查看最近提交的降重任务，快速确认是否完成或失败。"
-        :tasks="recentTasks"
-        :guest="isGuest"
-        empty-text="登录并提交降重任务后，这里会显示最近 5 条记录。"
-        @history="goHistory"
-        @login="goLogin"
-      />
-      <BuyCreditsPanel v-if="showBuy" @paid="afterPaid" />
-    </div>
+  <UserShell title="降重复率" subtitle="上传正文与查重报告，优先处理高重复区域并保留文档结构。" :credits="userCredits" @buy="showBuy = !showBuy">
+    <TaskSubmitPanel
+      title="新建降重复率任务"
+      hint="正文目前仅支持 Word 文档。上传全量查重报告后，系统会优先针对高重复段落处理。"
+      action-text="开始降重"
+      task-type="dedup"
+      :cost-rate="dedupRate"
+      :need-report="true"
+      report-label="查重报告（可选）"
+      paper-hint="为了尽量保留论文排版与样式，降重任务当前仅接收 .docx 原文。"
+      report-hint="支持上传 .docx / .pdf 查重报告。后端会校验是否为全量报告结构。"
+      report-help="不上传报告时按全文降重；上传全量报告时按命中段落优先处理。"
+      :paper-accept="['.docx']"
+      :report-accept="['.docx', '.pdf']"
+      :credits="userCredits"
+      @submitted="afterTaskSubmit"
+      @go-history="goHistory"
+    />
+
+    <TaskRecentList
+      title="近期降重记录"
+      description="查看最近提交的降重任务，快速确认是否完成、失败或仍在排队。"
+      :tasks="recentTasks"
+      :guest="isGuest"
+      empty-text="登录并提交降重任务后，这里会显示最近 5 条记录。"
+      @history="goHistory"
+      @login="goLogin"
+    />
+
+    <BuyCreditsPanel v-if="showBuy" @paid="afterPaid" />
   </UserShell>
 </template>
 

@@ -1,48 +1,77 @@
 <template>
-  <div class="academic-shell academic-shell-enter min-h-screen text-[#11161a] md:grid md:grid-cols-[252px_1fr]">
-    <aside class="border-b border-[#d9dee4] bg-gradient-to-b from-[#f5f7fa]/95 to-[#eef2f6]/90 p-5 md:min-h-screen md:border-b-0 md:border-r">
-      <div class="mb-8">
-        <div class="text-[11px] uppercase tracking-[0.2em] text-[#667481]">格物学术 Console</div>
-        <div class="mt-3 text-2xl font-semibold">运营后台</div>
-        <p class="mt-2 text-xs text-[#5f6d79]">数据看板 · 任务审计 · 配置策略</p>
-      </div>
-      <nav class="space-y-2 text-sm">
-        <RouterLink
-          v-for="(item, idx) in menus"
-          :key="item.path"
-          :to="item.path"
-          class="group flex items-center justify-between rounded-xl px-3 py-2.5 transition"
-          :class="$route.path === item.path ? 'bg-[#0f7a5f] text-white shadow-[0_8px_20px_rgba(27,77,65,0.25)]' : 'text-[#26323b] hover:bg-[#e9eef4]'"
-        >
-          <span>{{ item.label }}</span>
-          <span class="text-[10px] tracking-[0.16em] opacity-70">{{ menuCode(idx) }}</span>
-        </RouterLink>
-      </nav>
-      <div class="mt-4 rounded-xl border border-[#d7e0e8] bg-[#f6faf8] px-3 py-2 text-xs text-[#355364]">
-        <div class="flex items-center gap-2">
-          <span class="inline-block h-2.5 w-2.5 rounded-full" :class="statusDotClass"></span>
-          <span>{{ systemModeText }}</span>
+  <div class="scholar-page academic-shell-enter">
+    <div class="scholar-shell">
+      <aside class="scholar-sidebar">
+        <div class="scholar-brand">
+          <div class="scholar-brand__eyebrow">WuhongAI Operations</div>
+          <div class="scholar-brand__title">运营控制台</div>
+          <p class="scholar-brand__lead">
+            统一处理计费、支付、登录、算法包、推广和任务审计，面向上线运营的后台工作流。
+          </p>
         </div>
-      </div>
-      <button class="mt-4 w-full rounded-xl bg-[#edf1f5] px-3 py-2 text-sm text-[#33424f]" @click="logout">
-        退出后台
-      </button>
-    </aside>
 
-    <div>
-      <header class="sticky top-0 z-10 flex min-h-16 items-center justify-between border-b border-[#d9dee4] bg-[#f4f6f9]/92 px-6 py-3 backdrop-blur">
-        <div>
-          <div class="text-[11px] uppercase tracking-[0.18em] text-[#73818d]">Operations Console</div>
-          <div class="mt-1 text-lg font-semibold">{{ title }}</div>
+        <nav class="scholar-nav">
+          <RouterLink
+            v-for="(item, idx) in menus"
+            :key="item.path"
+            :to="item.path"
+            class="scholar-nav__item"
+            :class="{ 'is-active': $route.path === item.path }"
+          >
+            <span class="scholar-nav__label">{{ item.label }}</span>
+            <span class="scholar-nav__meta">{{ menuCode(idx) }}</span>
+          </RouterLink>
+        </nav>
+
+        <div class="scholar-rail-card">
+          <div class="scholar-rail-card__label">系统模式</div>
+          <div class="scholar-rail-card__body" style="margin-top: 8px">
+            <span class="scholar-badge" :class="systemModeBadgeClass">{{ systemModeText }}</span>
+          </div>
         </div>
-        <div class="flex items-center gap-3 text-sm text-[#5b6771]">
-          <span class="rounded-full bg-[#e8edf2] px-3 py-1">{{ subtitle || "系统运行中" }}</span>
-          <span v-if="adminInfo" class="rounded-full bg-[#dce6f2] px-3 py-1">{{ adminInfo.username }} · {{ adminInfo.role }}</span>
+
+        <div class="scholar-rail-card">
+          <div class="scholar-rail-card__label">当前管理员</div>
+          <div class="scholar-rail-card__body">
+            {{ adminInfo ? `${adminInfo.username} / ${adminInfo.role}` : "未识别管理员信息" }}
+          </div>
+          <button
+            class="scholar-button scholar-button--secondary"
+            style="margin-top: 14px; width: 100%"
+            type="button"
+            @click="logout"
+          >
+            退出后台
+          </button>
         </div>
-      </header>
-      <main class="p-4 md:p-6">
-        <slot />
-      </main>
+      </aside>
+
+      <div class="scholar-main">
+        <header class="scholar-topbar">
+          <div class="scholar-topbar__meta">
+            <div>
+              <div class="scholar-topbar__eyebrow">Operations Console</div>
+              <div class="scholar-topbar__title">{{ title }}</div>
+              <p class="scholar-topbar__lead">
+                {{ subtitle || "后台配置尽量收拢到管理界面，部署时减少环境变量依赖。" }}
+              </p>
+            </div>
+
+            <div class="scholar-topbar__status">
+              <span class="scholar-badge scholar-badge--info">
+                {{ adminInfo?.role || "admin" }}
+              </span>
+              <span class="scholar-badge" :class="systemModeBadgeClass">
+                {{ systemModeText }}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <main class="scholar-content">
+          <slot />
+        </main>
+      </div>
     </div>
   </div>
 </template>
@@ -71,7 +100,7 @@ const systemMode = ref("LLM_PLUS_ALGO")
 
 const menus = computed(() => {
   const base = [
-    { path: "/admin/dashboard", label: "仪表盘" },
+    { path: "/admin/dashboard", label: "总览看板" },
     { path: "/admin/users", label: "用户管理" },
     { path: "/admin/tasks", label: "任务管理" },
     { path: "/admin/orders", label: "订单管理" },
@@ -87,16 +116,16 @@ const menus = computed(() => {
 
 const systemModeText = computed(() => {
   if (systemMode.value === "ALGO_ONLY") {
-    return "仅算法模式（降级中）"
+    return "算法降级模式"
   }
-  return "大模型 + 算法（正常）"
+  return "大模型 + 算法"
 })
 
-const statusDotClass = computed(() => {
+const systemModeBadgeClass = computed(() => {
   if (systemMode.value === "ALGO_ONLY") {
-    return "bg-[#cf3d33]"
+    return "scholar-badge--danger"
   }
-  return "bg-[#13815d]"
+  return "scholar-badge--success"
 })
 
 onMounted(loadSystemStatus)

@@ -1,29 +1,29 @@
 <template>
-  <UserShell title="AIGC检测" subtitle="上传论文后自动计算AI率" :credits="userCredits" @buy="showBuy = !showBuy">
-    <div class="space-y-4">
-      <TaskSubmitPanel
-        title="新建AIGC检测"
-        hint="先选目标平台，再上传论文。游客可以先浏览页面，点击提交时再登录。"
-        action-text="开始检测"
-        task-type="aigc_detect"
-        :cost-rate="detectRate"
-        paper-hint="支持 .docx / .pdf / .txt。文本文件会直接在浏览器内预估字符数，Word/PDF 以后端解析为准。"
-        :paper-accept="['.docx', '.pdf', '.txt']"
-        :credits="userCredits"
-        @submitted="afterTaskSubmit"
-        @go-history="goHistory"
-      />
-      <TaskRecentList
-        title="近期检测记录"
-        description="优先展示最近提交的 AIGC 检测任务，便于快速回看状态。"
-        :tasks="recentTasks"
-        :guest="isGuest"
-        empty-text="登录后提交检测任务，这里会显示最近 5 条记录。"
-        @history="goHistory"
-        @login="goLogin"
-      />
-      <BuyCreditsPanel v-if="showBuy" @paid="afterPaid" />
-    </div>
+  <UserShell title="AIGC 检测" subtitle="按目标平台提交正文，快速判断 AI 风险分布与高风险段落。" :credits="userCredits" @buy="showBuy = !showBuy">
+    <TaskSubmitPanel
+      title="新建 AIGC 检测任务"
+      hint="先选择目标平台，再上传正文。游客可以先浏览页面，点击提交时再登录。"
+      action-text="开始检测"
+      task-type="aigc_detect"
+      :cost-rate="detectRate"
+      paper-hint="支持 .docx / .pdf / .txt。纯文本文件会在浏览器内直接估算字符数，Word 和 PDF 以后端解析为准。"
+      :paper-accept="['.docx', '.pdf', '.txt']"
+      :credits="userCredits"
+      @submitted="afterTaskSubmit"
+      @go-history="goHistory"
+    />
+
+    <TaskRecentList
+      title="近期检测记录"
+      description="优先展示最近提交的 AIGC 检测任务，便于快速回看状态和风险摘要。"
+      :tasks="recentTasks"
+      :guest="isGuest"
+      empty-text="登录并提交检测任务后，这里会显示最近 5 条记录。"
+      @history="goHistory"
+      @login="goLogin"
+    />
+
+    <BuyCreditsPanel v-if="showBuy" @paid="afterPaid" />
   </UserShell>
 </template>
 

@@ -1,104 +1,145 @@
 <template>
-  <div class="min-h-screen p-4 md:flex md:items-center md:justify-center">
-    <div class="w-full max-w-5xl overflow-hidden rounded-3xl border border-[#d9dee4] bg-white md:grid md:grid-cols-[1.2fr_1fr]">
-      <section class="relative hidden min-h-[560px] bg-[linear-gradient(150deg,#1f5f4f,#274c67)] p-10 text-white md:block">
-        <div class="text-xs uppercase tracking-[0.18em] text-[#d0e0e7]">格物学术</div>
-        <h1 class="mt-6 text-4xl font-semibold leading-tight">学术文本处理平台</h1>
-        <p class="mt-4 max-w-md text-sm text-[#d6ebe5]">
-          AIGC检测、降重复率、降AIGC率统一入口，按平台规则计算积分，处理失败自动退回
-        </p>
-        <div class="mt-12 space-y-4 text-sm text-[#def0eb]">
-          <div>1. 手机号验证码登录，支持邀请注册</div>
-          <div>2. 微信扫码快速登录（开发环境可模拟）</div>
-          <div>3. 任务与积分流水实时可查</div>
-        </div>
-      </section>
-      <section class="p-6 md:p-10">
-        <div class="mb-6">
-          <h2 class="text-2xl font-semibold text-[#101418]">登录</h2>
-          <p class="mt-1 text-sm text-[#5b6771]">{{ wechatLoginEnabled ? "手机号验证码 / 微信扫码" : "手机号验证码登录" }}</p>
-        </div>
+  <div class="scholar-auth academic-shell-enter">
+    <div class="scholar-auth__frame">
+      <section class="scholar-auth__poster">
+        <div class="scholar-auth__content">
+          <div class="scholar-auth__eyebrow">WuhongAI Academic Writing</div>
+          <h1 class="scholar-auth__title">让论文修改、检测与交付回到同一工作流。</h1>
+          <p class="scholar-auth__lead">
+            面向学术文本处理的统一入口，支持 AIGC 检测、降重复率、降 AIGC 率、积分购买和任务记录回溯。
+          </p>
 
-        <div class="mb-4 flex gap-2 rounded-xl bg-[#eef3f8] p-1">
-          <button
-            v-if="phoneLoginEnabled"
-            class="rounded-lg px-3 py-2 text-sm transition"
-            :class="mode === 'phone' ? 'bg-[#0f7a5f] text-white' : 'text-[#344250]'"
-            @click="switchMode('phone')"
-          >
-            手机号登录
-          </button>
-          <button
-            v-if="wechatLoginEnabled"
-            class="rounded-lg px-3 py-2 text-sm transition"
-            :class="mode === 'wx' ? 'bg-[#0f7a5f] text-white' : 'text-[#344250]'"
-            @click="switchMode('wx')"
-          >
-            微信扫码
-          </button>
-        </div>
-
-        <form v-if="mode === 'phone'" class="space-y-4" @submit.prevent="login">
-          <label class="block space-y-2">
-            <span class="text-sm text-[#4a5761]">手机号</span>
-            <input
-              v-model.trim="phone"
-              class="w-full rounded-lg border border-[#ccd5dd] px-3 py-2 outline-none focus:border-[#0f7a5f]"
-              placeholder="请输入11位手机号"
-            />
-          </label>
-          <label class="block space-y-2">
-            <span class="text-sm text-[#4a5761]">验证码</span>
-            <div class="flex gap-2">
-              <input
-                v-model.trim="code"
-                class="min-w-0 flex-1 rounded-lg border border-[#ccd5dd] px-3 py-2 outline-none focus:border-[#0f7a5f]"
-                placeholder="请输入验证码"
-              />
-              <button
-                type="button"
-                class="rounded-lg bg-[#e6f2ee] px-3 text-sm text-[#0d6b52] disabled:opacity-60"
-                :disabled="sending || countdown > 0"
-                @click="sendCode"
-              >
-                {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
-              </button>
-            </div>
-          </label>
-
-          <button class="w-full rounded-lg bg-[#0f7a5f] px-4 py-2 text-white disabled:opacity-60" :disabled="loading">
-            {{ loading ? "登录中..." : "登录并进入工作台" }}
-          </button>
-        </form>
-
-        <div v-else class="rounded-xl border border-[#d9e2ea] bg-[#f8fbff] p-4">
-          <div class="text-sm text-[#4d5d69]">请使用微信扫码登录</div>
-          <div class="mt-3 flex items-center gap-4">
-            <img v-if="wxQrcodeDataUrl" :src="wxQrcodeDataUrl" alt="wx login qrcode" class="h-40 w-40 rounded border border-[#dbe4ec]" />
-            <div class="space-y-2 text-sm">
-              <div>倒计时：{{ wxCountdown }} 秒</div>
-              <div>状态：{{ wxStatusText }}</div>
-              <button class="rounded bg-[#edf2f6] px-3 py-1.5 text-xs text-[#344250]" @click="loadWxQrcode">刷新二维码</button>
-              <button
-                v-if="wxMockEnabled"
-                class="rounded bg-[#0f7a5f] px-3 py-1.5 text-xs text-white"
-                @click="mockWxAuthorize"
-              >
-                模拟扫码成功
-              </button>
-            </div>
+          <div class="scholar-auth__points">
+            <div class="scholar-auth__point">短信登录、微信扫码登录、游客浏览三种路径并存，先看后用。</div>
+            <div class="scholar-auth__point">任务按字符精确计费，失败自动退款，状态与结果支持全程追踪。</div>
+            <div class="scholar-auth__point">部署后支付、短信、微信登录、大模型都可在后台配置，无需反复改环境变量。</div>
           </div>
         </div>
+      </section>
 
-        <p v-if="errorText" class="mt-3 text-sm text-[#b14133]">{{ errorText }}</p>
-        <p v-if="hintText" class="mt-3 text-sm text-[#106c4f]">{{ hintText }}</p>
+      <section class="scholar-auth__panel">
+        <div class="scholar-stack">
+          <div>
+            <h2>登录</h2>
+            <p class="scholar-lead" style="margin-top: 10px">
+              {{ wechatLoginEnabled ? "支持短信验证码与微信扫码登录。" : "当前使用短信验证码登录。" }}
+            </p>
+          </div>
 
-        <div class="mt-8 text-sm text-[#5b6771]">
-          新用户？<RouterLink class="text-[#0f7a5f]" :to="registerLink">去注册</RouterLink>
+          <div class="scholar-switch" v-if="phoneLoginEnabled || wechatLoginEnabled">
+            <button
+              v-if="phoneLoginEnabled"
+              type="button"
+              class="scholar-switch__button"
+              :class="{ 'is-active': mode === 'phone' }"
+              @click="switchMode('phone')"
+            >
+              手机验证码
+            </button>
+            <button
+              v-if="wechatLoginEnabled"
+              type="button"
+              class="scholar-switch__button"
+              :class="{ 'is-active': mode === 'wx' }"
+              @click="switchMode('wx')"
+            >
+              微信扫码
+            </button>
+          </div>
+
+          <form v-if="mode === 'phone'" class="scholar-stack" @submit.prevent="login">
+            <label class="scholar-field">
+              <span class="scholar-field__label">手机号</span>
+              <input
+                v-model.trim="phone"
+                class="scholar-input"
+                autocomplete="tel"
+                placeholder="请输入 11 位手机号"
+              />
+            </label>
+
+            <label class="scholar-field">
+              <span class="scholar-field__label">验证码</span>
+              <div class="scholar-inline-actions" style="align-items: stretch">
+                <input
+                  v-model.trim="code"
+                  class="scholar-input"
+                  style="flex: 1"
+                  autocomplete="one-time-code"
+                  placeholder="请输入验证码"
+                />
+                <button
+                  type="button"
+                  class="scholar-button scholar-button--secondary"
+                  :disabled="sending || countdown > 0"
+                  @click="sendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
+                </button>
+              </div>
+            </label>
+
+            <button class="scholar-button" :disabled="loading">
+              {{ loading ? "登录中..." : "登录并进入工作台" }}
+            </button>
+          </form>
+
+          <div v-else class="scholar-panel scholar-panel--soft">
+            <div class="scholar-panel__body">
+              <div class="scholar-stack">
+                <div class="scholar-note">
+                  使用微信扫码完成授权。若当前是开发联调环境，可通过“模拟扫码成功”走通整条登录链路。
+                </div>
+
+                <div class="scholar-inline-actions" style="align-items: center">
+                  <img
+                    v-if="wxQrcodeDataUrl"
+                    :src="wxQrcodeDataUrl"
+                    alt="wx login qrcode"
+                    class="rounded-[20px] border border-[var(--line)] bg-white"
+                    style="height: 168px; width: 168px"
+                  />
+
+                  <div class="scholar-stack" style="min-width: 180px">
+                    <span class="scholar-badge scholar-badge--info">状态：{{ wxStatusText }}</span>
+                    <span class="scholar-pill">二维码剩余 {{ wxCountdown }} 秒</span>
+                    <button
+                      type="button"
+                      class="scholar-button scholar-button--secondary"
+                      @click="loadWxQrcode"
+                    >
+                      刷新二维码
+                    </button>
+                    <button
+                      v-if="wxMockEnabled"
+                      type="button"
+                      class="scholar-button"
+                      @click="mockWxAuthorize"
+                    >
+                      模拟扫码成功
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p v-if="errorText" class="scholar-note scholar-note--danger">{{ errorText }}</p>
+          <p v-if="hintText" class="scholar-note scholar-note--success">{{ hintText }}</p>
+
+          <div class="scholar-inline-actions">
+            <RouterLink class="scholar-button scholar-button--ghost" :to="registerLink">
+              新用户注册
+            </RouterLink>
+            <button
+              type="button"
+              class="scholar-button scholar-button--secondary"
+              @click="enterGuest"
+            >
+              先以游客浏览
+            </button>
+          </div>
         </div>
-        <button class="mt-3 text-sm text-[#5b6771] underline underline-offset-4" @click="enterGuest">
-          先以游客模式浏览
-        </button>
       </section>
     </div>
   </div>
@@ -150,10 +191,8 @@ onMounted(async () => {
     localStorage.setItem("wuhong_referrer_code", refCode.toUpperCase())
     registerLink.value = `/register?ref=${encodeURIComponent(refCode)}`
   }
-  if (String(route.query.mode || "") === "wx") {
-    if (wechatLoginEnabled.value) {
-      await switchMode("wx")
-    }
+  if (String(route.query.mode || "") === "wx" && wechatLoginEnabled.value) {
+    await switchMode("wx")
   }
 })
 
@@ -228,7 +267,7 @@ async function sendCode() {
       countdown.value -= 1
       if (countdown.value <= 0) clearInterval(timer)
     }, 1000)
-    hintText.value = data.debug_code ? `测试验证码 ${data.debug_code}` : "验证码已发送"
+    hintText.value = data.debug_code ? `测试验证码：${data.debug_code}` : "验证码已发送"
   } catch (error) {
     errorText.value = error.message || "发送失败"
   } finally {

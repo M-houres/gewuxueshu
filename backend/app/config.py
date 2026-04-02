@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     payment_sign_secret: str = "change_me_payment_sign_key"
     payment_callback_ttl_seconds: int = 900
     payment_test_mode: bool = True
-    frontend_base_url: str = "http://localhost:5173"
+    frontend_base_url: str = ""
     sms_api_key: str = ""
     sms_gateway_url: str = ""
 

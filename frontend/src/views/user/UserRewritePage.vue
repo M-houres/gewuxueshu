@@ -1,34 +1,34 @@
 <template>
-  <UserShell title="降AIGC率" subtitle="在保留论点前提下降低AIGC风险表达" :credits="userCredits" @buy="showBuy = !showBuy">
-    <div class="space-y-4">
-      <TaskSubmitPanel
-        title="新建降AIGC率任务"
-        hint="主文件仅支持 Word 文档。可选上传全文 AIGC 检测报告，用于优先降低高风险段落的AIGC表达。"
-        action-text="开始降AIGC率"
-        task-type="rewrite"
-        :cost-rate="rewriteRate"
-        :need-report="true"
-        report-label="AIGC检测报告（可选）"
-        paper-hint="降AIGC率任务会尽量保留论文结构与版式，因此原文仅接受 .docx。"
-        report-hint="支持上传 .docx / .pdf AIGC 报告。后端会校验是否为全文检测报告。"
-        report-help="不上传报告时按全文处理；上传全文报告时优先处理高 AI 风险段落。"
-        :paper-accept="['.docx']"
-        :report-accept="['.docx', '.pdf']"
-        :credits="userCredits"
-        @submitted="afterTaskSubmit"
-        @go-history="goHistory"
-      />
-      <TaskRecentList
-        title="近期降AIGC率记录"
-        description="查看最近提交的降AIGC率任务，确认结果是否已生成。"
-        :tasks="recentTasks"
-        :guest="isGuest"
-        empty-text="登录并提交降AIGC率任务后，这里会显示最近 5 条记录。"
-        @history="goHistory"
-        @login="goLogin"
-      />
-      <BuyCreditsPanel v-if="showBuy" @paid="afterPaid" />
-    </div>
+  <UserShell title="降 AIGC 率" subtitle="在尽量保留论点与结构的前提下，降低表达中的 AI 痕迹。" :credits="userCredits" @buy="showBuy = !showBuy">
+    <TaskSubmitPanel
+      title="新建降 AIGC 率任务"
+      hint="正文目前仅支持 Word 文档。可上传全量 AIGC 检测报告，用于优先处理高风险段落。"
+      action-text="开始优化"
+      task-type="rewrite"
+      :cost-rate="rewriteRate"
+      :need-report="true"
+      report-label="AIGC 检测报告（可选）"
+      paper-hint="为了尽量保留论文结构与排版，降 AIGC 率任务当前仅接收 .docx 原文。"
+      report-hint="支持上传 .docx / .pdf AIGC 报告。后端会校验是否为全量检测报告。"
+      report-help="不上传报告时按全文处理；上传报告时优先处理高 AI 风险段落。"
+      :paper-accept="['.docx']"
+      :report-accept="['.docx', '.pdf']"
+      :credits="userCredits"
+      @submitted="afterTaskSubmit"
+      @go-history="goHistory"
+    />
+
+    <TaskRecentList
+      title="近期降 AIGC 率记录"
+      description="查看最近提交的任务，确认结果是否生成、是否需要二次人工修订。"
+      :tasks="recentTasks"
+      :guest="isGuest"
+      empty-text="登录并提交降 AIGC 率任务后，这里会显示最近 5 条记录。"
+      @history="goHistory"
+      @login="goLogin"
+    />
+
+    <BuyCreditsPanel v-if="showBuy" @paid="afterPaid" />
   </UserShell>
 </template>
 
