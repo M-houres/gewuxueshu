@@ -1,0 +1,61 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: wuhongai-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wuhongai
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: wuhongai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wuhongai-backend
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    working_dir: /app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wuhongai-worker
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    working_dir: /app
+    command: celery -A app.worker_tasks.celery_app worker -l info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - mysql
+      - redis
+      - backend
+
+volumes:
+  mysql_data:
+  redis_data:

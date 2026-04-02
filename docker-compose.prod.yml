@@ -1,0 +1,74 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: wuhongai-mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: wuhongai-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wuhongai-backend
+    restart: unless-stopped
+    env_file:
+      - ./.env.prod
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_output:/app/output
+      - backend_algorithms:/app/algorithm_packages
+    expose:
+      - "8000"
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wuhongai-worker
+    restart: unless-stopped
+    env_file:
+      - ./.env.prod
+    command: celery -A app.worker_tasks.celery_app worker -l info
+    depends_on:
+      - backend
+      - mysql
+      - redis
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_output:/app/output
+      - backend_algorithms:/app/algorithm_packages
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wuhongai-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  mysql_data:
+  redis_data:
+  backend_uploads:
+  backend_output:
+  backend_algorithms:
