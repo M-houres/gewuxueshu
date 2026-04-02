@@ -143,7 +143,7 @@
           <p v-if="hintText" class="scholar-note scholar-note--success">{{ hintText }}</p>
 
           <div class="scholar-inline-actions scholar-inline-actions--spread">
-            <RouterLink class="scholar-button scholar-button--ghost" to="/login">
+            <RouterLink class="scholar-button scholar-button--ghost" :to="loginLink">
               返回登录
             </RouterLink>
           </div>
@@ -172,17 +172,25 @@ const countdown = ref(0)
 const errorText = ref("")
 const hintText = ref("")
 const referrerCode = ref("")
+const loginLink = ref("/login")
 let timer = null
 
 onMounted(() => {
+  const params = new URLSearchParams()
+  const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
+  if (redirect && redirect.startsWith("/")) {
+    params.set("redirect", redirect)
+  }
   const queryRef = route.query.ref
   if (typeof queryRef === "string" && queryRef.trim()) {
     referrerCode.value = queryRef.trim().toUpperCase()
     localStorage.setItem("wuhong_referrer_code", referrerCode.value)
-    return
+    params.set("ref", referrerCode.value)
+  } else {
+    const cached = localStorage.getItem("wuhong_referrer_code")
+    referrerCode.value = cached ? cached.toUpperCase() : ""
   }
-  const cached = localStorage.getItem("wuhong_referrer_code")
-  referrerCode.value = cached ? cached.toUpperCase() : ""
+  loginLink.value = params.toString() ? `/login?${params.toString()}` : "/login"
 })
 
 onUnmounted(() => {
@@ -245,7 +253,12 @@ async function register() {
     setUserToken(data.token)
     setUserInfo(data.user)
     localStorage.removeItem("wuhong_referrer_code")
-    router.push("/app/detect")
+    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
+    if (redirect && redirect.startsWith("/")) {
+      router.push(redirect)
+    } else {
+      router.push("/app/detect")
+    }
   } catch (error) {
     errorText.value = error.message || "注册失败"
   } finally {

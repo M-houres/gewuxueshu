@@ -16,7 +16,7 @@
             :key="item.path"
             :to="item.path"
             class="scholar-nav__item"
-            :class="{ 'is-active': $route.path === item.path }"
+            :class="{ 'is-active': isMenuActive(item.path) }"
           >
             <span class="scholar-nav__label">{{ item.label }}</span>
             <span class="scholar-nav__meta">{{ menuCode(idx) }}</span>
@@ -50,7 +50,7 @@
         <header class="scholar-topbar">
           <div class="scholar-topbar__meta">
             <div>
-              <div class="scholar-topbar__eyebrow">格物学术</div>
+              <div class="scholar-topbar__eyebrow">格物学术 / {{ activeMenuCode }}</div>
               <div class="scholar-topbar__title">{{ title }}</div>
               <p class="scholar-topbar__lead">
                 {{ subtitle || "后台配置尽量收拢到管理界面，部署时减少环境变量依赖。" }}
@@ -66,6 +66,24 @@
               </span>
             </div>
           </div>
+
+          <div class="scholar-topbar__brief">
+            <article class="scholar-topbar__brief-item">
+              <span>当前区段</span>
+              <strong>{{ activeMenu?.label || "后台" }}</strong>
+              <p>导航高亮与详情页归属保持一致，避免在详情页丢失位置感。</p>
+            </article>
+            <article class="scholar-topbar__brief-item">
+              <span>管理员角色</span>
+              <strong>{{ adminInfo?.role || "admin" }}</strong>
+              <p>权限不足的页面会被路由守卫自动挡回总览页。</p>
+            </article>
+            <article class="scholar-topbar__brief-item">
+              <span>运行模式</span>
+              <strong>{{ systemModeText }}</strong>
+              <p>切换状态由后台接口回读，避免界面与真实系统状态脱节。</p>
+            </article>
+          </div>
         </header>
 
         <main class="scholar-content">
@@ -78,7 +96,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue"
-import { RouterLink, useRouter } from "vue-router"
+import { RouterLink, useRoute, useRouter } from "vue-router"
 
 import { adminHttp } from "../lib/http"
 import { clearAdminSession, getAdminInfo } from "../lib/session"
@@ -95,6 +113,7 @@ defineProps({
 })
 
 const router = useRouter()
+const route = useRoute()
 const adminInfo = ref(getAdminInfo())
 const systemMode = ref("LLM_PLUS_ALGO")
 
@@ -113,6 +132,9 @@ const menus = computed(() => {
   }
   return base
 })
+
+const activeMenu = computed(() => menus.value.find((item) => isRouteMatch(route.path, item.path)) || menus.value[0] || null)
+const activeMenuCode = computed(() => menuCode(menus.value.findIndex((item) => item.path === activeMenu.value?.path)))
 
 const systemModeText = computed(() => {
   if (systemMode.value === "ALGO_ONLY") {
@@ -145,6 +167,20 @@ function logout() {
 }
 
 function menuCode(index) {
+  if (index < 0) {
+    return "A00"
+  }
   return `A${String(index + 1).padStart(2, "0")}`
+}
+
+function isMenuActive(path) {
+  return isRouteMatch(route.path, path)
+}
+
+function isRouteMatch(currentPath, targetPath) {
+  if (targetPath === "/admin/users") {
+    return currentPath === targetPath || currentPath.startsWith("/admin/users/")
+  }
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`)
 }
 </script>

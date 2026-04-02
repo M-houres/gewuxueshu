@@ -262,11 +262,17 @@ const wxStatusText = computed(() => {
 
 onMounted(async () => {
   await loadAuthOptions()
+  const params = new URLSearchParams()
+  const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
+  if (redirect && redirect.startsWith("/")) {
+    params.set("redirect", redirect)
+  }
   const refCode = route.query.ref
   if (typeof refCode === "string" && refCode) {
     localStorage.setItem("wuhong_referrer_code", refCode.toUpperCase())
-    registerLink.value = `/register?ref=${encodeURIComponent(refCode)}`
+    params.set("ref", refCode)
   }
+  registerLink.value = params.toString() ? `/register?${params.toString()}` : "/register"
   if (String(route.query.mode || "") === "wx" && wechatLoginEnabled.value) {
     await switchMode("wx")
   }

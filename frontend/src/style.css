@@ -206,6 +206,14 @@ h6 {
   line-height: 1.8;
 }
 
+.scholar-brand__caption {
+  margin-top: 10px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+}
+
 .scholar-nav {
   position: relative;
   z-index: 1;
@@ -288,6 +296,62 @@ h6 {
     linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 241, 231, 0.62)),
     linear-gradient(135deg, rgba(23, 74, 82, 0.04), transparent 35%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.scholar-rail-stack {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.scholar-rail-card--accent {
+  background:
+    linear-gradient(180deg, rgba(229, 238, 240, 0.92), rgba(247, 241, 232, 0.72)),
+    linear-gradient(135deg, rgba(23, 74, 82, 0.06), transparent 46%);
+}
+
+.scholar-rail-card__eyeline {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.scholar-rail-card__headline {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.08;
+  color: var(--ink);
+}
+
+.scholar-rail-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.scholar-rail-card__metric {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(125, 102, 66, 0.1);
+}
+
+.scholar-rail-card__metric span {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.scholar-rail-card__metric strong {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
 }
 
 .scholar-rail-card__label {
@@ -376,6 +440,44 @@ h6 {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.scholar-topbar__brief {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.scholar-topbar__brief-item {
+  display: grid;
+  gap: 8px;
+  padding: 14px 14px 15px;
+  border: 1px solid rgba(125, 102, 66, 0.12);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 241, 231, 0.54)),
+    linear-gradient(135deg, rgba(23, 74, 82, 0.03), transparent 58%);
+}
+
+.scholar-topbar__brief-item span {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.scholar-topbar__brief-item strong {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.scholar-topbar__brief-item p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--ink-soft);
 }
 
 .scholar-content {
@@ -1362,7 +1464,8 @@ h6 {
   }
 
   .scholar-auth__ledger-grid,
-  .scholar-auth__quickline {
+  .scholar-auth__quickline,
+  .scholar-topbar__brief {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1385,6 +1488,11 @@ h6 {
 
   .scholar-inline-actions--spread {
     justify-content: flex-start;
+  }
+
+  .scholar-rail-card__grid,
+  .scholar-topbar__brief {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1429,7 +1537,9 @@ h6 {
   }
 
   .scholar-auth__ledger-grid,
-  .scholar-auth__quickline {
+  .scholar-auth__quickline,
+  .scholar-topbar__brief,
+  .scholar-rail-card__grid {
     grid-template-columns: 1fr;
   }
 
