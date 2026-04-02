@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router"
 
+import { resolveAdminRedirect, resolveUserRedirect } from "../lib/redirect"
 import { getAdminInfo, getAdminToken, getUserToken } from "../lib/session"
 
 const AdminLoginPage = () => import("../views/admin/AdminLoginPage.vue")
@@ -61,10 +62,10 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if ((to.path === "/login" || to.path === "/register") && getUserToken()) {
-    return resolveAuthenticatedRedirect(to.query.redirect, "/app/detect", "/app/")
+    return resolveUserRedirect(to.query.redirect, "/app/detect")
   }
   if (to.path === "/admin/login" && getAdminToken()) {
-    return resolveAuthenticatedRedirect(to.query.redirect, "/admin/dashboard", "/admin/")
+    return resolveAdminRedirect(to.query.redirect, "/admin/dashboard")
   }
   if (to.meta.auth === "admin" && !getAdminToken()) {
     const redirect = encodeURIComponent(to.fullPath || "/admin/dashboard")
@@ -83,12 +84,5 @@ router.beforeEach((to) => {
   }
   return true
 })
-
-function resolveAuthenticatedRedirect(rawRedirect, fallback, allowedPrefix) {
-  if (typeof rawRedirect === "string" && rawRedirect.startsWith(allowedPrefix)) {
-    return rawRedirect
-  }
-  return fallback
-}
 
 export default router

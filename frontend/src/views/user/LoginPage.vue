@@ -227,6 +227,7 @@ import { RouterLink, useRoute, useRouter } from "vue-router"
 
 import { getDeviceFingerprint } from "../../lib/device"
 import { userHttp } from "../../lib/http"
+import { resolveUserRedirect } from "../../lib/redirect"
 import { setUserInfo, setUserToken } from "../../lib/session"
 
 const route = useRoute()
@@ -263,8 +264,8 @@ const wxStatusText = computed(() => {
 onMounted(async () => {
   await loadAuthOptions()
   const params = new URLSearchParams()
-  const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
-  if (redirect && redirect.startsWith("/")) {
+  const redirect = resolveUserRedirect(route.query.redirect, "")
+  if (redirect) {
     params.set("redirect", redirect)
   }
   const refCode = route.query.ref
@@ -443,12 +444,7 @@ async function mockWxAuthorize() {
 function completeLogin(token, user) {
   setUserToken(token)
   setUserInfo(user)
-  const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
-  if (redirect && redirect.startsWith("/")) {
-    router.push(redirect)
-  } else {
-    router.push("/app/detect")
-  }
+  router.push(resolveUserRedirect(route.query.redirect, "/app/detect"))
 }
 
 function enterGuest() {

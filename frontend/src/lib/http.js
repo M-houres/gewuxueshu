@@ -116,9 +116,12 @@ adminHttp.interceptors.response.use(
   (resp) => unwrapResponse(resp),
   async (error) => {
     if (error?.response?.status === 401) {
+      const hadToken = Boolean(getAdminToken())
       clearAdminSession()
-      const redirect = encodeURIComponent(`${location.pathname}${location.search}`)
-      location.href = `/admin/login?redirect=${redirect}`
+      if (hadToken) {
+        const redirect = encodeURIComponent(`${location.pathname}${location.search}`)
+        location.href = `/admin/login?redirect=${redirect}`
+      }
     }
     return normalizeError(error)
   }

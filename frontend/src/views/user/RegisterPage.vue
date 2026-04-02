@@ -159,6 +159,7 @@ import { RouterLink, useRoute, useRouter } from "vue-router"
 
 import { getDeviceFingerprint } from "../../lib/device"
 import { userHttp } from "../../lib/http"
+import { resolveUserRedirect } from "../../lib/redirect"
 import { setUserInfo, setUserToken } from "../../lib/session"
 
 const route = useRoute()
@@ -177,8 +178,8 @@ let timer = null
 
 onMounted(() => {
   const params = new URLSearchParams()
-  const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
-  if (redirect && redirect.startsWith("/")) {
+  const redirect = resolveUserRedirect(route.query.redirect, "")
+  if (redirect) {
     params.set("redirect", redirect)
   }
   const queryRef = route.query.ref
@@ -253,12 +254,7 @@ async function register() {
     setUserToken(data.token)
     setUserInfo(data.user)
     localStorage.removeItem("wuhong_referrer_code")
-    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
-    if (redirect && redirect.startsWith("/")) {
-      router.push(redirect)
-    } else {
-      router.push("/app/detect")
-    }
+    router.push(resolveUserRedirect(route.query.redirect, "/app/detect"))
   } catch (error) {
     errorText.value = error.message || "注册失败"
   } finally {

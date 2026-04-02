@@ -148,6 +148,7 @@ import { ref } from "vue"
 import { RouterLink, useRoute, useRouter } from "vue-router"
 
 import { adminHttp } from "../../lib/http"
+import { resolveAdminRedirect } from "../../lib/redirect"
 import { setAdminInfo, setAdminToken } from "../../lib/session"
 
 const router = useRouter()
@@ -168,12 +169,7 @@ async function login() {
     })
     setAdminToken(data.token)
     setAdminInfo(data.admin || null)
-    const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
-    if (redirect && redirect.startsWith("/admin/")) {
-      router.push(redirect)
-    } else {
-      router.push("/admin/dashboard")
-    }
+    router.push(resolveAdminRedirect(route.query.redirect, "/admin/dashboard"))
   } catch (error) {
     errorText.value = error.message || "登录失败"
   } finally {
