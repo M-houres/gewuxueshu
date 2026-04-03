@@ -71,9 +71,9 @@ function formatTime(value) {
 
 function platformLabel(platform) {
   const mapping = {
-    cnki: "知网 CNKI",
-    vip: "维普 VIP",
-    paperpass: "PaperPass",
+    cnki: "仿知网检测",
+    vip: "仿维普检测",
+    paperpass: "仿PaperPass检测",
   }
   return mapping[platform] || platform || "-"
 }

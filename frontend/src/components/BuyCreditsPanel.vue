@@ -30,7 +30,7 @@
           @click="openPay(item)"
         >
           <div class="flex items-start justify-between gap-3">
-            <div class="text-base font-semibold text-[var(--ink)]">{{ item.name }}</div>
+            <div class="text-lg font-bold tracking-[0.01em] text-[var(--ink)]">{{ item.name }}</div>
             <span v-if="item.badge" class="scholar-badge scholar-badge--success">{{ item.badge }}</span>
           </div>
           <div class="mt-3 text-sm leading-7 text-[var(--ink-soft)]">

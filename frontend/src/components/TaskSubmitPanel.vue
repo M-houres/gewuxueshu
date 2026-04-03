@@ -12,10 +12,10 @@
           <div class="scholar-panel__body">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <div class="scholar-kicker">第一步</div>
+                <div class="scholar-kicker scholar-kicker--step">第一步</div>
                 <h3 class="scholar-subtitle">选择目标平台</h3>
               </div>
-              <span class="scholar-pill">默认推荐知网 CNKI</span>
+              <span class="scholar-pill">默认推荐仿知网检测</span>
             </div>
 
             <div class="scholar-option-grid lg:grid-cols-3" style="margin-top: 18px">
@@ -46,7 +46,7 @@
 
         <section class="scholar-panel scholar-panel--soft">
           <div class="scholar-panel__body">
-            <div class="scholar-kicker">第二步</div>
+            <div class="scholar-kicker scholar-kicker--step">第二步</div>
             <h3 class="scholar-subtitle">上传正文文件</h3>
             <p class="scholar-lead">{{ paperHint }}</p>
 
@@ -86,7 +86,7 @@
           <div class="scholar-panel__body">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <div class="scholar-kicker">第三步</div>
+                <div class="scholar-kicker scholar-kicker--step">第三步</div>
                 <h3 class="scholar-subtitle">上传辅助报告</h3>
               </div>
               <span class="scholar-pill">可选</span>
@@ -126,7 +126,7 @@
 
         <section class="scholar-panel scholar-panel--soft">
           <div class="scholar-panel__body">
-            <div class="scholar-kicker">{{ confirmationStepLabel }}</div>
+            <div class="scholar-kicker scholar-kicker--step">{{ confirmationStepLabel }}</div>
             <h3 class="scholar-subtitle">提交前确认</h3>
 
             <div class="scholar-stack" style="margin-top: 18px">
@@ -245,22 +245,22 @@ const confirmationStepLabel = computed(() => (props.needReport ? "第四步" : "
 const platformOptions = computed(() => {
   if (props.taskType === "dedup") {
     return [
-      { value: "cnki", label: "知网 CNKI", desc: "偏重学位论文场景，适合正式查重前的降重准备。", badge: "论文" },
-      { value: "vip", label: "维普 VIP", desc: "更适合期刊稿件表达规整与句式调整。", badge: "期刊" },
-      { value: "paperpass", label: "PaperPass", desc: "适合初筛和快速预审，强调效率与覆盖面。", badge: "预审" },
+      { value: "cnki", label: "仿知网检测", desc: "采用仿知网规则，更贴近学位论文场景的降重准备。", badge: "论文" },
+      { value: "vip", label: "仿维普检测", desc: "采用仿维普规则，适合期刊稿件表达规整与句式调整。", badge: "期刊" },
+      { value: "paperpass", label: "仿PaperPass检测", desc: "采用仿PaperPass规则，适合初筛和快速预审。", badge: "预审" },
     ]
   }
   if (props.taskType === "rewrite") {
     return [
-      { value: "cnki", label: "知网 CNKI", desc: "面向学术正文，控制表达痕迹并尽量保持论点稳定。", badge: "学术" },
-      { value: "vip", label: "维普 VIP", desc: "适合投稿前的语言整理和段落表达调整。", badge: "投稿" },
-      { value: "paperpass", label: "PaperPass", desc: "偏向快速降 AIGC 率处理和初次优化。", badge: "效率" },
+      { value: "cnki", label: "仿知网检测", desc: "采用仿知网规则，控制表达痕迹并尽量保持论点稳定。", badge: "学术" },
+      { value: "vip", label: "仿维普检测", desc: "采用仿维普规则，适合投稿前的语言整理和段落调整。", badge: "投稿" },
+      { value: "paperpass", label: "仿PaperPass检测", desc: "采用仿PaperPass规则，偏向快速降 AIGC 率处理。", badge: "效率" },
     ]
   }
   return [
-    { value: "cnki", label: "知网 CNKI", desc: "高校论文常用标准，适合正式提交前排查 AI 风险。", badge: "推荐" },
-    { value: "vip", label: "维普 VIP", desc: "适合期刊稿件和研究类文本的表达波动检测。", badge: "期刊" },
-    { value: "paperpass", label: "PaperPass", desc: "适合快速预检，及时发现高风险段落。", badge: "快速" },
+    { value: "cnki", label: "仿知网检测", desc: "采用仿知网检测规则，适合提交前排查 AI 风险。", badge: "推荐" },
+    { value: "vip", label: "仿维普检测", desc: "采用仿维普检测规则，适合期刊稿件和研究文本预检。", badge: "期刊" },
+    { value: "paperpass", label: "仿PaperPass检测", desc: "采用仿PaperPass检测规则，适合快速发现高风险段落。", badge: "快速" },
   ]
 })
 
