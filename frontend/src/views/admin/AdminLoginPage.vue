@@ -5,10 +5,10 @@
         <div class="scholar-auth__content scholar-auth__content--login">
           <div class="scholar-auth__masthead">
             <div>
-              <div class="scholar-auth__eyebrow">OPERATIONS CONSOLE</div>
-              <div class="scholar-login__meta">Deploy / Billing / Audit</div>
+              <div class="scholar-auth__eyebrow">运营控制台</div>
+              <div class="scholar-login__meta">部署 / 计费 / 审计</div>
             </div>
-            <span class="scholar-auth__signal">Prod-ready Controls</span>
+            <span class="scholar-auth__signal">生产级后台治理</span>
           </div>
 
           <div class="scholar-auth__headline">
@@ -22,17 +22,17 @@
             <div class="scholar-auth__ledger-label">后台控制面</div>
             <div class="scholar-auth__ledger-grid">
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">A1</div>
+                <div class="scholar-auth__ledger-index">登录</div>
                 <strong>登录与安全</strong>
                 <p>统一管理短信、微信登录、管理员账号和上线环境密钥。</p>
               </article>
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">A2</div>
+                <div class="scholar-auth__ledger-index">计费</div>
                 <strong>支付与计费</strong>
                 <p>后台配置计费策略、支付回调与积分套餐，减少部署脚本改动。</p>
               </article>
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">A3</div>
+                <div class="scholar-auth__ledger-index">审计</div>
                 <strong>审计与回溯</strong>
                 <p>任务、订单、推广和算法包都回到同一控制台中统一审计。</p>
               </article>
@@ -43,7 +43,7 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">CONTROL 01</div>
+                <div class="scholar-auth__timeline-code">第一步</div>
                 <div class="scholar-auth__timeline-title">后台保存立即生效</div>
                 <p class="scholar-auth__timeline-copy">
                   支付、短信、微信登录和模型参数尽量收拢到管理界面统一维护。
@@ -53,7 +53,7 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">CONTROL 02</div>
+                <div class="scholar-auth__timeline-code">第二步</div>
                 <div class="scholar-auth__timeline-title">就绪状态回读</div>
                 <p class="scholar-auth__timeline-copy">
                   配置是否完整、是否可用都通过控制台状态回读，而不是只依赖部署猜测。
@@ -63,7 +63,7 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">CONTROL 03</div>
+                <div class="scholar-auth__timeline-code">第三步</div>
                 <div class="scholar-auth__timeline-title">日志与任务统一审计</div>
                 <p class="scholar-auth__timeline-copy">
                   订单、推广、日志和任务结果在同一后台中回溯，更适合商业化运营。

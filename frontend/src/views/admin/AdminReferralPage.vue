@@ -1,5 +1,5 @@
-<template>
-  <AdminShell title="推广管理" subtitle="规则配置、奖励流水、异常注册">
+﻿<template>
+  <AdminShell title="推广管理" subtitle="规则配置、奖励流水与异常注册。">
     <div class="space-y-4">
       <section class="grid gap-4 md:grid-cols-4">
         <article class="rounded-2xl border border-[#d9dee4] bg-white p-4">
@@ -15,16 +15,15 @@
           <div class="mt-2 text-2xl font-semibold">{{ stats.today_new_relations || 0 }}</div>
         </article>
         <article class="rounded-2xl border border-[#d9dee4] bg-white p-4">
-          <div class="text-xs text-[#5b6771]">Top推广者数量</div>
+          <div class="text-xs text-[#5b6771]">Top 推广者数量</div>
           <div class="mt-2 text-2xl font-semibold">{{ (stats.top10 || []).length }}</div>
         </article>
       </section>
 
-      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
+      <section v-if="canManageReferrals" class="rounded-2xl border border-[#d9dee4] bg-white p-5">
         <h3 class="text-base font-semibold">推广规则配置</h3>
         <div class="mt-2 rounded-xl border border-[#e1e8ee] bg-[#f8fbff] p-3 text-sm leading-6 text-[#50606c]">
-          普通运营只需要理解 5 个字段：
-          注册奖励是“注册即送多少积分”，返佣比例是“被邀请人充值后返给邀请人的比例”，同 IP 上限是“24 小时内最多允许多少次注册”。
+          运营只需配置 5 个字段：注册奖励、返佣比例、同 IP 24 小时注册上限。
         </div>
         <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <label class="space-y-1 text-sm">
@@ -47,10 +46,6 @@
             <span>同IP 24小时注册上限</span>
             <input v-model.number="form.ip_limit_24h" class="w-full rounded-lg border border-[#ccd5dd] px-3 py-2 outline-none focus:border-[#0f7a5f]" />
           </label>
-        </div>
-        <div class="mt-3 rounded-xl border border-[#e1e8ee] bg-[#f8fbff] p-3 text-sm text-[#50606c]">
-          <div>运营预览：每邀请 1 人注册，邀请人得 {{ form.register_inviter_credits || 0 }} 积分，被邀请人得 {{ form.register_invitee_bonus || 0 }} 积分。</div>
-          <div class="mt-1">被邀请人首充时，邀请人返 {{ firstPayPct }}%；之后每次充值继续返 {{ recurringPct }}%。</div>
         </div>
         <button class="mt-3 rounded-lg bg-[#0f7a5f] px-3 py-2 text-sm text-white" @click="saveConfig">保存配置</button>
         <p v-if="hintText" class="mt-2 text-sm text-[#106c4f]">{{ hintText }}</p>
@@ -83,7 +78,8 @@
                   <span class="rounded-full bg-[#f2f6f9] px-2 py-1 text-xs text-[#44525d]">{{ mapRewardStatus(row.status) }}</span>
                 </td>
                 <td class="px-2 py-2">
-                  <button class="rounded bg-[#0f7a5f] px-2 py-1 text-xs text-white" @click="retry(row)">重试</button>
+                  <button v-if="canManageReferrals" class="rounded bg-[#0f7a5f] px-2 py-1 text-xs text-white" @click="retry(row)">重试</button>
+                  <span v-else>-</span>
                 </td>
                 <td class="px-2 py-2">{{ formatTime(row.created_at) }}</td>
               </tr>
@@ -122,10 +118,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 
 import AdminShell from "../../components/AdminShell.vue"
 import { adminHttp } from "../../lib/http"
+import { adminHasPermission } from "../../lib/session"
 
 const stats = ref({})
 const rewards = ref([])
@@ -141,21 +138,30 @@ const form = ref({
   ip_limit_24h: 3,
 })
 
+const canManageReferrals = computed(() => adminHasPermission("referrals:manage"))
+
 onMounted(loadAll)
 
 async function loadAll() {
-  const [statsData, rewardData, suspiciousData, cfgData] = await Promise.all([
+  const jobs = [
     adminHttp.get("/admin/referrals/stats"),
     adminHttp.get("/admin/referrals/rewards", { params: { page: 1, page_size: 50 } }),
     adminHttp.get("/admin/referrals/suspicious", { params: { page: 1, page_size: 50 } }),
-    adminHttp.get("/admin/referrals/config"),
-  ])
+  ]
+  if (canManageReferrals.value) {
+    jobs.push(adminHttp.get("/admin/referrals/config"))
+  }
+
+  const [statsData, rewardData, suspiciousData, cfgData] = await Promise.all(jobs)
   stats.value = statsData
   rewards.value = rewardData.items || []
   suspiciousRows.value = suspiciousData.items || []
-  form.value = { ...form.value, ...cfgData }
-  firstPayPct.value = Number((form.value.first_pay_ratio || 0) * 100)
-  recurringPct.value = Number((form.value.recurring_ratio || 0) * 100)
+
+  if (cfgData) {
+    form.value = { ...form.value, ...cfgData }
+    firstPayPct.value = Number((form.value.first_pay_ratio || 0) * 100)
+    recurringPct.value = Number((form.value.recurring_ratio || 0) * 100)
+  }
 }
 
 async function saveConfig() {

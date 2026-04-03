@@ -76,3 +76,39 @@ export function getAdminInfo() {
     return null
   }
 }
+
+function normalizePermissions(admin) {
+  const values = admin?.permissions
+  if (!Array.isArray(values)) {
+    return []
+  }
+  return values
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+}
+
+export function getAdminPermissions() {
+  return normalizePermissions(getAdminInfo())
+}
+
+export function adminHasPermission(permission) {
+  if (!permission) {
+    return true
+  }
+  const admin = getAdminInfo()
+  if (!admin) {
+    return false
+  }
+  if (admin.role === "super_admin") {
+    return true
+  }
+  const permissions = new Set(normalizePermissions(admin))
+  if (permissions.has("*") || permissions.has(permission)) {
+    return true
+  }
+  const [scope] = String(permission).split(":")
+  if (scope && permissions.has(`${scope}:*`)) {
+    return true
+  }
+  return false
+}

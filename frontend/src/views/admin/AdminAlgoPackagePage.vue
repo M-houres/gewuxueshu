@@ -1,11 +1,12 @@
-<template>
-  <AdminShell title="算法包管理" subtitle="上传、激活与版本状态">
+﻿<template>
+  <AdminShell title="算法包管理" subtitle="上传、启停与版本查看。">
     <div class="space-y-4">
       <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h3 class="text-base font-semibold">上传算法包</h3>
+          <h3 class="text-base font-semibold">算法包操作</h3>
           <div class="flex flex-wrap items-center gap-2">
             <button
+              v-if="canManageAlgo"
               class="rounded-lg border border-[#0f7a5f] bg-[#e8f4ef] px-3 py-2 text-sm text-[#0f6c53] hover:border-[#0d5f49] disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="bootstrapping"
               @click="bootstrapBuiltinPackages"
@@ -17,10 +18,11 @@
               :disabled="downloadingGuide"
               @click="downloadGuide"
             >
-              {{ downloadingGuide ? "下载中..." : "下载算法写作总规范包" }}
+              {{ downloadingGuide ? "下载中..." : "下载算法包编写规范" }}
             </button>
           </div>
         </div>
+
         <div class="mt-3 space-y-4 rounded-2xl border border-[#dee6ed] bg-[#f8fbff] p-4">
           <div>
             <div class="mb-2 text-xs font-semibold tracking-[0.08em] text-[#6b7a86]">选择平台</div>
@@ -37,6 +39,7 @@
               </button>
             </div>
           </div>
+
           <div>
             <div class="mb-2 text-xs font-semibold tracking-[0.08em] text-[#6b7a86]">功能类型</div>
             <div class="grid gap-2 md:grid-cols-3">
@@ -52,20 +55,13 @@
               </button>
             </div>
           </div>
+
           <div class="rounded-xl bg-[#eef4f9] px-3 py-2 text-xs text-[#4c5d69]">
             当前选择：{{ mapPlatform(uploadForm.platform) }} / {{ mapFunctionType(uploadForm.function_type) }}
           </div>
-          <div class="rounded-xl border border-[#d8e4ee] bg-white px-3 py-3 text-xs leading-6 text-[#4c5d69]">
-            <div class="font-semibold text-[#31414d]">上传前硬性要求</div>
-            <div>1. 必须是 `zip`，且至少包含 `manifest.json` 与入口 Python 文件。</div>
-            <div>2. `manifest.name` 只能用字母、数字、下划线、短横线；`version` 必须是语义化版本号。</div>
-            <div>3. `platform`、`function_type` 必须和当前槽位完全一致，入口路径不能是绝对路径，也不能含 `..`。</div>
-            <div>4. Python 文件和 `manifest.json` 必须是 UTF-8；`process` 必须可调用，且返回值不能是 `None`。</div>
-            <div>5. 运行时会优先传入字符串文本；如果你的 `process` 只接收对象，也要兼容 `{"text": "..."}`。</div>
-            <div>6. 当前默认单次执行超时 8 秒，上传包大小上限 200 MB。</div>
-          </div>
         </div>
-        <div class="mt-3 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
+
+        <div v-if="canManageAlgo" class="mt-3 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
           <input
             type="file"
             accept=".zip,application/zip"
@@ -84,6 +80,10 @@
             {{ uploading ? "上传中..." : "上传" }}
           </button>
         </div>
+        <p v-else class="mt-3 rounded-xl border border-[#dce4eb] bg-[#f8fbff] px-3 py-2 text-sm text-[#4f5d69]">
+          当前账号仅有查看权限，如需上传或切换算法包，请联系超级管理员授权。
+        </p>
+
         <p v-if="hintText" class="mt-3 text-sm text-[#106c4f]">{{ hintText }}</p>
         <p v-if="errorText" class="mt-3 text-sm text-[#af3f33]">{{ errorText }}</p>
       </section>
@@ -150,14 +150,16 @@
                 <td class="px-2 py-2">{{ row.smoke_status || "-" }}</td>
                 <td class="px-2 py-2">
                   <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    :class="toggleSwitchClass(row.active)"
-                    :disabled="togglingKey === buildRowKey(row)"
-                    @click="toggleRowActive(row)"
-                  >
-                    <span :class="toggleThumbClass(row.active)" />
-                  </button>
+                    <button
+                      v-if="canManageAlgo"
+                      type="button"
+                      :class="toggleSwitchClass(row.active)"
+                      :disabled="togglingKey === buildRowKey(row)"
+                      @click="toggleRowActive(row)"
+                    >
+                      <span :class="toggleThumbClass(row.active)" />
+                    </button>
+                    <span v-else class="scholar-pill">只读</span>
                     <span class="text-xs text-[#53626d]">{{ row.active ? "已启用" : "已停用" }}</span>
                   </div>
                 </td>
@@ -184,11 +186,12 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 
 import AdminShell from "../../components/AdminShell.vue"
 import { downloadAxiosBlobResponse } from "../../lib/download"
 import { adminHttp } from "../../lib/http"
+import { adminHasPermission } from "../../lib/session"
 
 const rows = ref([])
 const slots = ref([])
@@ -205,6 +208,8 @@ const uploadForm = ref({
   function_type: "dedup",
 })
 const downloadingGuide = ref(false)
+
+const canManageAlgo = computed(() => adminHasPermission("algo:manage"))
 const platformOptions = [
   { value: "cnki", label: "知网 CNKI", desc: "高校论文检测规则" },
   { value: "vip", label: "维普 VIP", desc: "期刊库检测规则" },
@@ -261,9 +266,9 @@ async function downloadGuide() {
   try {
     const response = await adminHttp.get("/admin/algo-packages/authoring-bundle", { responseType: "blob" })
     downloadAxiosBlobResponse(response, "ALGO_PACKAGE_AUTHORING_SPEC_BUNDLE.zip")
-    hintText.value = "算法写作总规范包已开始下载。"
+    hintText.value = "算法编写规范包已开始下载。"
   } catch (error) {
-    errorText.value = error.message || "下载算法写作总规范包失败"
+    errorText.value = error.message || "下载算法编写规范包失败"
   } finally {
     downloadingGuide.value = false
   }

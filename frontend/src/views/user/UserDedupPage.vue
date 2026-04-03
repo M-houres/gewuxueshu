@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <UserShell title="降重复率" subtitle="上传正文与查重报告，优先处理高重复区域并保留文档结构。" :credits="userCredits" @buy="showBuy = !showBuy">
     <TaskSubmitPanel
       title="新建降重复率任务"
-      hint="正文目前仅支持 Word 文档。上传全量查重报告后，系统会优先针对高重复段落处理。"
+      hint="降重任务采用四步流程：选平台、上传正文、可选上传查重报告、提交确认。"
       action-text="开始降重"
       task-type="dedup"
       :cost-rate="dedupRate"
@@ -23,7 +23,7 @@
       description="查看最近提交的降重任务，快速确认是否完成、失败或仍在排队。"
       :tasks="recentTasks"
       :guest="isGuest"
-      empty-text="登录并提交降重任务后，这里会显示最近 5 条记录。"
+      empty-text="提交降重任务后，这里会展示最近 5 条记录。"
       @history="goHistory"
       @login="goLogin"
     />

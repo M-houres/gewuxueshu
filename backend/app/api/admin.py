@@ -11,7 +11,12 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.constants import DEFAULT_BILLING_PACKAGES
-from app.deps import current_admin, current_super_admin, db_dep
+from app.deps import (
+    current_super_admin,
+    db_dep,
+    normalize_admin_permissions,
+    require_admin_permission,
+)
 from app.exceptions import BizError
 from app.models import (
     AdminAuditLog,
@@ -40,7 +45,7 @@ from app.schemas import (
     AlgoPackageUploadReq,
     ReferralConfigReq,
 )
-from app.security import create_token, verify_password
+from app.security import create_token, hash_password, verify_password
 from app.services.algo_package_service import (
     activate_algorithm_package,
     deactivate_algorithm_package,
@@ -184,6 +189,66 @@ CONFIG_DEFAULTS = {
 _LLM_PROVIDERS = set(SUPPORTED_LLM_PROVIDERS)
 _PAYMENT_PROVIDERS = {"wechat", "alipay", "mock", "wechatpay_v3"}
 _SMS_PROVIDERS = {"custom_webhook", "tencent_sms", "aliyun_sms", "disabled"}
+ADMIN_PERMISSION_CATALOG = [
+    {"key": "dashboard:view", "label": "查看总览看板", "group": "看板"},
+    {"key": "users:view", "label": "查看用户列表与详情", "group": "用户"},
+    {"key": "users:manage", "label": "封禁与调整用户积分", "group": "用户"},
+    {"key": "tasks:view", "label": "查看任务与结果下载", "group": "任务"},
+    {"key": "orders:view", "label": "查看订单列表与详情", "group": "订单"},
+    {"key": "orders:refund", "label": "执行订单退款", "group": "订单"},
+    {"key": "referrals:view", "label": "查看推广统计与记录", "group": "推广"},
+    {"key": "referrals:manage", "label": "修改推广规则与重试奖励", "group": "推广"},
+    {"key": "logs:view", "label": "查看系统日志", "group": "日志"},
+    {"key": "credits:view", "label": "查看积分流水", "group": "积分"},
+    {"key": "algo:view", "label": "查看算法包列表", "group": "算法包"},
+    {"key": "algo:manage", "label": "上传/启停算法包", "group": "算法包"},
+    {"key": "configs:view", "label": "查看系统配置", "group": "系统配置"},
+    {"key": "configs:manage", "label": "修改系统配置", "group": "系统配置"},
+    {"key": "system:manage", "label": "切换系统运行模式", "group": "系统模式"},
+]
+ADMIN_PERMISSION_KEYS = {item["key"] for item in ADMIN_PERMISSION_CATALOG}
+DEFAULT_OPERATOR_PERMISSIONS = {
+    "dashboard:view",
+    "users:view",
+    "users:manage",
+    "tasks:view",
+    "orders:view",
+    "orders:refund",
+    "referrals:view",
+    "logs:view",
+    "credits:view",
+    "algo:view",
+}
+
+
+def _effective_admin_permissions(admin: AdminUser) -> list[str]:
+    if admin.role == "super_admin":
+        return ["*"]
+    permissions = normalize_admin_permissions(admin.permissions_json)
+    if not permissions:
+        permissions = set(DEFAULT_OPERATOR_PERMISSIONS)
+    return sorted(permissions)
+
+
+def _admin_payload(admin: AdminUser) -> dict:
+    return {
+        "id": admin.id,
+        "username": admin.username,
+        "role": admin.role,
+        "is_active": bool(getattr(admin, "is_active", True)),
+        "permissions": _effective_admin_permissions(admin),
+        "last_login": admin.last_login,
+        "created_at": admin.created_at,
+        "updated_at": admin.updated_at,
+    }
+
+
+def _normalize_permission_list(raw) -> list[str]:
+    values = normalize_admin_permissions(raw)
+    unsupported = sorted(values - ADMIN_PERMISSION_KEYS)
+    if unsupported:
+        raise BizError(code=4308, message=f"存在不支持的权限: {','.join(unsupported)}")
+    return sorted(values)
 
 
 def _assert_category(category: str) -> str:
@@ -864,14 +929,181 @@ def admin_login(req: AdminLoginReq, db: Session = Depends(db_dep)) -> APIResp:
     admin = db.query(AdminUser).filter(AdminUser.username == req.username).first()
     if admin is None or not verify_password(req.password, admin.password_hash):
         raise BizError(code=4301, message="管理员账号或密码错误")
+    if not bool(getattr(admin, "is_active", True)):
+        raise BizError(code=4309, message="管理员账号已停用，请联系超级管理员")
     admin.last_login = datetime.utcnow()
     db.commit()
     token = create_token(subject=str(admin.id), scope="admin")
-    return ok(data={"token": token, "admin": {"id": admin.id, "username": admin.username, "role": admin.role}})
+    return ok(data={"token": token, "admin": _admin_payload(admin), "permission_catalog": ADMIN_PERMISSION_CATALOG})
+
+
+@router.get("/admin-users", response_model=APIResp)
+def list_admin_users(
+    _: AdminUser = Depends(current_super_admin),
+    db: Session = Depends(db_dep),
+) -> APIResp:
+    rows = db.query(AdminUser).order_by(desc(AdminUser.created_at)).all()
+    return ok(
+        data={
+            "items": [_admin_payload(row) for row in rows],
+            "permission_catalog": ADMIN_PERMISSION_CATALOG,
+        }
+    )
+
+
+@router.post("/admin-users", response_model=APIResp)
+def create_admin_user(
+    payload: dict,
+    admin: AdminUser = Depends(current_super_admin),
+    db: Session = Depends(db_dep),
+) -> APIResp:
+    if not isinstance(payload, dict):
+        raise BizError(code=4302, message="请求体必须为 JSON 对象")
+    username = str(payload.get("username", "")).strip()
+    password = str(payload.get("password", "")).strip()
+    role = str(payload.get("role", "operator")).strip().lower() or "operator"
+    is_active = bool(payload.get("is_active", True))
+    if len(username) < 3:
+        raise BizError(code=4303, message="管理员用户名至少 3 位")
+    if len(password) < 8:
+        raise BizError(code=4304, message="管理员密码至少 8 位")
+    if role == "super_admin":
+        raise BizError(code=4305, message="禁止通过该接口创建超级管理员")
+    if db.query(AdminUser.id).filter(AdminUser.username == username).first():
+        raise BizError(code=4306, message="管理员用户名已存在")
+
+    permissions = payload.get("permissions")
+    if permissions is None:
+        normalized_permissions = sorted(DEFAULT_OPERATOR_PERMISSIONS)
+    else:
+        normalized_permissions = _normalize_permission_list(permissions)
+
+    row = AdminUser(
+        username=username,
+        password_hash=hash_password(password),
+        role=role,
+        is_active=is_active,
+        permissions_json=normalized_permissions,
+    )
+    db.add(row)
+    db.flush()
+    db.add(
+        AdminAuditLog(
+            admin_id=admin.id,
+            action="admin_create",
+            target_type="admin_user",
+            target_id=str(row.id),
+            before_json=None,
+            after_json={
+                "username": row.username,
+                "role": row.role,
+                "is_active": row.is_active,
+                "permissions": normalized_permissions,
+            },
+        )
+    )
+    db.commit()
+    db.refresh(row)
+    return ok(data={"admin": _admin_payload(row)})
+
+
+@router.post("/admin-users/{admin_id}/permissions", response_model=APIResp)
+def update_admin_permissions(
+    admin_id: int,
+    payload: dict,
+    actor: AdminUser = Depends(current_super_admin),
+    db: Session = Depends(db_dep),
+) -> APIResp:
+    if not isinstance(payload, dict):
+        raise BizError(code=4302, message="请求体必须为 JSON 对象")
+    target = db.get(AdminUser, admin_id)
+    if target is None:
+        raise BizError(code=4307, message="管理员不存在", http_status=404)
+    if target.role == "super_admin":
+        raise BizError(code=4310, message="超级管理员权限固定为全量权限")
+    permissions = _normalize_permission_list(payload.get("permissions", []))
+    before = _effective_admin_permissions(target)
+    target.permissions_json = permissions
+    db.add(
+        AdminAuditLog(
+            admin_id=actor.id,
+            action="admin_permissions_update",
+            target_type="admin_user",
+            target_id=str(target.id),
+            before_json={"permissions": before},
+            after_json={"permissions": permissions},
+        )
+    )
+    db.commit()
+    db.refresh(target)
+    return ok(data={"admin": _admin_payload(target)})
+
+
+@router.post("/admin-users/{admin_id}/password", response_model=APIResp)
+def reset_admin_password(
+    admin_id: int,
+    payload: dict,
+    actor: AdminUser = Depends(current_super_admin),
+    db: Session = Depends(db_dep),
+) -> APIResp:
+    if not isinstance(payload, dict):
+        raise BizError(code=4302, message="请求体必须为 JSON 对象")
+    password = str(payload.get("password", "")).strip()
+    if len(password) < 8:
+        raise BizError(code=4304, message="管理员密码至少 8 位")
+    target = db.get(AdminUser, admin_id)
+    if target is None:
+        raise BizError(code=4307, message="管理员不存在", http_status=404)
+    target.password_hash = hash_password(password)
+    db.add(
+        AdminAuditLog(
+            admin_id=actor.id,
+            action="admin_password_reset",
+            target_type="admin_user",
+            target_id=str(target.id),
+            before_json=None,
+            after_json={"password_reset": True},
+        )
+    )
+    db.commit()
+    db.refresh(target)
+    return ok(data={"admin": _admin_payload(target)})
+
+
+@router.post("/admin-users/{admin_id}/status", response_model=APIResp)
+def update_admin_status(
+    admin_id: int,
+    payload: dict,
+    actor: AdminUser = Depends(current_super_admin),
+    db: Session = Depends(db_dep),
+) -> APIResp:
+    if not isinstance(payload, dict):
+        raise BizError(code=4302, message="请求体必须为 JSON 对象")
+    target = db.get(AdminUser, admin_id)
+    if target is None:
+        raise BizError(code=4307, message="管理员不存在", http_status=404)
+    next_status = bool(payload.get("is_active", True))
+    if target.role == "super_admin" and not next_status:
+        raise BizError(code=4311, message="超级管理员账号不可停用")
+    before = bool(getattr(target, "is_active", True))
+    target.is_active = next_status
+    db.add(
+        AdminAuditLog(
+            admin_id=actor.id,
+            action="admin_status_update",
+            target_type="admin_user",
+            target_id=str(target.id),
+            before_json={"is_active": before},
+            after_json={"is_active": next_status},
+        )
+    )
+    db.commit()
+    db.refresh(target)
+    return ok(data={"admin": _admin_payload(target)})
 
 
 @router.get("/dashboard", response_model=APIResp)
-def dashboard(_: AdminUser = Depends(current_admin), db: Session = Depends(db_dep)) -> APIResp:
+def dashboard(_: AdminUser = Depends(require_admin_permission("dashboard:view")), db: Session = Depends(db_dep)) -> APIResp:
     total_users = db.query(User).count()
     total_tasks = db.query(Task).count()
     total_orders = db.query(Order).filter(Order.status == "paid").count()
@@ -942,7 +1174,7 @@ def dashboard(_: AdminUser = Depends(current_admin), db: Session = Depends(db_de
 
 
 @router.get("/switch/current", response_model=APIResp)
-def switch_current(_: AdminUser = Depends(current_admin), db: Session = Depends(db_dep)) -> APIResp:
+def switch_current(_: AdminUser = Depends(require_admin_permission("dashboard:view")), db: Session = Depends(db_dep)) -> APIResp:
     switch = db.query(SystemSwitch).first()
     if switch is None:
         switch = SystemSwitch(
@@ -967,7 +1199,7 @@ def switch_current(_: AdminUser = Depends(current_admin), db: Session = Depends(
 @router.post("/switch/mode", response_model=APIResp)
 def switch_mode(
     payload: dict,
-    admin: AdminUser = Depends(current_super_admin),
+    admin: AdminUser = Depends(require_admin_permission("system:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     mode = str(payload.get("mode", "")).strip().upper()
@@ -1002,7 +1234,7 @@ def switch_mode(
 def switch_logs(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("logs:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(SwitchLog)
@@ -1031,7 +1263,7 @@ def llm_error_logs(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     error_type: str | None = Query(default=None),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("logs:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(LLMErrorLog)
@@ -1063,7 +1295,7 @@ def admin_users(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     q: str | None = Query(default=None),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("users:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(User)
@@ -1094,7 +1326,7 @@ def admin_users(
 def adjust_user_credits(
     user_id: int,
     req: AdminAdjustCreditReq,
-    admin: AdminUser = Depends(current_admin),
+    admin: AdminUser = Depends(require_admin_permission("users:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     user = db.get(User, user_id)
@@ -1119,7 +1351,7 @@ def adjust_user_credits(
 def ban_or_unban_user(
     user_id: int,
     payload: dict,
-    admin: AdminUser = Depends(current_admin),
+    admin: AdminUser = Depends(require_admin_permission("users:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     user = db.get(User, user_id)
@@ -1144,7 +1376,7 @@ def ban_or_unban_user(
 @router.get("/users/{user_id}/detail", response_model=APIResp)
 def user_detail(
     user_id: int,
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("users:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     user = db.get(User, user_id)
@@ -1233,7 +1465,7 @@ def admin_tasks(
     status: str | None = Query(default=None),
     start_date: str | None = Query(default=None),
     end_date: str | None = Query(default=None),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("tasks:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(Task).join(User, User.id == Task.user_id)
@@ -1291,7 +1523,7 @@ def admin_tasks(
 @router.get("/tasks/{task_id}/detail", response_model=APIResp)
 def admin_task_detail(
     task_id: int,
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("tasks:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     row = db.get(Task, task_id)
@@ -1323,7 +1555,7 @@ def admin_task_detail(
 @router.get("/tasks/{task_id}/download")
 def admin_task_download(
     task_id: int,
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("tasks:view")),
     db: Session = Depends(db_dep),
 ) -> FileResponse:
     row = db.get(Task, task_id)
@@ -1345,7 +1577,7 @@ def admin_orders(
     order_no: str | None = Query(default=None),
     status: str | None = Query(default=None),
     provider: str | None = Query(default=None),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("orders:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(Order).join(User, User.id == Order.user_id)
@@ -1380,7 +1612,7 @@ def admin_orders(
 
 
 @router.get("/orders/{order_no}/detail", response_model=APIResp)
-def order_detail(order_no: str, _: AdminUser = Depends(current_admin), db: Session = Depends(db_dep)) -> APIResp:
+def order_detail(order_no: str, _: AdminUser = Depends(require_admin_permission("orders:view")), db: Session = Depends(db_dep)) -> APIResp:
     row = db.query(Order).filter(Order.order_no == order_no).first()
     if row is None:
         raise BizError(code=4044, message="订单不存在", http_status=404)
@@ -1404,7 +1636,7 @@ def order_detail(order_no: str, _: AdminUser = Depends(current_admin), db: Sessi
 @router.post("/orders/{order_no}/refund", response_model=APIResp)
 def refund_order(
     order_no: str,
-    admin: AdminUser = Depends(current_admin),
+    admin: AdminUser = Depends(require_admin_permission("orders:refund")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     order = db.query(Order).filter(Order.order_no == order_no).with_for_update().first()
@@ -1442,7 +1674,7 @@ def refund_order(
 
 
 @router.get("/referrals/stats", response_model=APIResp)
-def referral_stats(_: AdminUser = Depends(current_admin), db: Session = Depends(db_dep)) -> APIResp:
+def referral_stats(_: AdminUser = Depends(require_admin_permission("referrals:view")), db: Session = Depends(db_dep)) -> APIResp:
     total_relations = db.query(ReferralRelation).count()
     total_reward = db.query(func.coalesce(func.sum(ReferralReward.credits), 0)).scalar() or 0
     today_start = datetime.combine(date.today(), datetime.min.time())
@@ -1469,7 +1701,7 @@ def referral_stats(_: AdminUser = Depends(current_admin), db: Session = Depends(
 def referral_rewards(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("referrals:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(ReferralReward)
@@ -1501,7 +1733,7 @@ def referral_rewards(
 def suspicious_accounts(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("referrals:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(RegistrationRiskLog)
@@ -1529,7 +1761,7 @@ def suspicious_accounts(
 @router.post("/referrals/config", response_model=APIResp)
 def update_referral_config(
     req: ReferralConfigReq,
-    admin: AdminUser = Depends(current_super_admin),
+    admin: AdminUser = Depends(require_admin_permission("referrals:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     data = update_referral_rules(db, req.model_dump(), admin.id)
@@ -1538,7 +1770,7 @@ def update_referral_config(
 
 
 @router.get("/referrals/config", response_model=APIResp)
-def get_referral_config(_: AdminUser = Depends(current_super_admin), db: Session = Depends(db_dep)) -> APIResp:
+def get_referral_config(_: AdminUser = Depends(require_admin_permission("referrals:manage")), db: Session = Depends(db_dep)) -> APIResp:
     return ok(data=get_referral_rules(db))
 
 
@@ -1546,7 +1778,7 @@ def get_referral_config(_: AdminUser = Depends(current_super_admin), db: Session
 def config_audit_logs(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    _: AdminUser = Depends(current_super_admin),
+    _: AdminUser = Depends(require_admin_permission("configs:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(AdminAuditLog).filter(AdminAuditLog.action == "config_update")
@@ -1584,7 +1816,7 @@ def config_audit_logs(
 
 @router.get("/configs/readiness", response_model=APIResp)
 def get_config_readiness(
-    _: AdminUser = Depends(current_super_admin),
+    _: AdminUser = Depends(require_admin_permission("configs:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     items = []
@@ -1597,7 +1829,7 @@ def get_config_readiness(
 @router.get("/configs/{category}", response_model=APIResp)
 def get_config(
     category: str,
-    _: AdminUser = Depends(current_super_admin),
+    _: AdminUser = Depends(require_admin_permission("configs:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     c = _assert_category(category)
@@ -1608,7 +1840,7 @@ def get_config(
 def update_config(
     category: str,
     payload: dict,
-    admin: AdminUser = Depends(current_super_admin),
+    admin: AdminUser = Depends(require_admin_permission("configs:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     c = _assert_category(category)
@@ -1625,7 +1857,11 @@ def update_config(
 
 
 @router.post("/referrals/rewards/{reward_id}/retry", response_model=APIResp)
-def retry_referral_reward(reward_id: int, _: AdminUser = Depends(current_admin), db: Session = Depends(db_dep)) -> APIResp:
+def retry_referral_reward(
+    reward_id: int,
+    _: AdminUser = Depends(require_admin_permission("referrals:manage")),
+    db: Session = Depends(db_dep),
+) -> APIResp:
     row = db.get(ReferralReward, reward_id)
     if row is None:
         raise BizError(code=4043, message="奖励记录不存在", http_status=404)
@@ -1639,7 +1875,7 @@ def retry_referral_reward(reward_id: int, _: AdminUser = Depends(current_admin),
 def credit_transactions(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("credits:view")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     base_query = db.query(CreditTransaction)
@@ -1668,14 +1904,14 @@ def credit_transactions(
 
 
 @router.get("/algo-packages", response_model=APIResp)
-def get_algo_packages(_: AdminUser = Depends(current_admin), db: Session = Depends(db_dep)) -> APIResp:
+def get_algo_packages(_: AdminUser = Depends(require_admin_permission("algo:view")), db: Session = Depends(db_dep)) -> APIResp:
     data = list_algorithm_packages(db)
     return ok(data=data)
 
 
 @router.get("/algo-packages/guide")
 @router.get("/algo-package-guide")
-def download_algo_package_guide(_: AdminUser = Depends(current_admin)) -> Response:
+def download_algo_package_guide(_: AdminUser = Depends(require_admin_permission("algo:view"))) -> Response:
     guide_path = Path(__file__).resolve().parents[2] / "docs" / "ALGO_PACKAGE_AUTHORING_GUIDE.md"
     if not guide_path.exists():
         raise BizError(code=4501, message="算法包撰写说明不存在", http_status=404)
@@ -1688,7 +1924,7 @@ def download_algo_package_guide(_: AdminUser = Depends(current_admin)) -> Respon
 
 
 @router.get("/algo-packages/authoring-bundle")
-def download_algo_package_authoring_bundle(_: AdminUser = Depends(current_admin)) -> Response:
+def download_algo_package_authoring_bundle(_: AdminUser = Depends(require_admin_permission("algo:view"))) -> Response:
     filename, content = build_authoring_spec_bundle()
     headers = {
         "Content-Disposition": f'attachment; filename="{filename}"; filename*=UTF-8\'\'{filename}',
@@ -1701,7 +1937,7 @@ def download_algo_package_authoring_bundle(_: AdminUser = Depends(current_admin)
 def download_algo_package_template(
     platform: str = Query(...),
     function_type: str = Query(...),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("algo:view")),
 ) -> Response:
     filename, content = build_builtin_template_package(platform=platform, function_type=function_type)
     headers = {
@@ -1716,7 +1952,7 @@ def download_algo_package_archive(
     platform: str = Query(...),
     function_type: str = Query(...),
     version: str = Query(...),
-    _: AdminUser = Depends(current_admin),
+    _: AdminUser = Depends(require_admin_permission("algo:view")),
 ) -> Response:
     package_path = get_algorithm_package_archive_path(
         platform=platform,
@@ -1735,7 +1971,7 @@ def download_algo_package_archive(
 @router.post("/algo-packages/bootstrap", response_model=APIResp)
 def bootstrap_algo_packages(
     activate: bool = Query(default=True),
-    admin: AdminUser = Depends(current_super_admin),
+    admin: AdminUser = Depends(require_admin_permission("algo:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     try:
@@ -1756,7 +1992,7 @@ def upload_algo_package(
     platform: str = Form(...),
     function_type: str = Form(...),
     activate: bool = Form(default=True),
-    admin: AdminUser = Depends(current_super_admin),
+    admin: AdminUser = Depends(require_admin_permission("algo:manage")),
     db: Session = Depends(db_dep),
     file: UploadFile = File(...),
 ) -> APIResp:
@@ -1783,7 +2019,7 @@ def upload_algo_package(
 @router.post("/algo-packages/activate", response_model=APIResp)
 def activate_algo_package(
     req: AlgoPackageActivateReq,
-    admin: AdminUser = Depends(current_super_admin),
+    admin: AdminUser = Depends(require_admin_permission("algo:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     try:
@@ -1804,7 +2040,7 @@ def activate_algo_package(
 @router.post("/algo-packages/deactivate", response_model=APIResp)
 def deactivate_algo_package_slot(
     req: AlgoPackageUploadReq,
-    admin: AdminUser = Depends(current_super_admin),
+    admin: AdminUser = Depends(require_admin_permission("algo:manage")),
     db: Session = Depends(db_dep),
 ) -> APIResp:
     try:

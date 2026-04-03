@@ -12,25 +12,25 @@
   --font-display:
     "Baskerville", "Iowan Old Style", "Palatino Linotype", "Source Han Serif SC", "Noto Serif CJK SC",
     "Songti SC", serif;
-  --bg: #f2ebe1;
-  --bg-soft: #e7ddd0;
-  --paper: rgba(255, 251, 245, 0.86);
-  --paper-strong: #fffdf9;
-  --paper-muted: #f7f1e6;
-  --line: rgba(154, 127, 83, 0.16);
-  --line-strong: rgba(125, 102, 66, 0.3);
-  --ink: #1c2732;
-  --ink-soft: #61707a;
-  --ink-faint: #86929a;
-  --accent: #173f48;
-  --accent-strong: #102f36;
-  --accent-soft: #dfe9eb;
-  --accent-warm: #9a6c33;
-  --success: #16664d;
-  --warn: #8b6420;
-  --danger: #a33e38;
-  --shadow-soft: 0 20px 54px rgba(24, 35, 45, 0.08);
-  --shadow-strong: 0 38px 92px rgba(18, 27, 38, 0.16);
+  --bg: #edf3ef;
+  --bg-soft: #dce7e0;
+  --paper: rgba(255, 255, 252, 0.88);
+  --paper-strong: #fffef8;
+  --paper-muted: #f3f7f2;
+  --line: rgba(93, 114, 96, 0.18);
+  --line-strong: rgba(72, 92, 76, 0.32);
+  --ink: #1f2b2d;
+  --ink-soft: #5b6c6e;
+  --ink-faint: #7a898b;
+  --accent: #1c5b54;
+  --accent-strong: #154742;
+  --accent-soft: #dfece8;
+  --accent-warm: #8d6b43;
+  --success: #1e7254;
+  --warn: #8f6528;
+  --danger: #ad433d;
+  --shadow-soft: 0 16px 38px rgba(17, 31, 35, 0.08);
+  --shadow-strong: 0 32px 74px rgba(12, 24, 28, 0.16);
   --radius-xl: 28px;
   --radius-lg: 22px;
   --radius-md: 16px;
@@ -58,10 +58,10 @@ body {
   font-family: var(--font-sans);
   color: var(--ink);
   background:
-    radial-gradient(circle at 12% 12%, rgba(23, 63, 72, 0.12), transparent 24%),
-    radial-gradient(circle at 88% 10%, rgba(154, 108, 51, 0.16), transparent 18%),
-    radial-gradient(circle at 52% 100%, rgba(20, 59, 66, 0.08), transparent 28%),
-    linear-gradient(180deg, #fcfaf5, #efe6d8 100%);
+    radial-gradient(circle at 10% 8%, rgba(28, 91, 84, 0.14), transparent 26%),
+    radial-gradient(circle at 88% 12%, rgba(141, 107, 67, 0.16), transparent 20%),
+    radial-gradient(circle at 50% 100%, rgba(34, 92, 84, 0.09), transparent 30%),
+    linear-gradient(180deg, #fafdfb, #e7efe9 100%);
   line-height: 1.6;
 }
 
@@ -71,8 +71,8 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(146, 122, 84, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(146, 122, 84, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(124, 145, 127, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 145, 127, 0.05) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 68%);
   opacity: 0.3;
@@ -139,15 +139,15 @@ h6 {
 .scholar-shell {
   display: grid;
   grid-template-columns: minmax(272px, 308px) minmax(0, 1fr);
-  gap: 28px;
-  padding: 28px;
+  gap: 24px;
+  padding: 24px;
 }
 
 .scholar-sidebar {
-  position: sticky;
-  top: 28px;
+  position: relative;
+  top: auto;
   align-self: start;
-  min-height: calc(100vh - 56px);
+  min-height: auto;
   border: 1px solid rgba(125, 102, 66, 0.16);
   border-radius: 34px;
   background:
@@ -195,7 +195,7 @@ h6 {
 .scholar-brand__title {
   margin-top: 12px;
   font-family: var(--font-display);
-  font-size: clamp(36px, 3vw, 44px);
+  font-size: clamp(40px, 3.4vw, 52px);
   line-height: 1.02;
 }
 
@@ -395,9 +395,9 @@ h6 {
 }
 
 .scholar-topbar {
-  position: sticky;
-  top: 28px;
-  z-index: 10;
+  position: relative;
+  top: auto;
+  z-index: 1;
   padding: 22px 24px;
   border: 1px solid rgba(125, 102, 66, 0.14);
   border-radius: 32px;
@@ -435,7 +435,7 @@ h6 {
 .scholar-topbar__title {
   margin-top: 8px;
   font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 32px);
+  font-size: clamp(24px, 2.6vw, 30px);
   line-height: 1.12;
 }
 
@@ -1336,6 +1336,11 @@ h6 {
 }
 
 .scholar-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.scholar-step-list {
   display: grid;
   gap: 16px;
 }

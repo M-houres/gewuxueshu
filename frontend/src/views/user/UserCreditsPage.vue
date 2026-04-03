@@ -1,7 +1,7 @@
 <template>
   <UserShell title="积分流水" subtitle="查看所有积分变动记录" :credits="userCredits" @buy="showBuy = !showBuy">
     <section v-if="isGuest" class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-      <h3 class="text-base font-semibold">游客模式</h3>
+      <h3 class="text-base font-semibold">登录后查看积分流水</h3>
       <p class="mt-2 text-sm leading-6 text-[#556470]">积分流水仅对已登录用户展示。登录后可查看消费、退款、返佣等完整记录。</p>
       <button class="mt-4 rounded-lg bg-[#0f7a5f] px-4 py-2 text-sm text-white" @click="goLogin">
         登录后查看积分流水

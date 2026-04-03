@@ -1,16 +1,14 @@
-<template>
+﻿<template>
   <div class="scholar-page academic-shell-enter">
-    <div class="scholar-shell">
+    <div class="scholar-shell scholar-shell--admin">
       <aside class="scholar-sidebar">
         <div class="scholar-brand">
           <div class="scholar-brand__eyebrow">运营后台</div>
-          <div class="scholar-brand__title">运营控制台</div>
-          <p class="scholar-brand__lead">
-            把用户、订单、任务、推广、算法包和配置审计收进同一个后台，减少部署时反复改环境变量。
-          </p>
+          <div class="scholar-brand__title">格物学术</div>
+          <p class="scholar-brand__lead">统一管理用户、任务、订单、推广、配置与审计，支持多管理员协同运营。</p>
         </div>
 
-        <section class="scholar-sidebar__section">
+        <section v-if="coreMenus.length" class="scholar-sidebar__section">
           <div class="scholar-sidebar__label">核心运营</div>
           <nav class="scholar-nav">
             <RouterLink
@@ -41,36 +39,16 @@
         </section>
 
         <div class="scholar-rail-card scholar-rail-card--accent">
-          <div class="scholar-rail-card__eyeline">系统状态</div>
-          <div class="scholar-rail-card__headline">{{ systemModeText }}</div>
+          <div class="scholar-rail-card__eyeline">当前账号</div>
+          <div class="scholar-rail-card__headline">{{ adminInfo?.username || '未登录' }}</div>
           <div class="scholar-rail-card__body">
-            运行模式由后台接口实时回读，避免界面状态和系统真实状态脱节。
+            角色：{{ roleLabel }}
+            <br />
+            模式：{{ systemModeText }}
           </div>
-          <div class="scholar-rail-card__grid">
-            <div class="scholar-rail-card__metric">
-              <span>当前模块</span>
-              <strong>{{ activeMenu?.label || "后台" }}</strong>
-            </div>
-            <div class="scholar-rail-card__metric">
-              <span>管理员角色</span>
-              <strong>{{ adminInfo?.role || "admin" }}</strong>
-            </div>
+          <div class="scholar-inline-actions" style="margin-top: 12px">
+            <button class="scholar-button scholar-button--secondary scholar-button--block" type="button" @click="logout">退出后台</button>
           </div>
-        </div>
-
-        <div class="scholar-rail-card">
-          <div class="scholar-rail-card__label">当前管理员</div>
-          <div class="scholar-rail-card__body">
-            {{ adminInfo ? `${adminInfo.username} / ${adminInfo.role}` : "未识别管理员信息" }}
-          </div>
-          <button
-            class="scholar-button scholar-button--secondary"
-            style="margin-top: 14px; width: 100%"
-            type="button"
-            @click="logout"
-          >
-            退出后台
-          </button>
         </div>
       </aside>
 
@@ -80,36 +58,30 @@
             <div>
               <div class="scholar-topbar__eyebrow">当前模块</div>
               <div class="scholar-topbar__title">{{ title }}</div>
-              <p class="scholar-topbar__lead">
-                {{ subtitle || "后台配置尽量收拢到管理界面，部署时减少环境变量依赖。" }}
-              </p>
+              <p class="scholar-topbar__lead">{{ subtitle || '后台配置尽量收敛到页面维护，减少依赖环境变量的手工操作。' }}</p>
             </div>
 
             <div class="scholar-topbar__status">
-              <span class="scholar-badge scholar-badge--info">
-                {{ adminInfo?.role || "admin" }}
-              </span>
-              <span class="scholar-badge" :class="systemModeBadgeClass">
-                {{ systemModeText }}
-              </span>
+              <span class="scholar-badge scholar-badge--info">{{ roleLabel }}</span>
+              <span class="scholar-badge" :class="systemModeBadgeClass">{{ systemModeText }}</span>
             </div>
           </div>
 
           <div class="scholar-topbar__brief">
             <article class="scholar-topbar__brief-item">
-              <span>当前位置</span>
-              <strong>{{ activeMenu?.label || "后台" }}</strong>
-              <p>详情页和列表页共用同一导航高亮，避免丢失位置感。</p>
+              <span>当前页面</span>
+              <strong>{{ activeMenu?.label || '后台' }}</strong>
+              <p>左侧导航会根据管理员权限自动显示可访问模块。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>管理方式</span>
-              <strong>配置优先，环境变量兜底</strong>
-              <p>关键参数统一沉到后台维护，部署后仍可在线调整。</p>
+              <span>权限模型</span>
+              <strong>超管统一分配</strong>
+              <p>普通管理员只在被授权的模块内操作，避免越权修改。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>权限边界</span>
-              <strong>{{ adminInfo?.role || "admin" }}</strong>
-              <p>超管专属能力会被路由守卫和接口权限同时约束。</p>
+              <span>配置策略</span>
+              <strong>线上可维护</strong>
+              <p>关键业务参数可直接在后台修改并记录审计日志。</p>
             </article>
           </div>
         </header>
@@ -127,7 +99,7 @@ import { computed, onMounted, ref } from "vue"
 import { RouterLink, useRoute, useRouter } from "vue-router"
 
 import { adminHttp } from "../lib/http"
-import { clearAdminSession, getAdminInfo } from "../lib/session"
+import { adminHasPermission, clearAdminSession, getAdminInfo } from "../lib/session"
 
 defineProps({
   title: {
@@ -145,24 +117,30 @@ const route = useRoute()
 const adminInfo = ref(getAdminInfo())
 const systemMode = ref("LLM_PLUS_ALGO")
 
-const coreMenus = computed(() => [
-  { path: "/admin/dashboard", label: "总览看板" },
-  { path: "/admin/users", label: "用户管理" },
-  { path: "/admin/tasks", label: "任务管理" },
-  { path: "/admin/orders", label: "订单管理" },
-  { path: "/admin/referrals", label: "推广管理" },
-  { path: "/admin/logs", label: "系统日志" },
-])
-
-const advancedMenus = computed(() => {
-  if (adminInfo.value?.role !== "super_admin") {
-    return []
+const roleLabel = computed(() => {
+  if (adminInfo.value?.role === "super_admin") {
+    return "超级管理员"
   }
-  return [
-    { path: "/admin/algo-packages", label: "算法包管理" },
-    { path: "/admin/configs", label: "配置中心" },
-  ]
+  return "普通管理员"
 })
+
+const coreMenuDefs = [
+  { path: "/admin/dashboard", label: "总览看板", permission: "dashboard:view" },
+  { path: "/admin/users", label: "用户管理", permission: "users:view" },
+  { path: "/admin/tasks", label: "任务管理", permission: "tasks:view" },
+  { path: "/admin/orders", label: "订单管理", permission: "orders:view" },
+  { path: "/admin/referrals", label: "推广管理", permission: "referrals:view" },
+  { path: "/admin/logs", label: "系统日志", permission: "logs:view" },
+]
+
+const advancedMenuDefs = [
+  { path: "/admin/algo-packages", label: "算法包管理", permission: "algo:view" },
+  { path: "/admin/configs", label: "配置中心", permission: "configs:view" },
+  { path: "/admin/admin-users", label: "管理员管理", permission: "admins:view" },
+]
+
+const coreMenus = computed(() => coreMenuDefs.filter((item) => adminHasPermission(item.permission)))
+const advancedMenus = computed(() => advancedMenuDefs.filter((item) => adminHasPermission(item.permission)))
 
 const menus = computed(() => [...coreMenus.value, ...advancedMenus.value])
 const activeMenu = computed(() => menus.value.find((item) => isRouteMatch(route.path, item.path)) || menus.value[0] || null)
@@ -184,6 +162,9 @@ const systemModeBadgeClass = computed(() => {
 onMounted(loadSystemStatus)
 
 async function loadSystemStatus() {
+  if (!adminHasPermission("dashboard:view")) {
+    return
+  }
   try {
     const data = await adminHttp.get("/admin/switch/current")
     systemMode.value = data.current_mode || "LLM_PLUS_ALGO"

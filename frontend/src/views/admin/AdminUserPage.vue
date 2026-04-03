@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <AdminShell title="用户管理" subtitle="查询用户、封禁状态与积分调整。">
     <section class="scholar-panel">
       <div class="scholar-panel__header">
-        <div class="scholar-kicker">User Search</div>
+        <div class="scholar-kicker">用户搜索</div>
         <h3 class="scholar-subtitle">检索与筛选</h3>
       </div>
 
@@ -69,10 +69,10 @@
                     <button class="scholar-button scholar-button--secondary" type="button" @click="goDetail(row)">
                       查看详情
                     </button>
-                    <button class="scholar-button scholar-button--ghost" type="button" @click="toggleBan(row)">
+                    <button v-if="canManageUsers" class="scholar-button scholar-button--ghost" type="button" @click="toggleBan(row)">
                       {{ row.is_banned ? "解封" : "封禁" }}
                     </button>
-                    <button class="scholar-button" type="button" @click="openAdjust(row)">
+                    <button v-if="canManageUsers" class="scholar-button" type="button" @click="openAdjust(row)">
                       调整积分
                     </button>
                   </div>
@@ -89,10 +89,10 @@
       </div>
     </section>
 
-    <section v-if="editing" class="scholar-panel scholar-panel--soft">
+    <section v-if="editing && canManageUsers" class="scholar-panel scholar-panel--soft">
       <div class="scholar-panel__body">
-        <div class="scholar-kicker">Credits Adjust</div>
-        <h3 class="scholar-subtitle">调整积分：{{ editing.phone }}</h3>
+        <div class="scholar-kicker">积分调整</div>
+        <h3 class="scholar-subtitle">调整用户积分：{{ editing.phone }}</h3>
         <div class="scholar-grid md:grid-cols-3" style="margin-top: 18px">
           <input v-model.number="delta" class="scholar-input" placeholder="输入正负积分" />
           <input v-model.trim="reason" class="scholar-input" placeholder="调整原因" />
@@ -111,6 +111,7 @@ import { useRouter } from "vue-router"
 
 import AdminShell from "../../components/AdminShell.vue"
 import { adminHttp } from "../../lib/http"
+import { adminHasPermission } from "../../lib/session"
 
 const router = useRouter()
 const rows = ref([])
@@ -121,6 +122,8 @@ const delta = ref(0)
 const reason = ref("")
 const hintText = ref("")
 const errorText = ref("")
+
+const canManageUsers = computed(() => adminHasPermission("users:manage"))
 const statusFilters = [
   { value: "", label: "全部状态" },
   { value: "active", label: "正常" },

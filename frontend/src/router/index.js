@@ -1,7 +1,7 @@
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
 
 import { resolveAdminRedirect, resolveUserRedirect } from '../lib/redirect'
-import { getAdminInfo, getAdminToken, getUserToken } from '../lib/session'
+import { adminHasPermission, getAdminInfo, getAdminToken, getUserToken } from '../lib/session'
 
 const AdminLoginPage = () => import('../views/admin/AdminLoginPage.vue')
 const AdminOrderPage = () => import('../views/admin/AdminOrderPage.vue')
@@ -13,6 +13,7 @@ const AdminDashboardPage = () => import('../views/admin/AdminDashboardPage.vue')
 const AdminAlgoPackagePage = () => import('../views/admin/AdminAlgoPackagePage.vue')
 const AdminConfigPage = () => import('../views/admin/AdminConfigPage.vue')
 const AdminLogsPage = () => import('../views/admin/AdminLogsPage.vue')
+const AdminAdminUsersPage = () => import('../views/admin/AdminAdminUsersPage.vue')
 const LoginPage = () => import('../views/user/LoginPage.vue')
 const RegisterPage = () => import('../views/user/RegisterPage.vue')
 const UserBuyPage = () => import('../views/user/UserBuyPage.vue')
@@ -21,6 +22,27 @@ const UserDetectPage = () => import('../views/user/UserDetectPage.vue')
 const UserReferralPage = () => import('../views/user/UserReferralPage.vue')
 const UserRewritePage = () => import('../views/user/UserRewritePage.vue')
 const UserDedupPage = () => import('../views/user/UserDedupPage.vue')
+
+const adminEntryRoutes = [
+  { path: '/admin/dashboard', permission: 'dashboard:view' },
+  { path: '/admin/users', permission: 'users:view' },
+  { path: '/admin/tasks', permission: 'tasks:view' },
+  { path: '/admin/orders', permission: 'orders:view' },
+  { path: '/admin/referrals', permission: 'referrals:view' },
+  { path: '/admin/logs', permission: 'logs:view' },
+  { path: '/admin/algo-packages', permission: 'algo:view' },
+  { path: '/admin/configs', permission: 'configs:view' },
+  { path: '/admin/admin-users', permission: 'admins:view' },
+]
+
+function firstAccessibleAdminRoute() {
+  for (const item of adminEntryRoutes) {
+    if (adminHasPermission(item.permission)) {
+      return item.path
+    }
+  }
+  return '/admin/login'
+}
 
 const router = createRouter({
   history: createWebHistory(),
@@ -46,15 +68,16 @@ const router = createRouter({
     { path: '/app/profile', component: UserProfilePage, meta: { auth: 'user', title: '个人中心' } },
     { path: '/admin', redirect: '/admin/dashboard' },
     { path: '/admin/login', component: AdminLoginPage },
-    { path: '/admin/dashboard', component: AdminDashboardPage, meta: { auth: 'admin', title: '后台总览' } },
-    { path: '/admin/users', component: AdminUserPage, meta: { auth: 'admin', title: '用户管理' } },
-    { path: '/admin/users/:id', component: AdminUserDetailPage, meta: { auth: 'admin', title: '用户详情' } },
-    { path: '/admin/tasks', component: AdminTaskPage, meta: { auth: 'admin', title: '任务管理' } },
-    { path: '/admin/orders', component: AdminOrderPage, meta: { auth: 'admin', title: '订单管理' } },
-    { path: '/admin/algo-packages', component: AdminAlgoPackagePage, meta: { auth: 'admin', title: '算法包管理' } },
-    { path: '/admin/referrals', component: AdminReferralPage, meta: { auth: 'admin', title: '推广管理' } },
-    { path: '/admin/configs', component: AdminConfigPage, meta: { auth: 'admin', title: '配置中心' } },
-    { path: '/admin/logs', component: AdminLogsPage, meta: { auth: 'admin', title: '系统日志' } },
+    { path: '/admin/dashboard', component: AdminDashboardPage, meta: { auth: 'admin', title: '后台总览', adminPermission: 'dashboard:view' } },
+    { path: '/admin/users', component: AdminUserPage, meta: { auth: 'admin', title: '用户管理', adminPermission: 'users:view' } },
+    { path: '/admin/users/:id', component: AdminUserDetailPage, meta: { auth: 'admin', title: '用户详情', adminPermission: 'users:view' } },
+    { path: '/admin/tasks', component: AdminTaskPage, meta: { auth: 'admin', title: '任务管理', adminPermission: 'tasks:view' } },
+    { path: '/admin/orders', component: AdminOrderPage, meta: { auth: 'admin', title: '订单管理', adminPermission: 'orders:view' } },
+    { path: '/admin/algo-packages', component: AdminAlgoPackagePage, meta: { auth: 'admin', title: '算法包管理', adminPermission: 'algo:view' } },
+    { path: '/admin/referrals', component: AdminReferralPage, meta: { auth: 'admin', title: '推广管理', adminPermission: 'referrals:view' } },
+    { path: '/admin/configs', component: AdminConfigPage, meta: { auth: 'admin', title: '配置中心', adminPermission: 'configs:view' } },
+    { path: '/admin/logs', component: AdminLogsPage, meta: { auth: 'admin', title: '系统日志', adminPermission: 'logs:view' } },
+    { path: '/admin/admin-users', component: AdminAdminUsersPage, meta: { auth: 'admin', title: '管理员管理', adminPermission: 'admins:view' } },
   ],
 })
 
@@ -63,7 +86,8 @@ router.beforeEach((to) => {
     return resolveUserRedirect(to.query.redirect, '/app/detect')
   }
   if (to.path === '/admin/login' && getAdminToken()) {
-    return resolveAdminRedirect(to.query.redirect, '/admin/dashboard')
+    const fallback = firstAccessibleAdminRoute()
+    return resolveAdminRedirect(to.query.redirect, fallback)
   }
   if (to.meta.auth === 'admin' && !getAdminToken()) {
     const redirect = encodeURIComponent(to.fullPath || '/admin/dashboard')
@@ -71,9 +95,13 @@ router.beforeEach((to) => {
   }
   if (to.meta.auth === 'admin') {
     const admin = getAdminInfo()
-    const role = admin?.role
-    if (role && role !== 'super_admin' && (to.path === '/admin/configs' || to.path === '/admin/algo-packages')) {
-      return '/admin/dashboard'
+    if (!admin) {
+      return '/admin/login'
+    }
+    const requiredPermission = to.meta.adminPermission
+    if (requiredPermission && !adminHasPermission(requiredPermission)) {
+      const fallback = firstAccessibleAdminRoute()
+      return fallback === '/admin/login' ? '/admin/login' : fallback
     }
   }
   return true

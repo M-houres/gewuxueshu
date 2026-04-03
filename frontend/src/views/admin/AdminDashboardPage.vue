@@ -73,7 +73,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue"
 
 import AdminShell from "../../components/AdminShell.vue"
 import { adminHttp } from "../../lib/http"
-import { getAdminInfo } from "../../lib/session"
+import { adminHasPermission } from "../../lib/session"
 
 echarts.use([LineChart, BarChart, TooltipComponent, GridComponent, CanvasRenderer])
 
@@ -106,7 +106,6 @@ const statCards = computed(() => {
 })
 
 const switchStatus = computed(() => dashboard.value?.switch_status || {})
-const adminInfo = getAdminInfo()
 const trendRows = computed(() => {
   const rows = dashboard.value?.trend_30d || []
   return rows.slice(-7)
@@ -140,8 +139,8 @@ async function loadData() {
 }
 
 async function recoverMode() {
-  if (adminInfo?.role !== "super_admin") {
-    window.alert("仅 super_admin 可执行手动恢复")
+  if (!adminHasPermission("system:manage")) {
+    window.alert("当前账号没有系统模式切换权限")
     return
   }
   const confirmed = window.confirm("确认切换回大模型 + 算法模式吗？")

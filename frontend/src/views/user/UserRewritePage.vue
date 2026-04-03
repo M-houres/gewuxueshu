@@ -1,8 +1,8 @@
-<template>
-  <UserShell title="降 AIGC 率" subtitle="在尽量保留论点与结构的前提下，降低表达中的 AI 痕迹。" :credits="userCredits" @buy="showBuy = !showBuy">
+﻿<template>
+  <UserShell title="降AIGC率" subtitle="在尽量保留论点与结构的前提下，降低表达中的 AI 痕迹。" :credits="userCredits" @buy="showBuy = !showBuy">
     <TaskSubmitPanel
-      title="新建降 AIGC 率任务"
-      hint="正文目前仅支持 Word 文档。可上传全量 AIGC 检测报告，用于优先处理高风险段落。"
+      title="新建降AIGC率任务"
+      hint="降 AIGC 率任务采用四步流程：选平台、上传正文、可选上传检测报告、提交确认。"
       action-text="开始优化"
       task-type="rewrite"
       :cost-rate="rewriteRate"
@@ -19,11 +19,11 @@
     />
 
     <TaskRecentList
-      title="近期降 AIGC 率记录"
+      title="近期降AIGC率记录"
       description="查看最近提交的任务，确认结果是否生成、是否需要二次人工修订。"
       :tasks="recentTasks"
       :guest="isGuest"
-      empty-text="登录并提交降 AIGC 率任务后，这里会显示最近 5 条记录。"
+      empty-text="提交降 AIGC 率任务后，这里会展示最近 5 条记录。"
       @history="goHistory"
       @login="goLogin"
     />

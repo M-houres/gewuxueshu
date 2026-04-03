@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Callable, Generator
 import time
 
 import redis
@@ -92,6 +92,18 @@ class MemoryRedisCompat:
 memory_redis = MemoryRedisCompat()
 
 auth_scheme = HTTPBearer(auto_error=False)
+LEGACY_OPERATOR_DEFAULT_PERMISSIONS = {
+    "dashboard:view",
+    "users:view",
+    "users:manage",
+    "tasks:view",
+    "orders:view",
+    "orders:refund",
+    "referrals:view",
+    "logs:view",
+    "credits:view",
+    "algo:view",
+}
 
 
 def get_redis():
@@ -143,6 +155,8 @@ def current_admin(
     admin = db.get(AdminUser, int(payload["sub"]))
     if not admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="admin not found")
+    if not getattr(admin, "is_active", True):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin disabled")
     return admin
 
 
@@ -150,3 +164,44 @@ def current_super_admin(admin: AdminUser = Depends(current_admin)) -> AdminUser:
     if admin.role != "super_admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
     return admin
+
+
+def normalize_admin_permissions(value) -> set[str]:
+    if value is None:
+        return set()
+    if isinstance(value, (list, tuple, set)):
+        return {str(item).strip() for item in value if str(item).strip()}
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return set()
+        return {part.strip() for part in raw.split(",") if part.strip()}
+    return set()
+
+
+def admin_has_permission(admin: AdminUser, permission: str) -> bool:
+    if not permission:
+        return True
+    if admin.role == "super_admin":
+        return True
+    permissions = normalize_admin_permissions(getattr(admin, "permissions_json", []))
+    if not permissions:
+        permissions = set(LEGACY_OPERATOR_DEFAULT_PERMISSIONS)
+    if "*" in permissions:
+        return True
+    if permission in permissions:
+        return True
+    if ":" in permission:
+        scope = permission.split(":", 1)[0]
+        if f"{scope}:*" in permissions:
+            return True
+    return False
+
+
+def require_admin_permission(permission: str) -> Callable[[AdminUser], AdminUser]:
+    def _dep(admin: AdminUser = Depends(current_admin)) -> AdminUser:
+        if admin_has_permission(admin, permission):
+            return admin
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+
+    return _dep

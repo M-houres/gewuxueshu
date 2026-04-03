@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="scholar-panel">
     <div class="scholar-panel__header">
       <div class="scholar-kicker">{{ sectionCode }}</div>
@@ -7,206 +7,183 @@
     </div>
 
     <div class="scholar-panel__body">
-      <div class="scholar-grid scholar-grid--form">
-        <div class="scholar-stack">
-          <section class="scholar-panel scholar-panel--soft">
-            <div class="scholar-panel__body">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <div class="scholar-kicker">第一步</div>
-                  <h3 class="scholar-subtitle">选择目标平台</h3>
-                </div>
-                <span class="scholar-pill">默认推荐知网 CNKI</span>
+      <div class="scholar-step-list">
+        <section class="scholar-panel scholar-panel--soft">
+          <div class="scholar-panel__body">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="scholar-kicker">第一步</div>
+                <h3 class="scholar-subtitle">选择目标平台</h3>
               </div>
+              <span class="scholar-pill">默认推荐知网 CNKI</span>
+            </div>
 
-              <div class="scholar-option-grid lg:grid-cols-3" style="margin-top: 18px">
-                <button
-                  v-for="item in platformOptions"
-                  :key="item.value"
-                  type="button"
-                  class="scholar-option-card"
-                  :class="{ 'is-active': platform === item.value }"
-                  @click="platform = item.value"
-                >
-                  <div class="flex items-start justify-between gap-3">
-                    <div>
-                      <div class="text-sm font-semibold text-[var(--ink)]">{{ item.label }}</div>
-                      <div class="mt-2 text-xs leading-6 text-[var(--ink-soft)]">{{ item.desc }}</div>
-                    </div>
-                    <span
-                      class="scholar-badge"
-                      :class="platform === item.value ? 'scholar-badge--success' : 'scholar-badge--info'"
-                    >
-                      {{ item.badge }}
+            <div class="scholar-option-grid lg:grid-cols-3" style="margin-top: 18px">
+              <button
+                v-for="item in platformOptions"
+                :key="item.value"
+                type="button"
+                class="scholar-option-card"
+                :class="{ 'is-active': platform === item.value }"
+                @click="platform = item.value"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="text-sm font-semibold text-[var(--ink)]">{{ item.label }}</div>
+                    <div class="mt-2 text-xs leading-6 text-[var(--ink-soft)]">{{ item.desc }}</div>
+                  </div>
+                  <span
+                    class="scholar-badge"
+                    :class="platform === item.value ? 'scholar-badge--success' : 'scholar-badge--info'"
+                  >
+                    {{ item.badge }}
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="scholar-panel scholar-panel--soft">
+          <div class="scholar-panel__body">
+            <div class="scholar-kicker">第二步</div>
+            <h3 class="scholar-subtitle">上传正文文件</h3>
+            <p class="scholar-lead">{{ paperHint }}</p>
+
+            <label class="scholar-dropzone" style="margin-top: 18px">
+              <input class="hidden" type="file" :accept="paperAcceptAttr" @change="onPaperChange" />
+              <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div class="text-sm font-semibold text-[var(--ink)]">点击上传论文正文</div>
+                  <div class="mt-2 text-xs text-[var(--ink-soft)]">
+                    支持格式：{{ formatExtList(paperAccept) }}
+                  </div>
+                </div>
+                <span class="scholar-pill">单文件上限 20MB</span>
+              </div>
+            </label>
+
+            <div v-if="paperFile" class="scholar-file-card" style="margin-top: 18px">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-sm font-semibold text-[var(--ink)]">{{ paperFile.name }}</div>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="scholar-pill">{{ humanSize(paperFile.size) }}</span>
+                    <span class="scholar-pill">
+                      {{ charCount > 0 ? `${charCount} 字符` : "字符数提交后按后端解析为准" }}
                     </span>
                   </div>
+                </div>
+                <button class="scholar-button scholar-button--secondary" type="button" @click="clearPaper">
+                  删除
                 </button>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section class="scholar-panel scholar-panel--soft">
-            <div class="scholar-panel__body">
-              <div class="scholar-kicker">第二步</div>
-              <h3 class="scholar-subtitle">上传正文文件</h3>
-              <p class="scholar-lead">{{ paperHint }}</p>
-
-              <label class="scholar-dropzone" style="margin-top: 18px">
-                <input class="hidden" type="file" :accept="paperAcceptAttr" @change="onPaperChange" />
-                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <div class="text-sm font-semibold text-[var(--ink)]">点击上传论文正文</div>
-                    <div class="mt-2 text-xs text-[var(--ink-soft)]">
-                      支持格式：{{ formatExtList(paperAccept) }}
-                    </div>
-                  </div>
-                  <span class="scholar-pill">单文件上限 20MB</span>
-                </div>
-              </label>
-
-              <div v-if="paperFile" class="scholar-file-card" style="margin-top: 18px">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm font-semibold text-[var(--ink)]">{{ paperFile.name }}</div>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                      <span class="scholar-pill">{{ humanSize(paperFile.size) }}</span>
-                      <span class="scholar-pill">
-                        {{ charCount > 0 ? `${charCount} 字符` : "字符数提交后以后端解析为准" }}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    class="scholar-button scholar-button--secondary"
-                    type="button"
-                    @click="clearPaper"
-                  >
-                    删除
-                  </button>
-                </div>
+        <section v-if="needReport" class="scholar-panel scholar-panel--soft">
+          <div class="scholar-panel__body">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="scholar-kicker">第三步</div>
+                <h3 class="scholar-subtitle">上传辅助报告</h3>
               </div>
+              <span class="scholar-pill">可选</span>
             </div>
-          </section>
+            <p class="scholar-lead">{{ reportHint }}</p>
+            <p v-if="reportHelp" class="scholar-muted text-sm leading-7">{{ reportHelp }}</p>
 
-          <section v-if="needReport" class="scholar-panel scholar-panel--soft">
-            <div class="scholar-panel__body">
-              <div class="flex items-center justify-between gap-3">
+            <label class="scholar-dropzone" style="margin-top: 18px">
+              <input class="hidden" type="file" :accept="reportAcceptAttr" @change="onReportChange" />
+              <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div class="scholar-kicker">第三步</div>
-                  <h3 class="scholar-subtitle">上传辅助报告</h3>
+                  <div class="text-sm font-semibold text-[var(--ink)]">{{ reportLabel }}</div>
+                  <div class="mt-2 text-xs text-[var(--ink-soft)]">
+                    支持格式：{{ formatExtList(reportAccept) }}
+                  </div>
                 </div>
-                <span class="scholar-pill">可选</span>
+                <span class="scholar-pill">按报告结果自动校验</span>
               </div>
-              <p class="scholar-lead">{{ reportHint }}</p>
-              <p v-if="reportHelp" class="scholar-muted text-sm leading-7">{{ reportHelp }}</p>
+            </label>
 
-              <label class="scholar-dropzone" style="margin-top: 18px">
-                <input class="hidden" type="file" :accept="reportAcceptAttr" @change="onReportChange" />
-                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <div class="text-sm font-semibold text-[var(--ink)]">{{ reportLabel }}</div>
-                    <div class="mt-2 text-xs text-[var(--ink-soft)]">
-                      支持格式：{{ formatExtList(reportAccept) }}
-                    </div>
+            <div v-if="reportFile" class="scholar-file-card" style="margin-top: 18px">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-sm font-semibold text-[var(--ink)]">{{ reportFile.name }}</div>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="scholar-pill">{{ humanSize(reportFile.size) }}</span>
+                    <span class="scholar-pill">提交后校验全量报告结构</span>
                   </div>
-                  <span class="scholar-pill">按报告结构自动校验</span>
                 </div>
-              </label>
-
-              <div v-if="reportFile" class="scholar-file-card" style="margin-top: 18px">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm font-semibold text-[var(--ink)]">{{ reportFile.name }}</div>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                      <span class="scholar-pill">{{ humanSize(reportFile.size) }}</span>
-                      <span class="scholar-pill">提交后校验全量报告结构</span>
-                    </div>
-                  </div>
-                  <button
-                    class="scholar-button scholar-button--secondary"
-                    type="button"
-                    @click="clearReport"
-                  >
-                    删除
-                  </button>
-                </div>
+                <button class="scholar-button scholar-button--secondary" type="button" @click="clearReport">
+                  删除
+                </button>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
 
-        <div class="scholar-stack">
-          <section class="scholar-panel scholar-panel--soft">
-            <div class="scholar-panel__body">
-              <div class="scholar-kicker">{{ confirmationStepLabel }}</div>
-              <h3 class="scholar-subtitle">提交前确认</h3>
+        <section class="scholar-panel scholar-panel--soft">
+          <div class="scholar-panel__body">
+            <div class="scholar-kicker">{{ confirmationStepLabel }}</div>
+            <h3 class="scholar-subtitle">提交前确认</h3>
 
-              <div class="scholar-stack" style="margin-top: 18px">
+            <div class="scholar-stack" style="margin-top: 18px">
+              <div class="scholar-stat">
+                <div class="scholar-stat__label">目标平台</div>
+                <div class="scholar-stat__value" style="font-size: 26px">{{ platformLabel }}</div>
+              </div>
+              <div class="scholar-grid scholar-grid--halves">
                 <div class="scholar-stat">
-                  <div class="scholar-stat__label">目标平台</div>
-                  <div class="scholar-stat__value" style="font-size: 26px">{{ platformLabel }}</div>
-                </div>
-                <div class="scholar-grid scholar-grid--halves">
-                  <div class="scholar-stat">
-                    <div class="scholar-stat__label">预计字符数</div>
-                    <div class="scholar-stat__value" style="font-size: 24px">
-                      {{ charCount > 0 ? charCount : "--" }}
-                    </div>
-                    <div class="scholar-stat__hint">Word/PDF 以后端解析为准</div>
+                  <div class="scholar-stat__label">预计字符数</div>
+                  <div class="scholar-stat__value" style="font-size: 24px">
+                    {{ charCount > 0 ? charCount : "--" }}
                   </div>
-                  <div class="scholar-stat">
-                    <div class="scholar-stat__label">预计消耗</div>
-                    <div class="scholar-stat__value" style="font-size: 24px">
-                      {{ charCount > 0 ? `${(charCount * props.costRate).toLocaleString()} 分` : "--" }}
-                    </div>
-                    <div class="scholar-stat__hint">按字符数 × 单价计算</div>
+                  <div class="scholar-stat__hint">Word/PDF 以后端解析为准</div>
+                </div>
+                <div class="scholar-stat">
+                  <div class="scholar-stat__label">预计消耗</div>
+                  <div class="scholar-stat__value" style="font-size: 24px">
+                    {{ charCount > 0 ? `${(charCount * props.costRate).toLocaleString()} 积分` : "--" }}
                   </div>
-                </div>
-
-                <div class="scholar-note">
-                  <div class="flex items-center justify-between gap-3">
-                    <span>当前积分</span>
-                    <strong>{{ displayCredits }}</strong>
-                  </div>
-                  <div style="margin-top: 10px">{{ chargeExplainText }}</div>
-                </div>
-
-                <div v-if="insufficient" class="scholar-note scholar-note--danger">
-                  当前积分不足，请先充值后再提交任务。
-                </div>
-
-                <div class="scholar-inline-actions">
-                  <button
-                    class="scholar-button"
-                    type="button"
-                    :disabled="!canSubmit"
-                    @click="submit"
-                  >
-                    {{ submitting ? "提交中..." : actionText }}
-                  </button>
-                  <button
-                    class="scholar-button scholar-button--secondary"
-                    type="button"
-                    @click="$emit('go-history')"
-                  >
-                    查看任务记录
-                  </button>
+                  <div class="scholar-stat__hint">按字符数 × 单价计算</div>
                 </div>
               </div>
-            </div>
-          </section>
 
-          <section class="scholar-panel scholar-panel--soft">
-            <div class="scholar-panel__body">
-              <div class="scholar-kicker">处理提示</div>
-              <h3 class="scholar-subtitle">执行提示</h3>
-              <div class="scholar-stack" style="margin-top: 16px">
-                <div class="scholar-note">建议正文使用可编辑源文件，便于系统提取文本并保留结构。</div>
-                <div class="scholar-note">上传辅助报告后，系统会优先处理命中的高风险段落或高重复段落。</div>
-                <div class="scholar-note">处理完成后可在任务记录页查看摘要、下载结果和失败原因。</div>
+              <div class="scholar-note">
+                <div class="flex items-center justify-between gap-3">
+                  <span>当前积分</span>
+                  <strong>{{ displayCredits }}</strong>
+                </div>
+                <div style="margin-top: 10px">{{ chargeExplainText }}</div>
+              </div>
+
+              <div v-if="insufficient" class="scholar-note scholar-note--danger">当前积分不足，请先充值后再提交任务。</div>
+
+              <div class="scholar-inline-actions">
+                <button class="scholar-button" type="button" :disabled="!canSubmit" @click="submit">
+                  {{ submitting ? "提交中..." : actionText }}
+                </button>
+                <button class="scholar-button scholar-button--secondary" type="button" @click="$emit('go-history')">
+                  查看任务记录
+                </button>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
+
+        <section class="scholar-panel scholar-panel--soft">
+          <div class="scholar-panel__body">
+            <div class="scholar-kicker">处理提示</div>
+            <h3 class="scholar-subtitle">执行建议</h3>
+            <div class="scholar-stack" style="margin-top: 16px">
+              <div class="scholar-note">建议正文使用可编辑源文件，便于系统提取文本并保留结构。</div>
+              <div class="scholar-note">上传辅助报告后，系统会优先处理报告命中的重点段落。</div>
+              <div class="scholar-note">处理完成后可在个人中心查看摘要、下载结果与失败原因。</div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <p v-if="errorText" class="scholar-note scholar-note--danger" style="margin-top: 18px">
@@ -256,9 +233,9 @@ const successText = ref("")
 
 const sectionCode = computed(() => {
   const mapping = {
-    aigc_detect: "检测入口",
-    dedup: "降重入口",
-    rewrite: "降 AIGC 率入口",
+    aigc_detect: "AIGC检测任务",
+    dedup: "降重复率任务",
+    rewrite: "降AIGC率任务",
   }
   return mapping[props.taskType] || "任务提交"
 })
@@ -312,7 +289,7 @@ const chargeExplainText = computed(() => {
   if (props.taskType === "dedup") {
     return "按论文正文字符计费；上传查重报告后，系统会优先按报告定位高重复内容。"
   }
-  return "按论文正文字符计费；上传 AIGC 报告后，系统会优先处理高风险段落以降低 AIGC 率。"
+  return "按论文正文字符计费；上传 AIGC 报告后，系统会优先处理高风险段落。"
 })
 
 const paperAcceptAttr = computed(() => props.paperAccept.join(","))

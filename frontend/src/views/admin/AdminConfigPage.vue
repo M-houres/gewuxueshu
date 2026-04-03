@@ -36,8 +36,14 @@
             当前状态：{{ readinessMap[activeTab]?.message }}
           </p>
         </div>
+        <p
+          v-if="!canManageConfigs"
+          class="mt-4 rounded-xl border border-[#f0debf] bg-[#fff8ea] px-3 py-2 text-sm text-[#7c5a2e]"
+        >
+          当前账号仅有查看权限。若需修改配置，请由超级管理员授予“配置管理”权限。
+        </p>
 
-        <div class="mt-5 space-y-4">
+        <fieldset class="mt-5 space-y-4" :disabled="!canManageConfigs || saving">
           <template v-if="activeTab === 'llm'">
             <label class="inline-flex items-center gap-2 text-sm"><input v-model="forms.llm.enabled" type="checkbox" /> 启用大模型增强</label>
             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -258,10 +264,16 @@
               <label class="space-y-1 text-sm md:col-span-2"><span>同 IP 24 小时注册上限</span><input v-model.number="forms.referral.ip_limit_24h" type="number" min="1" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" /></label>
             </div>
           </template>
-        </div>
+        </fieldset>
 
         <div class="mt-5 flex flex-wrap gap-2 border-t border-[#e6ebef] pt-4">
-          <button class="rounded-xl bg-[#0f7a5f] px-4 py-2 text-sm text-white disabled:opacity-60" :disabled="saving" @click="saveCurrent">{{ saving ? "保存中..." : `保存${currentTab.label}` }}</button>
+          <button
+            class="rounded-xl bg-[#0f7a5f] px-4 py-2 text-sm text-white disabled:opacity-60"
+            :disabled="saving || !canManageConfigs"
+            @click="saveCurrent"
+          >
+            {{ canManageConfigs ? (saving ? "保存中..." : `保存${currentTab.label}`) : "仅查看" }}
+          </button>
           <button class="rounded-xl bg-[#edf2f6] px-4 py-2 text-sm text-[#344250]" @click="reloadCurrent">重新加载</button>
         </div>
         <p v-if="hintText" class="mt-3 text-sm text-[#106c4f]">{{ hintText }}</p>
@@ -292,6 +304,7 @@
 import { computed, onMounted, ref } from "vue"
 import AdminShell from "../../components/AdminShell.vue"
 import { adminHttp } from "../../lib/http"
+import { adminHasPermission } from "../../lib/session"
 
 const tabs = [
   { key: "login", label: "登录配置", desc: "短信与微信登录" },
@@ -499,6 +512,7 @@ const currentTab = computed(() => tabs.find((tab) => tab.key === activeTab.value
 const currentGuide = computed(() => guideMap[activeTab.value] || guideMap.login)
 const isWechatPay = computed(() => ["wechat", "wechatpay_v3"].includes(forms.value.payment.provider))
 const isAlipay = computed(() => forms.value.payment.provider === "alipay")
+const canManageConfigs = computed(() => adminHasPermission("configs:manage"))
 const paymentProviderUnsupported = computed(() => {
   const provider = String(forms.value.payment.provider || "")
   return Boolean(provider) && !paymentProviders.some((item) => item.value === provider)
@@ -719,6 +733,11 @@ function resolvePaymentNotifyPreview() {
 }
 
 async function saveCurrent() {
+  if (!canManageConfigs.value) {
+    errorText.value = "当前账号仅有查看权限，无法保存配置。"
+    hintText.value = ""
+    return
+  }
   const checkError = validateCurrent()
   if (checkError) {
     errorText.value = checkError

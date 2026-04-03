@@ -1,5 +1,5 @@
-<template>
-  <AdminShell title="订单管理" subtitle="筛选、详情与退款操作">
+﻿<template>
+  <AdminShell title="订单管理" subtitle="筛选、详情与退款操作。">
     <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
       <div class="mb-4 space-y-4 rounded-2xl border border-[#dee6ed] bg-[#f8fbff] p-4">
         <div class="grid gap-2 md:grid-cols-2">
@@ -71,7 +71,14 @@
               <td class="px-2 py-2">
                 <div class="flex gap-2">
                   <button class="rounded bg-[#0f7a5f] px-2 py-1 text-xs text-white" @click="openDetail(row.order_no)">详情</button>
-                  <button class="rounded bg-[#edf2f6] px-2 py-1 text-xs text-[#344250] disabled:opacity-50" :disabled="row.status !== 'paid'" @click="refund(row)">退款</button>
+                  <button
+                    v-if="canRefund"
+                    class="rounded bg-[#edf2f6] px-2 py-1 text-xs text-[#344250] disabled:opacity-50"
+                    :disabled="row.status !== 'paid'"
+                    @click="refund(row)"
+                  >
+                    退款
+                  </button>
                 </div>
               </td>
             </tr>
@@ -103,10 +110,11 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue"
+import { computed, onMounted, reactive, ref } from "vue"
 
 import AdminShell from "../../components/AdminShell.vue"
 import { adminHttp } from "../../lib/http"
+import { adminHasPermission } from "../../lib/session"
 
 const rows = ref([])
 const detail = ref(null)
@@ -116,6 +124,8 @@ const filters = reactive({
   provider: "",
   status: "",
 })
+
+const canRefund = computed(() => adminHasPermission("orders:refund"))
 const providerOptions = [
   { value: "", label: "全部" },
   { value: "mock", label: "测试支付" },

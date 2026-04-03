@@ -1,12 +1,12 @@
-<template>
-  <UserShell title="AIGC 检测" subtitle="按目标平台提交正文，快速判断 AI 风险分布与高风险段落。" :credits="userCredits" @buy="showBuy = !showBuy">
+﻿<template>
+  <UserShell title="AIGC检测" subtitle="按目标平台提交正文，快速判断 AI 风险分布与重点段落。" :credits="userCredits" @buy="showBuy = !showBuy">
     <TaskSubmitPanel
       title="新建 AIGC 检测任务"
-      hint="先选择目标平台，再上传正文。游客可以先浏览页面，点击提交时再登录。"
+      hint="按“选择平台 → 上传正文 → 提交确认”的顺序完成，任务状态会自动同步到个人中心。"
       action-text="开始检测"
       task-type="aigc_detect"
       :cost-rate="detectRate"
-      paper-hint="支持 .docx / .pdf / .txt。纯文本文件会在浏览器内直接估算字符数，Word 和 PDF 以后端解析为准。"
+      paper-hint="支持 .docx / .pdf / .txt。纯文本文件会在浏览器内预估字符数，Word 与 PDF 以后端解析为准。"
       :paper-accept="['.docx', '.pdf', '.txt']"
       :credits="userCredits"
       @submitted="afterTaskSubmit"
@@ -15,10 +15,10 @@
 
     <TaskRecentList
       title="近期检测记录"
-      description="优先展示最近提交的 AIGC 检测任务，便于快速回看状态和风险摘要。"
+      description="优先展示最近提交的 AIGC 检测任务，便于快速回看状态与风险摘要。"
       :tasks="recentTasks"
       :guest="isGuest"
-      empty-text="登录并提交检测任务后，这里会显示最近 5 条记录。"
+      empty-text="提交检测任务后，这里会展示最近 5 条记录。"
       @history="goHistory"
       @login="goLogin"
     />

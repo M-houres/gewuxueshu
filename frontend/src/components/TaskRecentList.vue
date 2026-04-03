@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="scholar-panel">
     <div class="scholar-panel__header">
       <div class="flex flex-wrap items-start justify-between gap-3">
@@ -15,18 +15,7 @@
 
     <div class="scholar-panel__body">
       <div v-if="guest" class="scholar-note">
-        <div style="font-weight: 600; color: var(--ink)">登录后自动同步近期任务。</div>
-        <div style="margin-top: 6px">
-          提交任务后，可在个人中心统一查看处理进度、失败原因、结果摘要和下载入口。
-        </div>
-        <button
-          class="scholar-button"
-          type="button"
-          style="margin-top: 14px"
-          @click="$emit('login')"
-        >
-          登录后同步
-        </button>
+        提交任务后，这里会自动同步最近记录。你可以先浏览流程，提交前再登录即可。
       </div>
 
       <div v-else-if="tasks.length === 0" class="scholar-empty">
@@ -56,6 +45,10 @@
             </span>
           </div>
         </article>
+      </div>
+
+      <div v-if="guest" class="scholar-inline-actions" style="margin-top: 14px">
+        <button class="scholar-button" type="button" @click="$emit('login')">登录后同步</button>
       </div>
     </div>
   </section>
@@ -112,7 +105,7 @@ function summaryText(item) {
     return `检测结果：AI 风险约 ${pct}%`
   }
   if (item.status === "completed") {
-    return "任务已完成，可前往历史记录查看完整摘要或下载结果文件。"
+    return "任务已完成，可在个人中心查看完整摘要或下载结果文件。"
   }
   if (item.status === "running") {
     return "任务正在处理中，页面会按轮询状态自动同步最新进度。"

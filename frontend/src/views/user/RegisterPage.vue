@@ -22,17 +22,17 @@
             <div class="scholar-auth__ledger-label">注册后的账户结构</div>
             <div class="scholar-auth__ledger-grid">
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">01</div>
+                <div class="scholar-auth__ledger-index">邀请</div>
                 <strong>邀请关系</strong>
                 <p>邀请链接可自动带入推荐码，奖励按后台规则结算。</p>
               </article>
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">02</div>
+                <div class="scholar-auth__ledger-index">验证</div>
                 <strong>手机号开通</strong>
                 <p>验证通过后立即创建账户，不再额外收集注册资料。</p>
               </article>
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">03</div>
+                <div class="scholar-auth__ledger-index">归档</div>
                 <strong>统一归档</strong>
                 <p>账号、积分流水和历史任务都回到个人中心统一维护。</p>
               </article>

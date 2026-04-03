@@ -84,7 +84,8 @@ def test_aigc_detect_returns_structured_result(tmp_path: Path, db_session: Sessi
     assert len(result.result_json["risk_paragraphs"]) >= 1
     content = output_path.read_bytes()
     assert content.startswith(b"%PDF-")
-    assert b"GEWU Academic AIGC Detection Report" in content
+    assert b"Detection Summary" in content
+    assert b"GEWU Academic" not in content
 
 
 def test_aigc_detect_platform_profiles_are_close_but_not_identical(

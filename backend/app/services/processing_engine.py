@@ -539,7 +539,7 @@ class ProcessingEngine:
         stats = result.get("source_stats") or {}
 
         lines: list[str] = [
-            "GEWU Academic AIGC Detection Report",
+            "格物学术 AIGC 检测报告",
             f"Generated At: {generated_at}",
             f"Platform: {platform_label}",
             "Engine Type: Simulated provider algorithm (not official provider API)",

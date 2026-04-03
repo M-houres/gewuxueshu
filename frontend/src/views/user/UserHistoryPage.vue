@@ -2,8 +2,8 @@
   <UserShell title="任务记录" subtitle="查看任务状态、结果摘要、失败原因与下载入口。" :credits="userCredits" @buy="showBuy = !showBuy">
     <section v-if="isGuest" class="scholar-panel scholar-panel--soft">
       <div class="scholar-panel__body">
-        <div class="scholar-kicker">Guest Mode</div>
-        <h3 class="scholar-subtitle">游客模式下不展示任务历史</h3>
+        <div class="scholar-kicker">访问提醒</div>
+        <h3 class="scholar-subtitle">登录后查看任务历史</h3>
         <p class="scholar-lead">
           任务记录属于个人数据，登录后可查看处理状态、失败原因、结果摘要和文件下载。
         </p>

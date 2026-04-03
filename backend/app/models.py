@@ -210,8 +210,11 @@ class AdminUser(Base):
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20), default="operator")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    permissions_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     last_login: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class Notification(Base):
