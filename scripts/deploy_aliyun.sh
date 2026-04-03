@@ -4,7 +4,6 @@ set -euo pipefail
 REPO_URL="${REPO_URL:-https://github.com/M-houres/gewuxueshu.git}"
 APP_DIR="${APP_DIR:-/opt/wuhongai}"
 BRANCH="${BRANCH:-main}"
-INITIAL_CREDITS="${INITIAL_CREDITS:-2000}"
 
 if [ "$(id -u)" -eq 0 ]; then
   SUDO=""
@@ -113,7 +112,6 @@ ensure_secret "JWT_SECRET" "$(openssl rand -hex 32)"
 ensure_secret "PAYMENT_SIGN_SECRET" "$(openssl rand -hex 32)"
 ensure_secret "ADMIN_INIT_PASSWORD" "$(openssl rand -base64 18 | tr -d '=+/' | cut -c1-16)"
 set_env "APP_ENV" "prod"
-set_env "INITIAL_CREDITS" "$INITIAL_CREDITS"
 
 compose -f "$APP_DIR/docker-compose.prod.yml" up -d --build
 compose -f "$APP_DIR/docker-compose.prod.yml" ps

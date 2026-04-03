@@ -15,7 +15,7 @@ bash scripts/deploy_aliyun.sh
 Optional variables:
 
 ```bash
-INITIAL_CREDITS=2000 BRANCH=main APP_DIR=/opt/wuhongai bash scripts/deploy_aliyun.sh
+BRANCH=main APP_DIR=/opt/wuhongai bash scripts/deploy_aliyun.sh
 ```
 
 Compatibility scripts:
