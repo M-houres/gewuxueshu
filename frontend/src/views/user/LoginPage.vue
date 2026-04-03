@@ -1,225 +1,117 @@
 <template>
-  <div class="scholar-auth scholar-auth--login academic-shell-enter">
-    <div class="scholar-auth__frame scholar-auth__frame--editorial">
-      <section class="scholar-auth__poster scholar-auth__poster--login">
-        <div class="scholar-auth__content scholar-auth__content--login">
-          <div class="scholar-auth__masthead">
-            <div>
-              <div class="scholar-auth__eyebrow">学术工作流</div>
-              <div class="scholar-login__meta">学术文本工作流平台</div>
-            </div>
-            <span class="scholar-auth__signal">统一处理 / 自动归档</span>
-          </div>
-
-          <div class="scholar-auth__headline">
-            <h1 class="scholar-auth__title scholar-auth__title--login">格物学术</h1>
-            <p class="scholar-auth__lead scholar-auth__lead--login">
-              论文检测、降重与文本优化，在一套更清晰、更稳定的工作流内完成。
-            </p>
-          </div>
-
-          <div class="scholar-auth__ledger">
-            <div class="scholar-auth__ledger-label">核心功能</div>
-            <div class="scholar-auth__ledger-grid">
-              <article class="scholar-auth__ledger-card">
-                <strong>AIGC 检测</strong>
-                <p>先识别文本生成痕迹，再决定是否进入降重或改写流程。</p>
-              </article>
-              <article class="scholar-auth__ledger-card">
-                <strong>降重复率</strong>
-                <p>按目标平台选择算法，保留学术表达的结构稳定性。</p>
-              </article>
-              <article class="scholar-auth__ledger-card">
-                <strong>降 AIGC 率</strong>
-                <p>围绕高风险段落继续优化表达，结果与记录都会回到个人中心统一查看。</p>
-              </article>
-            </div>
-          </div>
-
-          <div class="scholar-auth__timeline">
-            <article class="scholar-auth__timeline-item">
-              <span class="scholar-auth__timeline-dot"></span>
-              <div>
-                <div class="scholar-auth__timeline-code">第一步</div>
-                <div class="scholar-auth__timeline-title">提交正文或报告</div>
-                <p class="scholar-auth__timeline-copy">
-                  先浏览入口和处理路径，需要提交任务时再完成登录。
-                </p>
-              </div>
-            </article>
-            <article class="scholar-auth__timeline-item">
-              <span class="scholar-auth__timeline-dot"></span>
-              <div>
-                <div class="scholar-auth__timeline-code">第二步</div>
-                <div class="scholar-auth__timeline-title">执行检测与优化</div>
-                <p class="scholar-auth__timeline-copy">
-                  按字符精确计费，失败自动退回积分，过程状态全程可见。
-                </p>
-              </div>
-            </article>
-            <article class="scholar-auth__timeline-item">
-              <span class="scholar-auth__timeline-dot"></span>
-              <div>
-                <div class="scholar-auth__timeline-code">第三步</div>
-                <div class="scholar-auth__timeline-title">在个人中心统一查看</div>
-                <p class="scholar-auth__timeline-copy">
-                  任务记录、积分流水和账户设置统一归档，不再分散跳转。
-                </p>
-              </div>
-            </article>
-          </div>
-
-          <div class="scholar-login__footnote">
-            {{
-              newUserInitialCredits > 0
-                ? `新用户注册后可获得 ${newUserInitialCredits.toLocaleString()} 积分，用于直接开始任务。`
-                : "适用于毕业论文、课程论文、期刊初稿等常见学术文本场景。"
-            }}
-          </div>
-        </div>
+  <div class="auth-page">
+    <div class="auth-wrap">
+      <section class="brand-panel">
+        <p class="brand-kicker">GEWU SCHOLAR PLATFORM</p>
+        <h1 class="brand-title">格物致知</h1>
+        <p class="brand-desc">
+          面向学术写作的检测与优化平台，提供 AIGC 检测、降重复率、降 AIGC 率三类能力，任务与结果统一管理。
+        </p>
       </section>
 
-      <section class="scholar-auth__panel">
-        <div class="scholar-auth__form-shell scholar-stack">
-          <div class="scholar-auth__panel-head">
-            <span class="scholar-badge scholar-badge--info">统一登录入口</span>
-            <h2>登录</h2>
-            <p class="scholar-lead">
-              {{
-                wechatLoginEnabled
-                  ? "支持短信验证码与微信扫码登录，登录后任务和账户信息会自动同步。"
-                  : "当前使用短信验证码登录，登录后任务和账户信息会自动同步。"
-              }}
-            </p>
-          </div>
+      <section class="form-panel">
+        <header class="panel-head">
+          <span class="panel-tag">登录状态</span>
+          <h2>未登录</h2>
+          <p>请输入手机号和验证码完成登录。</p>
+        </header>
 
-          <div class="scholar-auth__quickline">
-            <article class="scholar-auth__quickitem">
-              <span>访问方式</span>
-              <strong>{{ wechatLoginEnabled ? "短信 / 微信" : "短信验证码" }}</strong>
-            </article>
-            <article class="scholar-auth__quickitem">
-              <span>新用户权益</span>
-              <strong>{{ welcomeCreditsText }}</strong>
-            </article>
-            <article class="scholar-auth__quickitem">
-              <span>结果管理</span>
-              <strong>个人中心统一归档</strong>
-            </article>
-          </div>
+        <div v-if="phoneLoginEnabled || wechatLoginEnabled" class="mode-switch">
+          <button
+            v-if="phoneLoginEnabled"
+            type="button"
+            class="mode-btn"
+            :class="{ 'is-active': mode === 'phone' }"
+            @click="switchMode('phone')"
+          >
+            手机验证码
+          </button>
+          <button
+            v-if="wechatLoginEnabled"
+            type="button"
+            class="mode-btn"
+            :class="{ 'is-active': mode === 'wx' }"
+            @click="switchMode('wx')"
+          >
+            微信扫码
+          </button>
+        </div>
 
-          <div class="scholar-switch" v-if="phoneLoginEnabled || wechatLoginEnabled">
-            <button
-              v-if="phoneLoginEnabled"
-              type="button"
-              class="scholar-switch__button"
-              :class="{ 'is-active': mode === 'phone' }"
-              @click="switchMode('phone')"
-            >
-              手机验证码
-            </button>
-            <button
-              v-if="wechatLoginEnabled"
-              type="button"
-              class="scholar-switch__button"
-              :class="{ 'is-active': mode === 'wx' }"
-              @click="switchMode('wx')"
-            >
-              微信扫码
-            </button>
-          </div>
+        <form v-if="mode === 'phone'" class="form-stack" @submit.prevent="login">
+          <label class="field">
+            <span>手机号</span>
+            <input
+              v-model.trim="phone"
+              class="input"
+              autocomplete="tel"
+              placeholder="请输入 11 位手机号"
+            />
+          </label>
 
-          <form v-if="mode === 'phone'" class="scholar-stack scholar-stack--compact" @submit.prevent="login">
-            <label class="scholar-field">
-              <span class="scholar-field__label">手机号</span>
+          <label class="field">
+            <span>验证码</span>
+            <div class="code-row">
               <input
-                v-model.trim="phone"
-                class="scholar-input"
-                autocomplete="tel"
-                placeholder="请输入 11 位手机号"
+                v-model.trim="code"
+                class="input"
+                style="flex: 1"
+                autocomplete="one-time-code"
+                placeholder="请输入验证码"
               />
-            </label>
-
-            <label class="scholar-field">
-              <span class="scholar-field__label">验证码</span>
-              <div class="scholar-inline-actions" style="align-items: stretch">
-                <input
-                  v-model.trim="code"
-                  class="scholar-input"
-                  style="flex: 1"
-                  autocomplete="one-time-code"
-                  placeholder="请输入验证码"
-                />
-                <button
-                  type="button"
-                  class="scholar-button scholar-button--secondary"
-                  :disabled="sending || countdown > 0"
-                  @click="sendCode"
-                >
-                  {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
-                </button>
-              </div>
-            </label>
-
-            <button class="scholar-button scholar-button--block" :disabled="loading">
-              {{ loading ? "登录中..." : "登录并进入工作台" }}
-            </button>
-          </form>
-
-          <div v-else class="scholar-auth__wx-shell">
-            <div class="scholar-note">
-              使用微信扫码完成授权。若当前是开发联调环境，可通过“模拟扫码成功”走通整条登录链路。
+              <button
+                type="button"
+                class="btn btn-light"
+                :disabled="sending || countdown > 0"
+                @click="sendCode"
+              >
+                {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
+              </button>
             </div>
+          </label>
 
-            <div class="scholar-auth__wx-board">
-              <div class="scholar-auth__qr">
-                <img
-                  v-if="wxQrcodeDataUrl"
-                  :src="wxQrcodeDataUrl"
-                  alt="wx login qrcode"
-                  class="scholar-auth__qr-image"
-                />
-                <span v-else class="scholar-auth__qr-empty">等待生成二维码</span>
-              </div>
+          <button class="btn btn-primary" :disabled="loading">
+            {{ loading ? "登录中..." : "登录" }}
+          </button>
+        </form>
 
-              <div class="scholar-auth__wx-meta">
-                <span class="scholar-badge scholar-badge--info">状态：{{ wxStatusText }}</span>
-                <span class="scholar-pill">二维码剩余 {{ wxCountdown }} 秒</span>
-                <p class="scholar-auth__microcopy">授权成功后会自动跳转到工作台。</p>
-                <button
-                  type="button"
-                  class="scholar-button scholar-button--secondary scholar-button--block"
-                  @click="loadWxQrcode"
-                >
-                  刷新二维码
-                </button>
-                <button
-                  v-if="wxMockEnabled"
-                  type="button"
-                  class="scholar-button scholar-button--block"
-                  @click="mockWxAuthorize"
-                >
-                  模拟扫码成功
-                </button>
-              </div>
+        <div v-else class="wx-shell">
+          <div class="wx-board">
+            <div class="wx-qr">
+              <img
+                v-if="wxQrcodeDataUrl"
+                :src="wxQrcodeDataUrl"
+                alt="wx login qrcode"
+                class="wx-qr-image"
+              />
+              <span v-else class="wx-empty">等待二维码生成</span>
+            </div>
+            <div class="wx-meta">
+              <span class="wx-status">状态：{{ wxStatusText }}</span>
+              <span class="wx-expire">剩余 {{ wxCountdown }} 秒</span>
+              <button
+                type="button"
+                class="btn btn-light"
+                @click="loadWxQrcode"
+              >
+                刷新二维码
+              </button>
+              <button
+                v-if="wxMockEnabled"
+                type="button"
+                class="btn btn-primary"
+                @click="mockWxAuthorize"
+              >
+                模拟扫码成功
+              </button>
             </div>
           </div>
+        </div>
 
-          <p v-if="errorText" class="scholar-note scholar-note--danger">{{ errorText }}</p>
-          <p v-if="hintText" class="scholar-note scholar-note--success">{{ hintText }}</p>
+        <p v-if="errorText" class="message message-error">{{ errorText }}</p>
+        <p v-if="hintText" class="message message-success">{{ hintText }}</p>
 
-          <div class="scholar-inline-actions scholar-inline-actions--spread">
-            <RouterLink class="scholar-button scholar-button--secondary" :to="registerLink">
-              新用户注册
-            </RouterLink>
-            <button
-              type="button"
-              class="scholar-button scholar-button--ghost"
-              @click="enterGuest"
-            >
-              先看看工作台
-            </button>
-          </div>
+        <div class="panel-foot">
+          <RouterLink class="link-btn" :to="registerLink">去注册</RouterLink>
         </div>
       </section>
     </div>
@@ -237,10 +129,10 @@ import { setUserInfo, setUserToken } from "../../lib/session"
 
 const route = useRoute()
 const router = useRouter()
+
 const wechatLoginEnabled = ref(false)
 const wxMockEnabled = ref(false)
 const phoneLoginEnabled = ref(true)
-const newUserInitialCredits = ref(0)
 
 const mode = ref("phone")
 const phone = ref("")
@@ -265,13 +157,6 @@ const wxStatusText = computed(() => {
   if (wxStatus.value === "authorized") return "已授权，正在登录"
   if (wxStatus.value === "expired") return "二维码已过期"
   return "等待扫码"
-})
-
-const welcomeCreditsText = computed(() => {
-  if (newUserInitialCredits.value > 0) {
-    return `赠送 ${newUserInitialCredits.value.toLocaleString()} 积分`
-  }
-  return "登录后自动开通账户"
 })
 
 onMounted(async () => {
@@ -333,7 +218,6 @@ async function loadAuthOptions() {
     wechatLoginEnabled.value = Boolean(data.wechat_login_enabled)
     wxMockEnabled.value = Boolean(data.wx_mock_enabled)
     phoneLoginEnabled.value = data.phone_login_enabled !== false
-    newUserInitialCredits.value = Number(data.new_user_initial_credits || 0)
     if (!phoneLoginEnabled.value && wechatLoginEnabled.value) {
       mode.value = "wx"
     }
@@ -341,7 +225,6 @@ async function loadAuthOptions() {
     wechatLoginEnabled.value = false
     wxMockEnabled.value = false
     phoneLoginEnabled.value = true
-    newUserInitialCredits.value = 0
   }
 }
 
@@ -461,8 +344,265 @@ function completeLogin(token, user) {
   setUserInfo(user)
   router.push(resolveUserRedirect(route.query.redirect, "/app/detect"))
 }
-
-function enterGuest() {
-  router.push("/app/detect")
-}
 </script>
+
+<style scoped>
+.auth-page {
+  min-height: 100vh;
+  padding: clamp(18px, 4vw, 42px);
+  background:
+    radial-gradient(1200px 620px at 16% -8%, rgba(246, 233, 205, 0.6), transparent 72%),
+    radial-gradient(900px 500px at 86% 108%, rgba(203, 226, 233, 0.5), transparent 70%),
+    #f4f6f8;
+  font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+}
+
+.auth-wrap {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  min-height: calc(100vh - clamp(36px, 8vw, 84px));
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid #d9dee4;
+  box-shadow: 0 20px 58px rgba(18, 33, 52, 0.08);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+}
+
+.brand-panel {
+  padding: clamp(28px, 5vw, 62px);
+  background:
+    linear-gradient(158deg, rgba(19, 67, 103, 0.98), rgba(34, 98, 114, 0.9)),
+    radial-gradient(circle at 88% 15%, rgba(244, 235, 216, 0.3), transparent 38%);
+  color: #f4f7fb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.brand-kicker {
+  margin: 0;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+  opacity: 0.72;
+}
+
+.brand-title {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1.05;
+  letter-spacing: 0.08em;
+  color: #fff8e6;
+  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
+}
+
+.brand-desc {
+  margin: 0;
+  max-width: 34ch;
+  line-height: 1.9;
+  font-size: 15px;
+  color: rgba(245, 247, 252, 0.9);
+}
+
+.form-panel {
+  padding: clamp(24px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-head h2 {
+  margin: 8px 0 6px;
+  font-size: 30px;
+  color: #1d2a36;
+  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
+}
+
+.panel-head p {
+  margin: 0;
+  color: #5f6d79;
+  font-size: 14px;
+}
+
+.panel-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #14574b;
+  background: #e5f3ef;
+}
+
+.mode-switch {
+  margin-top: 18px;
+  display: flex;
+  gap: 8px;
+}
+
+.mode-btn {
+  flex: 1;
+  border: 1px solid #d4dde6;
+  background: #f7fafc;
+  color: #3f4f5e;
+  border-radius: 12px;
+  height: 38px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn.is-active {
+  background: #113f58;
+  color: #ffffff;
+  border-color: #113f58;
+}
+
+.form-stack {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: #4f5d69;
+}
+
+.input {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #cfd9e2;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #22313e;
+  background: #ffffff;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #2f688a;
+  box-shadow: 0 0 0 3px rgba(47, 104, 138, 0.14);
+}
+
+.code-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(132deg, #135278, #1b6b80);
+  color: #ffffff;
+  width: 100%;
+}
+
+.btn-light {
+  background: #edf3f7;
+  color: #2f4152;
+}
+
+.wx-shell {
+  margin-top: 18px;
+}
+
+.wx-board {
+  border: 1px solid #d6e0e8;
+  border-radius: 14px;
+  padding: 14px;
+  background: #f9fbfd;
+}
+
+.wx-qr {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 1px dashed #becad6;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+}
+
+.wx-qr-image {
+  width: min(210px, 100%);
+  height: auto;
+}
+
+.wx-empty {
+  color: #7b8997;
+  font-size: 13px;
+}
+
+.wx-meta {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wx-status,
+.wx-expire {
+  font-size: 12px;
+  color: #4f6070;
+}
+
+.message {
+  margin: 12px 0 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.message-error {
+  border: 1px solid #f0d3cd;
+  background: #fff6f4;
+  color: #9f3f34;
+}
+
+.message-success {
+  border: 1px solid #cde8dc;
+  background: #f2fbf6;
+  color: #17674f;
+}
+
+.panel-foot {
+  margin-top: 16px;
+}
+
+.link-btn {
+  display: inline-block;
+  color: #205d80;
+  text-decoration: none;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(32, 93, 128, 0.35);
+  padding-bottom: 2px;
+}
+
+@media (max-width: 960px) {
+  .auth-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-panel {
+    min-height: 260px;
+  }
+}
+</style>
