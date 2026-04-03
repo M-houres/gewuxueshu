@@ -1,32 +1,19 @@
-# Aliyun ECS Deployment
+# Aliyun ECS Deployment (Simple)
 
-One command for first deploy and updates:
+First deploy and later updates use the same command:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/M-houres/gewuxueshu/main/scripts/deploy_aliyun.sh | bash
+curl -fsSL https://raw.githubusercontent.com/M-houres/gewuxueshu/main/scripts/deploy_aliyun.sh | sudo bash
 ```
 
-If repo is already cloned:
+If code is already on server:
 
 ```bash
-bash scripts/deploy_aliyun.sh
-```
-
-Optional variables:
-
-```bash
-BRANCH=main APP_DIR=/opt/wuhongai bash scripts/deploy_aliyun.sh
-```
-
-Compatibility scripts:
-
-```bash
-bash scripts/deploy_aliyun_first.sh
-bash scripts/deploy_aliyun_update.sh
+sudo bash /opt/gewuxueshu/scripts/deploy_aliyun.sh
 ```
 
 Notes:
 
+- This script targets Ubuntu/Debian.
+- Default deploy directory: `/opt/gewuxueshu`.
 - Open inbound port `80` in Alibaba Cloud security group.
-- If using HTTPS, also open `443`.
-- Main runtime config file on server: `/opt/wuhongai/.env.prod`.

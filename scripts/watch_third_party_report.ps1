@@ -1,10 +1,17 @@
 param(
-  [string]$RootPath = "C:\Users\m\Desktop\bajie",
+  [string]$RootPath = "",
   [int]$IntervalSeconds = 600,
-  [string]$LogPath = "C:\Users\m\Desktop\bajie\wuhongai\docs\third_party_report_watch.log"
+  [string]$LogPath = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if ([string]::IsNullOrWhiteSpace($RootPath)) {
+  $RootPath = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+}
+if ([string]::IsNullOrWhiteSpace($LogPath)) {
+  $LogPath = Join-Path $RootPath "docs\third_party_report_watch.log"
+}
 
 function Write-Log {
   param([string]$Message)
