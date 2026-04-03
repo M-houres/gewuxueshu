@@ -23,7 +23,9 @@ run_backend_tests() {
   cd "$BACKEND_DIR"
 
   local py=""
-  if [ -x "$BACKEND_DIR/.venv/bin/python" ]; then
+  if [ -x "$BACKEND_DIR/.venv_sys/bin/python" ]; then
+    py="$BACKEND_DIR/.venv_sys/bin/python"
+  elif [ -x "$BACKEND_DIR/.venv/bin/python" ]; then
     py="$BACKEND_DIR/.venv/bin/python"
   elif command -v python3 >/dev/null 2>&1; then
     py="$(command -v python3)"

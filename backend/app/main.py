@@ -1,4 +1,5 @@
-﻿from datetime import datetime
+﻿from contextlib import asynccontextmanager
+from datetime import datetime
 import logging
 from pathlib import Path
 import time
@@ -25,7 +26,17 @@ from app.security import hash_password
 setup_logging()
 logger = logging.getLogger("app.main")
 settings = get_settings()
-app = FastAPI(title=settings.app_name)
+@asynccontextmanager
+async def app_lifespan(_: FastAPI):
+    assert_production_secrets()
+    run_migrations()
+    repair_missing_tables()
+    init_super_admin()
+    logger.info("startup_completed", extra={"app_env": settings.app_env})
+    yield
+
+
+app = FastAPI(title=settings.app_name, lifespan=app_lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -173,14 +184,6 @@ def repair_missing_tables() -> None:
         extra={"tables": missing_tables},
     )
 
-
-@app.on_event("startup")
-def on_startup() -> None:
-    assert_production_secrets()
-    run_migrations()
-    repair_missing_tables()
-    init_super_admin()
-    logger.info("startup_completed", extra={"app_env": settings.app_env})
 
 
 @app.get("/health")

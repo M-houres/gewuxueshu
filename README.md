@@ -188,3 +188,8 @@ curl -X POST "http://localhost:8000/api/v1/admin/algo-packages/activate" \
   - `scripts\\quality_gate.ps1`
 - 全链路升级手册：
   - `docs/PROJECT_EXCELLENCE_PLAYBOOK.md`
+
+## Aliyun Quick Commands
+- Quick guide: `docs/ALIYUN_QUICKSTART.md`
+- Deploy: `bash scripts/deploy_aliyun.sh`
+- Rollback: `bash scripts/deploy_aliyun_rollback.sh`
