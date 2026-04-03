@@ -47,6 +47,11 @@ _LOGIN_CONFIG_DEFAULTS = {
     "wechat_app_id": "",
     "wechat_app_secret": "",
     "wechat_redirect_uri": "",
+    "new_user_initial_credits": 2000,
+    "max_code_retry": 3,
+    "phone_lock_minutes": 5,
+    "send_code_ip_1h_limit": 30,
+    "login_ip_10m_limit": 120,
 }
 
 
@@ -125,8 +130,32 @@ def _get_login_config(db: Session) -> dict:
     value = row.config_value if row and isinstance(row.config_value, dict) else {}
     merged = dict(_LOGIN_CONFIG_DEFAULTS)
     merged["debug_code_enabled"] = _default_debug_code_enabled()
+    merged["new_user_initial_credits"] = int(settings.initial_credits)
+    merged["max_code_retry"] = int(settings.max_code_retry)
+    merged["phone_lock_minutes"] = int(settings.phone_lock_minutes)
+    merged["send_code_ip_1h_limit"] = int(settings.auth_send_code_ip_1h_limit)
+    merged["login_ip_10m_limit"] = int(settings.auth_login_ip_10m_limit)
     merged.update(value)
     return merged
+
+
+def _int_from_login_cfg(
+    login_cfg: dict,
+    key: str,
+    default: int,
+    *,
+    min_value: int = 0,
+    max_value: int | None = None,
+) -> int:
+    try:
+        value = int(login_cfg.get(key, default))
+    except Exception:
+        value = int(default)
+    if value < min_value:
+        return int(default)
+    if max_value is not None and value > max_value:
+        return int(default)
+    return value
 
 
 def _sms_provider_ready(login_cfg: dict) -> bool:
@@ -377,6 +406,7 @@ def _upsert_wechat_user(
     source: str = DEFAULT_CLIENT_SOURCE,
     scene: str = "web",
     unionid: str | None = None,
+    initial_credits: int | None = None,
 ) -> tuple[User, bool]:
     is_miniprogram = scene == "miniprogram"
     openid_attr = "wechat_openid_mp" if is_miniprogram else "wechat_openid_web"
@@ -410,7 +440,7 @@ def _upsert_wechat_user(
             db,
             user,
             tx_type=CreditType.INIT,
-            delta=settings.initial_credits,
+            delta=settings.initial_credits if initial_credits is None else int(initial_credits),
             reason="微信新用户初始积分",
             related_id=f"wx_user_init:{user.id}",
             source=source,
@@ -443,6 +473,7 @@ def auth_options(db: Session = Depends(db_dep)) -> APIResp:
             "sms_provider": str(login_cfg.get("sms_provider", "custom_webhook")).strip().lower() or "custom_webhook",
             "wx_mock_enabled": _wechat_mock_enabled(),
             "phone_login_enabled": phone_login_enabled,
+            "new_user_initial_credits": _int_from_login_cfg(login_cfg, "new_user_initial_credits", settings.initial_credits, min_value=0, max_value=1_000_000),
         }
     )
 
@@ -454,6 +485,7 @@ def send_code(
     db: Session = Depends(db_dep),
     redis_client=Depends(get_redis),
 ) -> APIResp:
+    login_cfg = _get_login_config(db)
     if not is_phone_valid(req.phone):
         raise BizError(code=4001, message="手机号格式错误")
     ip = _get_ip(request)
@@ -461,7 +493,7 @@ def send_code(
         redis_client,
         ip=ip,
         action="send_code",
-        limit=int(settings.auth_send_code_ip_1h_limit),
+        limit=_int_from_login_cfg(login_cfg, "send_code_ip_1h_limit", settings.auth_send_code_ip_1h_limit, min_value=1, max_value=10_000),
         window_seconds=3600,
         error_code=4019,
         error_message="当前IP请求验证码过于频繁，请稍后重试",
@@ -477,7 +509,6 @@ def send_code(
     if redis_client.ttl(cooldown_key) > 0:
         raise BizError(code=4003, message=f"验证码发送过于频繁，请{redis_client.ttl(cooldown_key)}秒后重试")
 
-    login_cfg = _get_login_config(db)
     debug_switch = bool(login_cfg.get("debug_code_enabled"))
     sms_ready = _sms_provider_ready(login_cfg)
     if settings.app_env == "prod" and (not sms_ready):
@@ -509,13 +540,14 @@ def send_code(
 
 @router.post("/login", response_model=APIResp)
 def login(req: LoginReq, request: Request, db: Session = Depends(db_dep), redis_client=Depends(get_redis)) -> APIResp:
+    login_cfg = _get_login_config(db)
     if not is_phone_valid(req.phone):
         raise BizError(code=4001, message="手机号格式错误")
     _enforce_ip_limit(
         redis_client,
         ip=_get_ip(request),
         action="login",
-        limit=int(settings.auth_login_ip_10m_limit),
+        limit=_int_from_login_cfg(login_cfg, "login_ip_10m_limit", settings.auth_login_ip_10m_limit, min_value=1, max_value=10_000),
         window_seconds=10 * 60,
         error_code=4020,
         error_message="当前IP登录请求过于频繁，请稍后再试",
@@ -537,8 +569,10 @@ def login(req: LoginReq, request: Request, db: Session = Depends(db_dep), redis_
     if req.code != real_code:
         current_retry = redis_client.incr(attempt_key)
         redis_client.expire(attempt_key, 300)
-        if current_retry >= settings.max_code_retry:
-            redis_client.setex(lock_key, settings.phone_lock_minutes * 60, 1)
+        max_code_retry = _int_from_login_cfg(login_cfg, "max_code_retry", settings.max_code_retry, min_value=1, max_value=20)
+        phone_lock_minutes = _int_from_login_cfg(login_cfg, "phone_lock_minutes", settings.phone_lock_minutes, min_value=1, max_value=120)
+        if current_retry >= max_code_retry:
+            redis_client.setex(lock_key, phone_lock_minutes * 60, 1)
             redis_client.delete(code_key)
         raise BizError(code=4005, message="验证码错误")
 
@@ -570,11 +604,18 @@ def login(req: LoginReq, request: Request, db: Session = Depends(db_dep), redis_
             user = User(phone=req.phone, nickname=f"用户{req.phone[-4:]}", source=client_source, credits=0)
             db.add(user)
             db.flush()
+            initial_credits = _int_from_login_cfg(
+                login_cfg,
+                "new_user_initial_credits",
+                settings.initial_credits,
+                min_value=0,
+                max_value=1_000_000,
+            )
             change_credits(
                 db,
                 user,
                 tx_type=CreditType.INIT,
-                delta=settings.initial_credits,
+                delta=initial_credits,
                 reason="新用户初始积分",
                 related_id=f"user_init:{user.id}",
                 source=client_source,
@@ -751,6 +792,13 @@ def wx_callback(
             source=get_client_source(request),
             scene="web",
             unionid=unionid,
+            initial_credits=_int_from_login_cfg(
+                login_cfg,
+                "new_user_initial_credits",
+                settings.initial_credits,
+                min_value=0,
+                max_value=1_000_000,
+            ),
         )
         token = create_token(subject=str(user.id), scope="user")
         db.commit()
@@ -819,6 +867,7 @@ def wx_mock_authorize(
     if scene not in {"web", "miniprogram"}:
         scene = "web"
     unionid = str(payload.get("unionid", "")).strip() or None
+    login_cfg = _get_login_config(db)
 
     try:
         user, is_new_user = _upsert_wechat_user(
@@ -827,6 +876,13 @@ def wx_mock_authorize(
             source=get_client_source(request),
             scene=scene,
             unionid=unionid,
+            initial_credits=_int_from_login_cfg(
+                login_cfg,
+                "new_user_initial_credits",
+                settings.initial_credits,
+                min_value=0,
+                max_value=1_000_000,
+            ),
         )
         token = create_token(subject=str(user.id), scope="user")
         db.commit()

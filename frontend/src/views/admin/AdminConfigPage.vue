@@ -221,6 +221,32 @@
               <label class="space-y-1 text-sm"><span>微信 AppSecret</span><input v-model="forms.login.wechat_app_secret" type="password" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" /></label>
               <label class="space-y-1 text-sm md:col-span-2"><span>微信回调地址</span><input v-model="forms.login.wechat_redirect_uri" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" /></label>
             </div>
+            <section class="rounded-2xl border border-[#dce4eb] bg-[#f8fbff] p-4">
+              <div class="text-sm font-semibold text-[#1f2c35]">新用户与风控参数</div>
+              <div class="mt-1 text-xs leading-5 text-[#5f6d79]">保存后立即生效，用于控制注册赠送积分和登录风控阈值。</div>
+              <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <label class="space-y-1 text-sm">
+                  <span>新用户初始积分</span>
+                  <input v-model.number="forms.login.new_user_initial_credits" type="number" min="0" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" />
+                </label>
+                <label class="space-y-1 text-sm">
+                  <span>验证码最大重试次数</span>
+                  <input v-model.number="forms.login.max_code_retry" type="number" min="1" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" />
+                </label>
+                <label class="space-y-1 text-sm">
+                  <span>手机号锁定分钟数</span>
+                  <input v-model.number="forms.login.phone_lock_minutes" type="number" min="1" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" />
+                </label>
+                <label class="space-y-1 text-sm">
+                  <span>发送验证码 IP 限流（1小时）</span>
+                  <input v-model.number="forms.login.send_code_ip_1h_limit" type="number" min="1" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" />
+                </label>
+                <label class="space-y-1 text-sm md:col-span-2">
+                  <span>登录请求 IP 限流（10分钟）</span>
+                  <input v-model.number="forms.login.login_ip_10m_limit" type="number" min="1" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" />
+                </label>
+              </div>
+            </section>
           </template>
 
           <template v-else-if="activeTab === 'referral'">
@@ -447,6 +473,11 @@ const forms = ref({
     wechat_app_id: "",
     wechat_app_secret: "",
     wechat_redirect_uri: "",
+    new_user_initial_credits: 2000,
+    max_code_retry: 3,
+    phone_lock_minutes: 5,
+    send_code_ip_1h_limit: 30,
+    login_ip_10m_limit: 120,
   },
   referral: {
     register_inviter_credits: 500,
@@ -503,6 +534,11 @@ async function loadTab(category) {
   if (category === "login") {
     forms.value.login.sms_region = forms.value.login.sms_region || "ap-guangzhou"
     forms.value.login.sms_aliyun_region_id = forms.value.login.sms_aliyun_region_id || "cn-hangzhou"
+    forms.value.login.new_user_initial_credits = Number(forms.value.login.new_user_initial_credits ?? 2000)
+    forms.value.login.max_code_retry = Number(forms.value.login.max_code_retry ?? 3)
+    forms.value.login.phone_lock_minutes = Number(forms.value.login.phone_lock_minutes ?? 5)
+    forms.value.login.send_code_ip_1h_limit = Number(forms.value.login.send_code_ip_1h_limit ?? 30)
+    forms.value.login.login_ip_10m_limit = Number(forms.value.login.login_ip_10m_limit ?? 120)
   }
   if (category === "referral") {
     referralFirstPayPct.value = Number(((forms.value.referral.first_pay_ratio || 0) * 100).toFixed(2))
@@ -574,6 +610,24 @@ function validateCurrent() {
   }
   if (activeTab.value === "payment" && !forms.value.payment.test_mode && forms.value.payment.provider === "mock") {
     return "关闭联调模式后不能选择 mock"
+  }
+  if (activeTab.value === "login") {
+    const cfg = forms.value.login || {}
+    if (Number(cfg.new_user_initial_credits) < 0) {
+      return "新用户初始积分不能小于 0"
+    }
+    if (Number(cfg.max_code_retry) < 1) {
+      return "验证码最大重试次数不能小于 1"
+    }
+    if (Number(cfg.phone_lock_minutes) < 1) {
+      return "手机号锁定分钟数不能小于 1"
+    }
+    if (Number(cfg.send_code_ip_1h_limit) < 1) {
+      return "发送验证码 IP 限流不能小于 1"
+    }
+    if (Number(cfg.login_ip_10m_limit) < 1) {
+      return "登录请求 IP 限流不能小于 1"
+    }
   }
   return ""
 }

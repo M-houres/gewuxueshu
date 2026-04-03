@@ -3,21 +3,21 @@
     <div class="scholar-panel__header">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div class="scholar-kicker">Recent Tasks</div>
+          <div class="scholar-kicker">近期任务</div>
           <h3 class="scholar-subtitle">{{ title }}</h3>
           <p v-if="description" class="scholar-lead">{{ description }}</p>
         </div>
         <button class="scholar-button scholar-button--secondary" type="button" @click="$emit('history')">
-          查看全部
+          进入个人中心
         </button>
       </div>
     </div>
 
     <div class="scholar-panel__body">
       <div v-if="guest" class="scholar-note">
-        <div style="font-weight: 600; color: var(--ink)">游客模式下不展示个人任务记录。</div>
+        <div style="font-weight: 600; color: var(--ink)">登录后自动同步近期任务。</div>
         <div style="margin-top: 6px">
-          登录后可查看处理进度、失败原因、结果摘要和下载入口。
+          提交任务后，可在个人中心统一查看处理进度、失败原因、结果摘要和下载入口。
         </div>
         <button
           class="scholar-button"
@@ -25,7 +25,7 @@
           style="margin-top: 14px"
           @click="$emit('login')"
         >
-          登录后查看
+          登录后同步
         </button>
       </div>
 

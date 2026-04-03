@@ -186,8 +186,8 @@ h6 {
 }
 
 .scholar-brand__eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.24em;
+  font-size: 11px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
@@ -195,14 +195,14 @@ h6 {
 .scholar-brand__title {
   margin-top: 12px;
   font-family: var(--font-display);
-  font-size: 27px;
-  line-height: 1.12;
+  font-size: clamp(36px, 3vw, 44px);
+  line-height: 1.02;
 }
 
 .scholar-brand__lead {
   margin-top: 12px;
   color: var(--ink-soft);
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.8;
 }
 
@@ -212,6 +212,18 @@ h6 {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--accent-warm);
+}
+
+.scholar-sidebar__section + .scholar-sidebar__section {
+  margin-top: 22px;
+}
+
+.scholar-sidebar__label {
+  margin: 0 0 12px 16px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
 }
 
 .scholar-nav {
@@ -414,8 +426,8 @@ h6 {
 }
 
 .scholar-topbar__eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.24em;
+  font-size: 11px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
@@ -423,8 +435,8 @@ h6 {
 .scholar-topbar__title {
   margin-top: 8px;
   font-family: var(--font-display);
-  font-size: clamp(28px, 3.8vw, 38px);
-  line-height: 1.08;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.12;
 }
 
 .scholar-topbar__lead {
@@ -1423,6 +1435,60 @@ h6 {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.scholar-tab-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.scholar-summary-row {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.scholar-summary-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.scholar-summary-card__label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.scholar-summary-card__value {
+  margin-top: 12px;
+  font-size: 26px;
+  line-height: 1.08;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.scholar-summary-card__hint {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.scholar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.scholar-toolbar__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .scholar-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--line), transparent);
@@ -1449,6 +1515,10 @@ h6 {
   }
 
   .scholar-grid--stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scholar-summary-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1492,6 +1562,10 @@ h6 {
 
   .scholar-rail-card__grid,
   .scholar-topbar__brief {
+    grid-template-columns: 1fr;
+  }
+
+  .scholar-summary-row {
     grid-template-columns: 1fr;
   }
 }

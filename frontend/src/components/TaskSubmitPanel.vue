@@ -13,7 +13,7 @@
             <div class="scholar-panel__body">
               <div class="flex items-center justify-between gap-3">
                 <div>
-                  <div class="scholar-kicker">Step 1</div>
+                  <div class="scholar-kicker">第一步</div>
                   <h3 class="scholar-subtitle">选择目标平台</h3>
                 </div>
                 <span class="scholar-pill">默认推荐知网 CNKI</span>
@@ -47,7 +47,7 @@
 
           <section class="scholar-panel scholar-panel--soft">
             <div class="scholar-panel__body">
-              <div class="scholar-kicker">Step 2</div>
+              <div class="scholar-kicker">第二步</div>
               <h3 class="scholar-subtitle">上传正文文件</h3>
               <p class="scholar-lead">{{ paperHint }}</p>
 
@@ -91,7 +91,7 @@
             <div class="scholar-panel__body">
               <div class="flex items-center justify-between gap-3">
                 <div>
-                  <div class="scholar-kicker">Step 3</div>
+                  <div class="scholar-kicker">第三步</div>
                   <h3 class="scholar-subtitle">上传辅助报告</h3>
                 </div>
                 <span class="scholar-pill">可选</span>
@@ -137,7 +137,7 @@
         <div class="scholar-stack">
           <section class="scholar-panel scholar-panel--soft">
             <div class="scholar-panel__body">
-              <div class="scholar-kicker">Step {{ needReport ? 4 : 3 }}</div>
+              <div class="scholar-kicker">{{ confirmationStepLabel }}</div>
               <h3 class="scholar-subtitle">提交前确认</h3>
 
               <div class="scholar-stack" style="margin-top: 18px">
@@ -197,7 +197,7 @@
 
           <section class="scholar-panel scholar-panel--soft">
             <div class="scholar-panel__body">
-              <div class="scholar-kicker">Writing Notes</div>
+              <div class="scholar-kicker">处理提示</div>
               <h3 class="scholar-subtitle">执行提示</h3>
               <div class="scholar-stack" style="margin-top: 16px">
                 <div class="scholar-note">建议正文使用可编辑源文件，便于系统提取文本并保留结构。</div>
@@ -256,12 +256,14 @@ const successText = ref("")
 
 const sectionCode = computed(() => {
   const mapping = {
-    aigc_detect: "AIGC Detect",
-    dedup: "Dedup Rewrite",
-    rewrite: "AIGC Reduction",
+    aigc_detect: "检测入口",
+    dedup: "降重入口",
+    rewrite: "降 AIGC 率入口",
   }
-  return mapping[props.taskType] || "Task Submit"
+  return mapping[props.taskType] || "任务提交"
 })
+
+const confirmationStepLabel = computed(() => (props.needReport ? "第四步" : "第三步"))
 
 const platformOptions = computed(() => {
   if (props.taskType === "dedup") {

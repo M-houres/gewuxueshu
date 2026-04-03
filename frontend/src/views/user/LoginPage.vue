@@ -5,10 +5,10 @@
         <div class="scholar-auth__content scholar-auth__content--login">
           <div class="scholar-auth__masthead">
             <div>
-              <div class="scholar-auth__eyebrow">GEWU ACADEMIC</div>
+              <div class="scholar-auth__eyebrow">学术工作流</div>
               <div class="scholar-login__meta">学术文本工作流平台</div>
             </div>
-            <span class="scholar-auth__signal">Research Workflow / 24H</span>
+            <span class="scholar-auth__signal">统一处理 / 自动归档</span>
           </div>
 
           <div class="scholar-auth__headline">
@@ -19,22 +19,19 @@
           </div>
 
           <div class="scholar-auth__ledger">
-            <div class="scholar-auth__ledger-label">从检测到交付</div>
+            <div class="scholar-auth__ledger-label">核心功能</div>
             <div class="scholar-auth__ledger-grid">
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">01</div>
                 <strong>AIGC 检测</strong>
                 <p>先识别文本生成痕迹，再决定是否进入降重或改写流程。</p>
               </article>
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">02</div>
                 <strong>降重复率</strong>
                 <p>按目标平台选择算法，保留学术表达的结构稳定性。</p>
               </article>
               <article class="scholar-auth__ledger-card">
-                <div class="scholar-auth__ledger-index">03</div>
-                <strong>结果交付</strong>
-                <p>处理完成后回到同一工作台，统一下载结果与历史记录。</p>
+                <strong>降 AIGC 率</strong>
+                <p>围绕高风险段落继续优化表达，结果与记录都会回到个人中心统一查看。</p>
               </article>
             </div>
           </div>
@@ -43,17 +40,17 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">STEP 01</div>
+                <div class="scholar-auth__timeline-code">第一步</div>
                 <div class="scholar-auth__timeline-title">提交正文或报告</div>
                 <p class="scholar-auth__timeline-copy">
-                  支持先查看页面结构，再决定是否登录创建任务。
+                  先浏览入口和处理路径，需要提交任务时再完成登录。
                 </p>
               </div>
             </article>
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">STEP 02</div>
+                <div class="scholar-auth__timeline-code">第二步</div>
                 <div class="scholar-auth__timeline-title">执行检测与优化</div>
                 <p class="scholar-auth__timeline-copy">
                   按字符精确计费，失败自动退回积分，过程状态全程可见。
@@ -63,17 +60,21 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">STEP 03</div>
-                <div class="scholar-auth__timeline-title">回到同一工作台交付</div>
+                <div class="scholar-auth__timeline-code">第三步</div>
+                <div class="scholar-auth__timeline-title">在个人中心统一查看</div>
                 <p class="scholar-auth__timeline-copy">
-                  下载结果、查看积分流水和回溯历史任务都在一个入口内完成。
+                  任务记录、积分流水和账户设置统一归档，不再分散跳转。
                 </p>
               </div>
             </article>
           </div>
 
           <div class="scholar-login__footnote">
-            适用于毕业论文、课程论文、期刊初稿等常见学术文本场景。
+            {{
+              newUserInitialCredits > 0
+                ? `新用户注册后可获得 ${newUserInitialCredits.toLocaleString()} 积分，用于直接开始任务。`
+                : "适用于毕业论文、课程论文、期刊初稿等常见学术文本场景。"
+            }}
           </div>
         </div>
       </section>
@@ -84,7 +85,11 @@
             <span class="scholar-badge scholar-badge--info">统一登录入口</span>
             <h2>登录</h2>
             <p class="scholar-lead">
-              {{ wechatLoginEnabled ? "支持短信验证码与微信扫码登录。" : "当前使用短信验证码登录。" }}
+              {{
+                wechatLoginEnabled
+                  ? "支持短信验证码与微信扫码登录，登录后任务和账户信息会自动同步。"
+                  : "当前使用短信验证码登录，登录后任务和账户信息会自动同步。"
+              }}
             </p>
           </div>
 
@@ -94,12 +99,12 @@
               <strong>{{ wechatLoginEnabled ? "短信 / 微信" : "短信验证码" }}</strong>
             </article>
             <article class="scholar-auth__quickitem">
-              <span>试用方式</span>
-              <strong>游客可先浏览</strong>
+              <span>新用户权益</span>
+              <strong>{{ welcomeCreditsText }}</strong>
             </article>
             <article class="scholar-auth__quickitem">
               <span>结果管理</span>
-              <strong>任务全程可追踪</strong>
+              <strong>个人中心统一归档</strong>
             </article>
           </div>
 
@@ -204,15 +209,15 @@
           <p v-if="hintText" class="scholar-note scholar-note--success">{{ hintText }}</p>
 
           <div class="scholar-inline-actions scholar-inline-actions--spread">
-            <RouterLink class="scholar-button scholar-button--ghost" :to="registerLink">
+            <RouterLink class="scholar-button scholar-button--secondary" :to="registerLink">
               新用户注册
             </RouterLink>
             <button
               type="button"
-              class="scholar-button scholar-button--secondary"
+              class="scholar-button scholar-button--ghost"
               @click="enterGuest"
             >
-              先以游客浏览
+              先看看工作台
             </button>
           </div>
         </div>
@@ -235,6 +240,7 @@ const router = useRouter()
 const wechatLoginEnabled = ref(false)
 const wxMockEnabled = ref(false)
 const phoneLoginEnabled = ref(true)
+const newUserInitialCredits = ref(0)
 
 const mode = ref("phone")
 const phone = ref("")
@@ -259,6 +265,13 @@ const wxStatusText = computed(() => {
   if (wxStatus.value === "authorized") return "已授权，正在登录"
   if (wxStatus.value === "expired") return "二维码已过期"
   return "等待扫码"
+})
+
+const welcomeCreditsText = computed(() => {
+  if (newUserInitialCredits.value > 0) {
+    return `赠送 ${newUserInitialCredits.value.toLocaleString()} 积分`
+  }
+  return "登录后自动开通账户"
 })
 
 onMounted(async () => {
@@ -320,6 +333,7 @@ async function loadAuthOptions() {
     wechatLoginEnabled.value = Boolean(data.wechat_login_enabled)
     wxMockEnabled.value = Boolean(data.wx_mock_enabled)
     phoneLoginEnabled.value = data.phone_login_enabled !== false
+    newUserInitialCredits.value = Number(data.new_user_initial_credits || 0)
     if (!phoneLoginEnabled.value && wechatLoginEnabled.value) {
       mode.value = "wx"
     }
@@ -327,6 +341,7 @@ async function loadAuthOptions() {
     wechatLoginEnabled.value = false
     wxMockEnabled.value = false
     phoneLoginEnabled.value = true
+    newUserInitialCredits.value = 0
   }
 }
 

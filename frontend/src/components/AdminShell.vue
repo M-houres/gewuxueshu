@@ -3,30 +3,58 @@
     <div class="scholar-shell">
       <aside class="scholar-sidebar">
         <div class="scholar-brand">
-          <div class="scholar-brand__eyebrow">格物学术</div>
+          <div class="scholar-brand__eyebrow">运营后台</div>
           <div class="scholar-brand__title">运营控制台</div>
           <p class="scholar-brand__lead">
-            统一处理计费、支付、登录、算法包、推广和任务审计，面向上线运营的后台工作流。
+            把用户、订单、任务、推广、算法包和配置审计收进同一个后台，减少部署时反复改环境变量。
           </p>
         </div>
 
-        <nav class="scholar-nav">
-          <RouterLink
-            v-for="(item, idx) in menus"
-            :key="item.path"
-            :to="item.path"
-            class="scholar-nav__item"
-            :class="{ 'is-active': isMenuActive(item.path) }"
-          >
-            <span class="scholar-nav__label">{{ item.label }}</span>
-            <span class="scholar-nav__meta">{{ menuCode(idx) }}</span>
-          </RouterLink>
-        </nav>
+        <section class="scholar-sidebar__section">
+          <div class="scholar-sidebar__label">核心运营</div>
+          <nav class="scholar-nav">
+            <RouterLink
+              v-for="item in coreMenus"
+              :key="item.path"
+              :to="item.path"
+              class="scholar-nav__item"
+              :class="{ 'is-active': isMenuActive(item.path) }"
+            >
+              <span class="scholar-nav__label">{{ item.label }}</span>
+            </RouterLink>
+          </nav>
+        </section>
 
-        <div class="scholar-rail-card">
-          <div class="scholar-rail-card__label">系统模式</div>
-          <div class="scholar-rail-card__body" style="margin-top: 8px">
-            <span class="scholar-badge" :class="systemModeBadgeClass">{{ systemModeText }}</span>
+        <section v-if="advancedMenus.length" class="scholar-sidebar__section">
+          <div class="scholar-sidebar__label">系统能力</div>
+          <nav class="scholar-nav">
+            <RouterLink
+              v-for="item in advancedMenus"
+              :key="item.path"
+              :to="item.path"
+              class="scholar-nav__item"
+              :class="{ 'is-active': isMenuActive(item.path) }"
+            >
+              <span class="scholar-nav__label">{{ item.label }}</span>
+            </RouterLink>
+          </nav>
+        </section>
+
+        <div class="scholar-rail-card scholar-rail-card--accent">
+          <div class="scholar-rail-card__eyeline">系统状态</div>
+          <div class="scholar-rail-card__headline">{{ systemModeText }}</div>
+          <div class="scholar-rail-card__body">
+            运行模式由后台接口实时回读，避免界面状态和系统真实状态脱节。
+          </div>
+          <div class="scholar-rail-card__grid">
+            <div class="scholar-rail-card__metric">
+              <span>当前模块</span>
+              <strong>{{ activeMenu?.label || "后台" }}</strong>
+            </div>
+            <div class="scholar-rail-card__metric">
+              <span>管理员角色</span>
+              <strong>{{ adminInfo?.role || "admin" }}</strong>
+            </div>
           </div>
         </div>
 
@@ -50,7 +78,7 @@
         <header class="scholar-topbar">
           <div class="scholar-topbar__meta">
             <div>
-              <div class="scholar-topbar__eyebrow">格物学术 / {{ activeMenuCode }}</div>
+              <div class="scholar-topbar__eyebrow">当前模块</div>
               <div class="scholar-topbar__title">{{ title }}</div>
               <p class="scholar-topbar__lead">
                 {{ subtitle || "后台配置尽量收拢到管理界面，部署时减少环境变量依赖。" }}
@@ -69,19 +97,19 @@
 
           <div class="scholar-topbar__brief">
             <article class="scholar-topbar__brief-item">
-              <span>当前区段</span>
+              <span>当前位置</span>
               <strong>{{ activeMenu?.label || "后台" }}</strong>
-              <p>导航高亮与详情页归属保持一致，避免在详情页丢失位置感。</p>
+              <p>详情页和列表页共用同一导航高亮，避免丢失位置感。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>管理员角色</span>
+              <span>管理方式</span>
+              <strong>配置优先，环境变量兜底</strong>
+              <p>关键参数统一沉到后台维护，部署后仍可在线调整。</p>
+            </article>
+            <article class="scholar-topbar__brief-item">
+              <span>权限边界</span>
               <strong>{{ adminInfo?.role || "admin" }}</strong>
-              <p>权限不足的页面会被路由守卫自动挡回总览页。</p>
-            </article>
-            <article class="scholar-topbar__brief-item">
-              <span>运行模式</span>
-              <strong>{{ systemModeText }}</strong>
-              <p>切换状态由后台接口回读，避免界面与真实系统状态脱节。</p>
+              <p>超管专属能力会被路由守卫和接口权限同时约束。</p>
             </article>
           </div>
         </header>
@@ -117,24 +145,27 @@ const route = useRoute()
 const adminInfo = ref(getAdminInfo())
 const systemMode = ref("LLM_PLUS_ALGO")
 
-const menus = computed(() => {
-  const base = [
-    { path: "/admin/dashboard", label: "总览看板" },
-    { path: "/admin/users", label: "用户管理" },
-    { path: "/admin/tasks", label: "任务管理" },
-    { path: "/admin/orders", label: "订单管理" },
-    { path: "/admin/referrals", label: "推广管理" },
-    { path: "/admin/logs", label: "系统日志" },
-  ]
-  if (adminInfo.value?.role === "super_admin") {
-    base.splice(4, 0, { path: "/admin/algo-packages", label: "算法包管理" })
-    base.push({ path: "/admin/configs", label: "配置中心" })
+const coreMenus = computed(() => [
+  { path: "/admin/dashboard", label: "总览看板" },
+  { path: "/admin/users", label: "用户管理" },
+  { path: "/admin/tasks", label: "任务管理" },
+  { path: "/admin/orders", label: "订单管理" },
+  { path: "/admin/referrals", label: "推广管理" },
+  { path: "/admin/logs", label: "系统日志" },
+])
+
+const advancedMenus = computed(() => {
+  if (adminInfo.value?.role !== "super_admin") {
+    return []
   }
-  return base
+  return [
+    { path: "/admin/algo-packages", label: "算法包管理" },
+    { path: "/admin/configs", label: "配置中心" },
+  ]
 })
 
+const menus = computed(() => [...coreMenus.value, ...advancedMenus.value])
 const activeMenu = computed(() => menus.value.find((item) => isRouteMatch(route.path, item.path)) || menus.value[0] || null)
-const activeMenuCode = computed(() => menuCode(menus.value.findIndex((item) => item.path === activeMenu.value?.path)))
 
 const systemModeText = computed(() => {
   if (systemMode.value === "ALGO_ONLY") {
@@ -164,13 +195,6 @@ async function loadSystemStatus() {
 function logout() {
   clearAdminSession()
   router.push("/admin/login")
-}
-
-function menuCode(index) {
-  if (index < 0) {
-    return "A00"
-  }
-  return `A${String(index + 1).padStart(2, "0")}`
 }
 
 function isMenuActive(path) {

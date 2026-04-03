@@ -3,52 +3,58 @@
     <div class="scholar-shell scholar-shell--editorial">
       <aside class="scholar-sidebar">
         <div class="scholar-brand">
-          <div class="scholar-brand__eyebrow">GEWU ACADEMIC</div>
+          <div class="scholar-brand__eyebrow">学术工作台</div>
           <div class="scholar-brand__title">格物学术</div>
-          <div class="scholar-brand__caption">Research Desk / {{ activeMenuCode }}</div>
           <p class="scholar-brand__lead">
-            面向论文修改与检测场景的统一入口，覆盖 AIGC 检测、降重复率、降 AIGC 率、积分结算与结果回溯。
+            把检测、降重、降 AIGC 率、积分购买和账户归档收进同一条工作流，减少跳转和反复确认。
           </p>
         </div>
 
-        <div class="scholar-rail-stack">
-          <div class="scholar-rail-card scholar-rail-card--accent">
-            <div class="scholar-rail-card__eyeline">当前工作区</div>
-            <div class="scholar-rail-card__headline">{{ activeMenu?.label || "工作台" }}</div>
-            <div class="scholar-rail-card__body">
-              {{ hasUserToken ? "已进入正式会话，可直接提交任务、查看历史和管理积分。" : "当前仍可先浏览页面，创建任务或支付时再登录。" }}
-            </div>
-            <div class="scholar-rail-card__grid">
-              <div class="scholar-rail-card__metric">
-                <span>会话状态</span>
-                <strong>{{ hasUserToken ? "用户模式" : "游客模式" }}</strong>
-              </div>
-              <div class="scholar-rail-card__metric">
-                <span>工作区编号</span>
-                <strong>{{ activeMenuCode }}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
+        <section class="scholar-sidebar__section">
+          <div class="scholar-sidebar__label">处理工作台</div>
+          <nav class="scholar-nav">
+            <RouterLink
+              v-for="item in workspaceMenus"
+              :key="item.path"
+              :to="item.path"
+              class="scholar-nav__item"
+              :class="{ 'is-active': isMenuActive(item.path) }"
+            >
+              <span class="scholar-nav__label">{{ item.label }}</span>
+            </RouterLink>
+          </nav>
+        </section>
 
-        <nav class="scholar-nav">
-          <RouterLink
-            v-for="(item, idx) in menus"
-            :key="item.path"
-            :to="item.path"
-            class="scholar-nav__item"
-            :class="{ 'is-active': isMenuActive(item.path) }"
-          >
-            <span class="scholar-nav__label">{{ item.label }}</span>
-            <span class="scholar-nav__meta">{{ menuCode(idx) }}</span>
-          </RouterLink>
-        </nav>
+        <section class="scholar-sidebar__section">
+          <div class="scholar-sidebar__label">账户与结算</div>
+          <nav class="scholar-nav">
+            <RouterLink
+              v-for="item in accountMenus"
+              :key="item.path"
+              :to="item.path"
+              class="scholar-nav__item"
+              :class="{ 'is-active': isMenuActive(item.path) }"
+            >
+              <span class="scholar-nav__label">{{ item.label }}</span>
+            </RouterLink>
+          </nav>
+        </section>
 
-        <div class="scholar-rail-card">
-          <div class="scholar-rail-card__label">积分账户</div>
-          <div class="scholar-rail-card__value">{{ displayCredits }}</div>
+        <div class="scholar-rail-card scholar-rail-card--accent">
+          <div class="scholar-rail-card__eyeline">账户状态</div>
+          <div class="scholar-rail-card__headline">{{ hasUserToken ? "已连接个人账户" : "浏览中，随时可登录" }}</div>
           <div class="scholar-rail-card__body">
-            {{ hasUserToken ? "任务成功后按字符扣费，失败自动退回积分。" : "游客可先浏览页面，创建任务或支付时再登录。" }}
+            {{ hasUserToken ? "任务记录、积分流水和个人资料会统一归档到个人中心。" : "可以先了解功能流程；提交任务、支付或查看个人数据时再登录即可。" }}
+          </div>
+          <div class="scholar-rail-card__grid">
+            <div class="scholar-rail-card__metric">
+              <span>当前功能</span>
+              <strong>{{ activeMenu?.label || "工作台" }}</strong>
+            </div>
+            <div class="scholar-rail-card__metric">
+              <span>当前积分</span>
+              <strong>{{ displayCredits }}</strong>
+            </div>
           </div>
           <div class="scholar-inline-actions" style="margin-top: 14px">
             <button
@@ -65,7 +71,7 @@
               type="button"
               @click="goLogin"
             >
-              登录使用
+              登录继续
             </button>
             <button
               class="scholar-button scholar-button--secondary"
@@ -80,7 +86,7 @@
         <div class="scholar-rail-card">
           <div class="scholar-rail-card__label">使用建议</div>
           <div class="scholar-rail-card__body">
-            建议先按目标平台选择算法，再提交正文；若有查重报告或 AIGC 报告，可一并上传以提升命中效率。
+            先选目标平台，再上传正文；任务记录和积分流水都会自动收进个人中心，便于回看和复核。
           </div>
         </div>
       </aside>
@@ -89,7 +95,7 @@
         <header class="scholar-topbar">
           <div class="scholar-topbar__meta">
             <div>
-              <div class="scholar-topbar__eyebrow">GEWU ACADEMIC / {{ activeMenuCode }}</div>
+              <div class="scholar-topbar__eyebrow">当前工作区</div>
               <div class="scholar-topbar__title">{{ title }}</div>
               <p class="scholar-topbar__lead">
                 {{ subtitle || "统一管理论文处理任务、结果下载、积分消费与账户资料。" }}
@@ -98,7 +104,7 @@
 
             <div class="scholar-topbar__status">
               <span class="scholar-badge scholar-badge--info">
-                {{ hasUserToken ? "已登录" : "游客模式" }}
+                {{ activeMenu?.label || "工作台" }}
               </span>
               <span class="scholar-badge scholar-badge--warn">
                 当前积分 {{ displayCredits }}
@@ -108,19 +114,19 @@
 
           <div class="scholar-topbar__brief">
             <article class="scholar-topbar__brief-item">
-              <span>当前区段</span>
-              <strong>{{ activeMenu?.label || "工作台" }}</strong>
-              <p>任务、历史、支付和账户入口在同一工作区内切换。</p>
+              <span>处理节奏</span>
+              <strong>先选择平台，再提交正文</strong>
+              <p>不同任务入口共享同一套账户和计费体系，减少重复确认。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>访问方式</span>
-              <strong>{{ hasUserToken ? "已登录会话" : "游客预览" }}</strong>
-              <p>{{ hasUserToken ? "可直接创建任务并查看积分变化。" : "可先浏览页面，再决定登录或注册。" }}</p>
+              <span>记录归档</span>
+              <strong>个人中心统一查看</strong>
+              <p>任务记录、积分流水和账户信息都收进一个账户页面，不再分散跳转。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>当前积分</span>
-              <strong>{{ displayCredits }}</strong>
-              <p>任务成功后按字符扣费，失败会自动退回积分。</p>
+              <span>账户状态</span>
+              <strong>{{ hasUserToken ? "登录后自动同步数据" : "需要时再登录即可" }}</strong>
+              <p>{{ hasUserToken ? "提交任务、查看结果和购买积分会自动回到当前账户。" : "浏览功能流程不受影响，提交任务或支付时再完成登录。" }}</p>
             </article>
           </div>
         </header>
@@ -159,20 +165,19 @@ const emit = defineEmits(["buy"])
 const router = useRouter()
 const route = useRoute()
 const hasUserToken = ref(false)
-const menus = [
+const workspaceMenus = [
   { path: "/app/detect", label: "AIGC 检测" },
   { path: "/app/dedup", label: "降重复率" },
   { path: "/app/rewrite", label: "降 AIGC 率" },
-  { path: "/app/history", label: "任务记录" },
+]
+const accountMenus = [
   { path: "/app/buy", label: "购买积分" },
-  { path: "/app/credits", label: "积分流水" },
   { path: "/app/profile", label: "个人中心" },
   { path: "/app/referral", label: "推广福利" },
 ]
+const menus = [...workspaceMenus, ...accountMenus]
 
 const activeMenu = computed(() => menus[findMenuIndex(route.path)] || menus[0])
-const activeMenuCode = computed(() => menuCode(findMenuIndex(route.path)))
-
 const displayCredits = computed(() => {
   if (props.credits == null) {
     return "--"
@@ -207,17 +212,7 @@ function goRegister() {
   router.push(`/register?redirect=${redirect}`)
 }
 
-function menuCode(index) {
-  if (index < 0) {
-    return "S00"
-  }
-  return `S${String(index + 1).padStart(2, "0")}`
-}
-
 function isMenuActive(path) {
-  if (path === "/app/credits") {
-    return route.path === path
-  }
   return route.path === path || route.path.startsWith(`${path}/`)
 }
 
@@ -227,9 +222,6 @@ function findMenuIndex(currentPath) {
 }
 
 function isRouteMatch(currentPath, targetPath) {
-  if (targetPath === "/app/credits") {
-    return currentPath === targetPath
-  }
   return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`)
 }
 

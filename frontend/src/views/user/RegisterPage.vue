@@ -5,10 +5,10 @@
         <div class="scholar-auth__content scholar-auth__content--login">
           <div class="scholar-auth__masthead">
             <div>
-              <div class="scholar-auth__eyebrow">GEWU ACADEMIC</div>
-              <div class="scholar-login__meta">Invite / Auto Onboarding</div>
+              <div class="scholar-auth__eyebrow">学术工作台</div>
+              <div class="scholar-login__meta">邀请追踪 / 自动开通</div>
             </div>
-            <span class="scholar-auth__signal">Invite Tracking / Auto Login</span>
+            <span class="scholar-auth__signal">邀请关联 / 即开即用</span>
           </div>
 
           <div class="scholar-auth__headline">
@@ -43,7 +43,7 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">STEP 01</div>
+                <div class="scholar-auth__timeline-code">第一步</div>
                 <div class="scholar-auth__timeline-title">识别邀请码</div>
                 <p class="scholar-auth__timeline-copy">
                   支持链接自动带入推荐码，也支持从本地缓存继续注册。
@@ -53,7 +53,7 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">STEP 02</div>
+                <div class="scholar-auth__timeline-code">第二步</div>
                 <div class="scholar-auth__timeline-title">短信验证创建账户</div>
                 <p class="scholar-auth__timeline-copy">
                   无需额外填写昵称或资料，注册完成后直接可用。
@@ -63,7 +63,7 @@
             <article class="scholar-auth__timeline-item">
               <span class="scholar-auth__timeline-dot"></span>
               <div>
-                <div class="scholar-auth__timeline-code">STEP 03</div>
+                <div class="scholar-auth__timeline-code">第三步</div>
                 <div class="scholar-auth__timeline-title">自动进入工作台</div>
                 <p class="scholar-auth__timeline-copy">
                   立即开始检测、降重和积分购买，不中断任务流程。

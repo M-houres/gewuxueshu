@@ -189,3 +189,34 @@ def test_save_billing_with_packages_affects_public_package_list(
     assert len(items) == 1
     assert items[0]["name"] == "校园体验包"
     assert items[0]["credits"] == 42000
+
+
+def test_save_login_strategy_config_affects_auth_options(
+    client: TestClient,
+    admin_override,
+) -> None:
+    resp = client.post(
+        "/api/v1/admin/configs/login",
+        json={
+            "sms_provider": "disabled",
+            "debug_code_enabled": True,
+            "wechat_login_enabled": False,
+            "new_user_initial_credits": 2000,
+            "max_code_retry": 4,
+            "phone_lock_minutes": 8,
+            "send_code_ip_1h_limit": 88,
+            "login_ip_10m_limit": 66,
+        },
+    )
+    assert resp.status_code == 200
+    value = resp.json()["data"]["value"]
+    assert value["new_user_initial_credits"] == 2000
+    assert value["max_code_retry"] == 4
+    assert value["phone_lock_minutes"] == 8
+    assert value["send_code_ip_1h_limit"] == 88
+    assert value["login_ip_10m_limit"] == 66
+
+    options = client.get("/api/v1/auth/options")
+    assert options.status_code == 200
+    data = options.json()["data"]
+    assert data["new_user_initial_credits"] == 2000

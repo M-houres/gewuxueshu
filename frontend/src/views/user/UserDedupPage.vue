@@ -69,7 +69,7 @@ onMounted(async () => {
 })
 
 function goHistory() {
-  router.push("/app/history")
+  router.push("/app/profile?tab=history")
 }
 
 async function afterTaskSubmit() {

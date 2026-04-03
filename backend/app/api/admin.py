@@ -118,6 +118,11 @@ CONFIG_FIELD_LABELS = {
         "wechat_app_id": "微信AppID",
         "wechat_app_secret": "微信AppSecret",
         "wechat_redirect_uri": "微信回调地址",
+        "new_user_initial_credits": "新用户初始积分",
+        "max_code_retry": "验证码最大重试次数",
+        "phone_lock_minutes": "验证码错误锁定分钟数",
+        "send_code_ip_1h_limit": "发送验证码IP限流",
+        "login_ip_10m_limit": "登录请求IP限流",
     },
     "referral": {
         "register_inviter_credits": "邀请人注册奖励",
@@ -161,6 +166,11 @@ CONFIG_DEFAULTS = {
         "wechat_app_id": "",
         "wechat_app_secret": "",
         "wechat_redirect_uri": "",
+        "new_user_initial_credits": settings.initial_credits,
+        "max_code_retry": settings.max_code_retry,
+        "phone_lock_minutes": settings.phone_lock_minutes,
+        "send_code_ip_1h_limit": settings.auth_send_code_ip_1h_limit,
+        "login_ip_10m_limit": settings.auth_login_ip_10m_limit,
     },
     "referral": {
         "register_inviter_credits": 500,
@@ -508,6 +518,41 @@ def _normalize_category_payload(category: str, payload: dict) -> dict:
         base["wechat_app_id"] = _as_text(raw.get("wechat_app_id", base["wechat_app_id"]), default="", max_len=128)
         base["wechat_app_secret"] = _as_text(raw.get("wechat_app_secret", base["wechat_app_secret"]), default="", max_len=256)
         base["wechat_redirect_uri"] = _as_text(raw.get("wechat_redirect_uri", base["wechat_redirect_uri"]), default="", max_len=256)
+        base["new_user_initial_credits"] = _as_int(
+            raw.get("new_user_initial_credits", base["new_user_initial_credits"]),
+            default=settings.initial_credits,
+            min_value=0,
+            max_value=1_000_000,
+            field="new_user_initial_credits",
+        )
+        base["max_code_retry"] = _as_int(
+            raw.get("max_code_retry", base["max_code_retry"]),
+            default=settings.max_code_retry,
+            min_value=1,
+            max_value=20,
+            field="max_code_retry",
+        )
+        base["phone_lock_minutes"] = _as_int(
+            raw.get("phone_lock_minutes", base["phone_lock_minutes"]),
+            default=settings.phone_lock_minutes,
+            min_value=1,
+            max_value=120,
+            field="phone_lock_minutes",
+        )
+        base["send_code_ip_1h_limit"] = _as_int(
+            raw.get("send_code_ip_1h_limit", base["send_code_ip_1h_limit"]),
+            default=settings.auth_send_code_ip_1h_limit,
+            min_value=1,
+            max_value=10_000,
+            field="send_code_ip_1h_limit",
+        )
+        base["login_ip_10m_limit"] = _as_int(
+            raw.get("login_ip_10m_limit", base["login_ip_10m_limit"]),
+            default=settings.auth_login_ip_10m_limit,
+            min_value=1,
+            max_value=10_000,
+            field="login_ip_10m_limit",
+        )
 
         if base["sms_gateway_url"] and (not _is_http_url(base["sms_gateway_url"])):
             raise BizError(code=4341, message="sms_gateway_url 必须以 http:// 或 https:// 开头")
@@ -699,6 +744,41 @@ def _get_category_config(db: Session, category: str) -> dict:
             merged["packages"] = deepcopy(DEFAULT_BILLING_PACKAGES)
     if category == "login":
         merged["sms_provider"] = _as_text(merged.get("sms_provider", "custom_webhook"), default="custom_webhook", max_len=64).lower()
+        merged["new_user_initial_credits"] = _as_int(
+            merged.get("new_user_initial_credits", settings.initial_credits),
+            default=settings.initial_credits,
+            min_value=0,
+            max_value=1_000_000,
+            field="new_user_initial_credits",
+        )
+        merged["max_code_retry"] = _as_int(
+            merged.get("max_code_retry", settings.max_code_retry),
+            default=settings.max_code_retry,
+            min_value=1,
+            max_value=20,
+            field="max_code_retry",
+        )
+        merged["phone_lock_minutes"] = _as_int(
+            merged.get("phone_lock_minutes", settings.phone_lock_minutes),
+            default=settings.phone_lock_minutes,
+            min_value=1,
+            max_value=120,
+            field="phone_lock_minutes",
+        )
+        merged["send_code_ip_1h_limit"] = _as_int(
+            merged.get("send_code_ip_1h_limit", settings.auth_send_code_ip_1h_limit),
+            default=settings.auth_send_code_ip_1h_limit,
+            min_value=1,
+            max_value=10_000,
+            field="send_code_ip_1h_limit",
+        )
+        merged["login_ip_10m_limit"] = _as_int(
+            merged.get("login_ip_10m_limit", settings.auth_login_ip_10m_limit),
+            default=settings.auth_login_ip_10m_limit,
+            min_value=1,
+            max_value=10_000,
+            field="login_ip_10m_limit",
+        )
     return merged
 
 

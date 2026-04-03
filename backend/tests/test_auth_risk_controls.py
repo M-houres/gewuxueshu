@@ -179,3 +179,25 @@ def test_login_ip_rate_limit(client: TestClient) -> None:
         assert body["code"] == 4020
     finally:
         settings.auth_login_ip_10m_limit = old_limit
+
+
+def test_new_user_login_uses_configured_initial_credits(client: TestClient, db_session: Session) -> None:
+    db_session.add(
+        SystemConfig(
+            category="system",
+            config_key="login",
+            config_value={
+                "debug_code_enabled": True,
+                "new_user_initial_credits": 2345,
+            },
+        )
+    )
+    db_session.commit()
+
+    resp = _login_with_code(client, phone="13800006001")
+    assert resp.status_code == 200
+
+    user_id = resp.json()["data"]["user"]["id"]
+    user = db_session.get(User, user_id)
+    assert user is not None
+    assert user.credits == 2345
