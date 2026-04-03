@@ -69,19 +69,19 @@
 
           <div class="scholar-topbar__brief">
             <article class="scholar-topbar__brief-item">
-              <span>当前页面</span>
-              <strong>{{ activeMenu?.label || '后台' }}</strong>
-              <p>左侧导航会根据管理员权限自动显示可访问模块。</p>
+              <span>操作路径</span>
+              <strong>{{ activeMenu?.label || '后台模块' }}</strong>
+              <p>先筛选再处理，常用动作尽量在当前页完成，减少跳转。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>权限模型</span>
+              <span>权限分层</span>
               <strong>超管统一分配</strong>
-              <p>普通管理员只在被授权的模块内操作，避免越权修改。</p>
+              <p>普通管理员只看可见模块，默认收敛高风险操作。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>配置策略</span>
-              <strong>线上可维护</strong>
-              <p>关键业务参数可直接在后台修改并记录审计日志。</p>
+              <span>生效机制</span>
+              <strong>保存即生效</strong>
+              <p>关键参数在线可维护，并保留审计日志便于追溯。</p>
             </article>
           </div>
         </header>

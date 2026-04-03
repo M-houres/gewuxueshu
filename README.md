@@ -177,3 +177,14 @@ curl -X POST "http://localhost:8000/api/v1/admin/algo-packages/activate" \
 - `GET /api/v1/admin/algo-packages`
 - 鉴权：管理员 Bearer Token
 - 返回：`slots`（各槽位当前激活版本）+ `items`（上传历史）
+
+## 工程化脚本（新增）
+
+- 一键部署（阿里云 ECS）：
+  - `bash scripts/deploy_aliyun.sh`
+- 质量闸门（Linux）：
+  - `bash scripts/quality_gate.sh`
+- 质量闸门（Windows）：
+  - `scripts\\quality_gate.ps1`
+- 全链路升级手册：
+  - `docs/PROJECT_EXCELLENCE_PLAYBOOK.md`
