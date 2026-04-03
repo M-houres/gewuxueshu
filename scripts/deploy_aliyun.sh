@@ -19,8 +19,21 @@ if ! command -v apt-get >/dev/null 2>&1; then
 fi
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y ca-certificates curl git openssl docker.io docker-compose-plugin
+if ! command -v curl >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1 || ! command -v openssl >/dev/null 2>&1; then
+  apt-get update -y
+  apt-get install -y ca-certificates curl git openssl
+fi
+
+if ! command -v docker >/dev/null 2>&1; then
+  apt-get update -y
+  apt-get install -y docker.io
+fi
+
+if ! docker compose version >/dev/null 2>&1; then
+  apt-get update -y
+  apt-get install -y docker-compose-plugin
+fi
+
 systemctl enable --now docker
 
 if ! command -v docker >/dev/null 2>&1; then
