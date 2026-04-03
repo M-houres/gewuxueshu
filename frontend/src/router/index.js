@@ -19,9 +19,12 @@ const RegisterPage = () => import('../views/user/RegisterPage.vue')
 const UserBuyPage = () => import('../views/user/UserBuyPage.vue')
 const UserProfilePage = () => import('../views/user/UserProfilePage.vue')
 const UserDetectPage = () => import('../views/user/UserDetectPage.vue')
+const UserDetectRecordsPage = () => import('../views/user/UserDetectRecordsPage.vue')
 const UserReferralPage = () => import('../views/user/UserReferralPage.vue')
 const UserRewritePage = () => import('../views/user/UserRewritePage.vue')
+const UserRewriteRecordsPage = () => import('../views/user/UserRewriteRecordsPage.vue')
 const UserDedupPage = () => import('../views/user/UserDedupPage.vue')
+const UserDedupRecordsPage = () => import('../views/user/UserDedupRecordsPage.vue')
 
 const adminEntryRoutes = [
   { path: '/admin/dashboard', permission: 'dashboard:view' },
@@ -61,8 +64,11 @@ const router = createRouter({
     { path: '/app/history', redirect: '/app/profile?tab=history' },
     { path: '/app/credits', redirect: '/app/profile?tab=credits' },
     { path: '/app/detect', component: UserDetectPage, meta: { auth: 'user', title: 'AIGC检测' } },
+    { path: '/app/detect/records', component: UserDetectRecordsPage, meta: { auth: 'user', title: 'AIGC检测记录' } },
     { path: '/app/dedup', component: UserDedupPage, meta: { auth: 'user', title: '降重复率' } },
+    { path: '/app/dedup/records', component: UserDedupRecordsPage, meta: { auth: 'user', title: '降重复率记录' } },
     { path: '/app/rewrite', component: UserRewritePage, meta: { auth: 'user', title: '降AIGC率' } },
+    { path: '/app/rewrite/records', component: UserRewriteRecordsPage, meta: { auth: 'user', title: '降AIGC率记录' } },
     { path: '/app/referral', component: UserReferralPage, meta: { auth: 'user', title: '推广福利' } },
     { path: '/app/buy', component: UserBuyPage, meta: { auth: 'user', title: '购买积分' } },
     { path: '/app/profile', component: UserProfilePage, meta: { auth: 'user', title: '个人中心' } },

@@ -45,11 +45,11 @@
         </div>
         <div>
           <div class="text-xs text-[#6b7782]">本页增加积分</div>
-          <div class="mt-1 text-lg font-semibold text-[#106c4f]">+{{ pageIncrease }}</div>
+          <div class="mt-1 text-lg font-semibold text-[#106c4f]">+{{ pageIncrease }} 积分</div>
         </div>
         <div>
           <div class="text-xs text-[#6b7782]">本页消耗积分</div>
-          <div class="mt-1 text-lg font-semibold text-[#b14133]">-{{ pageCost }}</div>
+          <div class="mt-1 text-lg font-semibold text-[#b14133]">-{{ pageCost }} 积分</div>
         </div>
         <div>
           <div class="text-xs text-[#6b7782]">当前筛选</div>
@@ -78,11 +78,11 @@
               </td>
               <td class="px-2 py-2">
                 <span :class="row.delta >= 0 ? 'text-[#106c4f]' : 'text-[#b14133]'">
-                  {{ row.delta >= 0 ? `+${row.delta}` : row.delta }}
+                  {{ row.delta >= 0 ? `+${row.delta}` : row.delta }} 积分
                 </span>
               </td>
-              <td class="px-2 py-2">{{ row.balance_before }}</td>
-              <td class="px-2 py-2">{{ row.balance_after }}</td>
+              <td class="px-2 py-2">{{ row.balance_before }} 积分</td>
+              <td class="px-2 py-2">{{ row.balance_after }} 积分</td>
               <td class="px-2 py-2">{{ row.reason || "-" }}</td>
               <td class="px-2 py-2">{{ formatTime(row.created_at) }}</td>
             </tr>

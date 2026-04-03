@@ -17,7 +17,7 @@
       </article>
       <article class="rounded-2xl border border-[#d9dee4] bg-white p-5">
         <div class="text-xs tracking-[0.1em] text-[#6c7985]">累计获得积分</div>
-        <div class="mt-2 text-3xl font-semibold text-[#17222b]">{{ rewardCreditsTotal }}</div>
+        <div class="mt-2 text-3xl font-semibold text-[#17222b]">{{ rewardCreditsTotal }} 积分</div>
         <div class="mt-2 text-sm text-[#5d6973]">包含注册奖励、首充奖励和持续返利</div>
       </article>
       <article class="rounded-2xl border border-[#d9dee4] bg-white p-5">
@@ -86,7 +86,7 @@
               <td class="px-2 py-2">
                 <span class="rounded-full bg-[#f2f6f9] px-2 py-1 text-xs text-[#44525d]">{{ mapReferralStatus(item.status) }}</span>
               </td>
-              <td class="px-2 py-2">{{ item.reward_credits }}</td>
+              <td class="px-2 py-2">{{ item.reward_credits }} 积分</td>
               <td class="px-2 py-2">{{ formatTime(item.created_at) }}</td>
             </tr>
             <tr v-if="referrals.length === 0">
@@ -116,7 +116,7 @@
               <td class="px-2 py-2">{{ item.id }}</td>
               <td class="px-2 py-2">{{ mapRewardRole(item.role) }}</td>
               <td class="px-2 py-2">{{ mapRewardType(item.reward_type) }}</td>
-              <td class="px-2 py-2">{{ item.credits }}</td>
+              <td class="px-2 py-2">{{ item.credits }} 积分</td>
               <td class="px-2 py-2">{{ mapRewardStatus(item.status) }}</td>
               <td class="px-2 py-2">{{ formatTime(item.created_at) }}</td>
             </tr>

@@ -266,9 +266,9 @@ const insufficient = computed(() => {
 const canSubmit = computed(() => Boolean(paperFile.value) && !submitting.value && !insufficient.value)
 const displayCredits = computed(() => {
   if (props.credits == null) {
-    return "--"
+    return "-- 积分"
   }
-  return Number(props.credits).toLocaleString()
+  return `${Number(props.credits).toLocaleString()} 积分`
 })
 const platformLabel = computed(() => {
   const row = platformOptions.value.find((item) => item.value === platform.value)

@@ -62,16 +62,16 @@
               <div class="scholar-stat">
                 <div class="scholar-stat__label">当前余额</div>
                 <div class="scholar-stat__value" style="font-size: 26px">
-                  {{ typeof userCredits === "number" ? userCredits : 0 }}
+                  {{ typeof userCredits === "number" ? userCredits : 0 }} 积分
                 </div>
               </div>
               <div class="scholar-stat">
                 <div class="scholar-stat__label">累计入账</div>
-                <div class="scholar-stat__value" style="font-size: 26px">{{ summary.income }}</div>
+                <div class="scholar-stat__value" style="font-size: 26px">{{ summary.income }} 积分</div>
               </div>
               <div class="scholar-stat">
                 <div class="scholar-stat__label">累计支出</div>
-                <div class="scholar-stat__value" style="font-size: 26px">{{ summary.outcome }}</div>
+                <div class="scholar-stat__value" style="font-size: 26px">{{ summary.outcome }} 积分</div>
               </div>
             </div>
             <div class="scholar-inline-actions" style="margin-top: 18px">
@@ -126,7 +126,7 @@
                     </span>
                   </td>
                   <td>{{ item.char_count || 0 }}</td>
-                  <td>{{ item.cost_credits || 0 }}</td>
+                  <td>{{ item.cost_credits || 0 }} 积分</td>
                   <td>{{ formatTime(item.created_at) }}</td>
                   <td>
                     <div class="scholar-inline-actions">
@@ -191,10 +191,10 @@
                   <td>{{ formatTime(row.created_at) }}</td>
                   <td>{{ mapCreditType(row.tx_type) }}</td>
                   <td :style="{ color: row.delta >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }">
-                    {{ row.delta }}
+                    {{ row.delta }} 积分
                   </td>
-                  <td>{{ row.balance_before }}</td>
-                  <td>{{ row.balance_after }}</td>
+                  <td>{{ row.balance_before }} 积分</td>
+                  <td>{{ row.balance_after }} 积分</td>
                   <td>{{ row.reason || "-" }}</td>
                 </tr>
                 <tr v-if="txRows.length === 0">

@@ -115,7 +115,7 @@
                   </span>
                 </td>
                 <td>{{ item.char_count }}</td>
-                <td>{{ item.cost_credits }}</td>
+                <td>{{ item.cost_credits }} 积分</td>
                 <td>{{ formatTime(item.created_at) }}</td>
                 <td>
                   <div class="scholar-inline-actions">

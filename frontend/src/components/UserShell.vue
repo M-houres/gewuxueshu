@@ -48,7 +48,7 @@
             </div>
             <div class="scholar-rail-card__metric">
               <span>当前积分</span>
-              <strong>{{ displayCredits }}</strong>
+              <strong>{{ displayCreditsWithUnit }}</strong>
             </div>
           </div>
           <div class="scholar-inline-actions" style="margin-top: 14px">
@@ -66,7 +66,7 @@
       </aside>
 
       <div class="scholar-main">
-        <header class="scholar-topbar">
+        <header v-if="!hideTopbar" class="scholar-topbar">
           <div class="scholar-topbar__meta">
             <div>
               <div class="scholar-topbar__eyebrow">当前工作区</div>
@@ -76,7 +76,7 @@
 
             <div class="scholar-topbar__status">
               <span class="scholar-badge scholar-badge--info">{{ activeMenu?.label || '工作台' }}</span>
-              <span class="scholar-badge scholar-badge--warn">当前积分 {{ displayCredits }}</span>
+              <span class="scholar-badge scholar-badge--warn">当前积分 {{ displayCreditsWithUnit }}</span>
             </div>
           </div>
 
@@ -126,6 +126,10 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  hideTopbar: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(["buy"])
@@ -152,6 +156,7 @@ const displayCredits = computed(() => {
   }
   return props.credits.toLocaleString()
 })
+const displayCreditsWithUnit = computed(() => `${displayCredits.value} 积分`)
 
 onMounted(syncTokenState)
 watch(

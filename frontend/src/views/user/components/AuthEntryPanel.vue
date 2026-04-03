@@ -1,116 +1,133 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-layout">
-      <section class="brand-area">
-        <p class="brand-mark">学术写作智能工作台</p>
-        <h1 class="brand-title">格物致知</h1>
-        <p class="brand-intro">
-          面向论文场景的实用平台，支持仿知网 AIGC 检测、降重复率、降 AIGC 率，任务和积分统一沉淀到个人中心。
-        </p>
-        <ul class="brand-points">
-          <li>手机号验证码登录与注册合一</li>
-          <li>微信扫码与手机号入口并行可用</li>
-          <li>登录后直接进入统一工作台</li>
-        </ul>
-      </section>
-
-      <section class="entry-area">
-        <header class="entry-header">
-          <p class="entry-kicker">{{ entryKicker }}</p>
-          <h2>{{ entryTitle }}</h2>
-          <p>输入手机号和验证码继续。未注册手机号会自动创建账号并直接登录。</p>
+  <div class="cnki-auth-page">
+    <div class="cnki-auth-shell">
+      <section class="cnki-auth-left">
+        <header class="cnki-auth-brand">
+          <div class="cnki-auth-logo">格</div>
+          <div>
+            <p class="cnki-auth-brand-top">格物致知</p>
+            <h1 class="cnki-auth-brand-title">格物学术</h1>
+          </div>
         </header>
 
-        <div v-if="phoneLoginEnabled || wechatLoginEnabled" class="mode-switch">
-          <button
-            v-if="phoneLoginEnabled"
-            type="button"
-            class="mode-btn"
-            :class="{ 'is-active': mode === 'phone' }"
-            @click="switchMode('phone')"
-          >
-            手机验证码
-          </button>
-          <button
-            v-if="wechatLoginEnabled"
-            type="button"
-            class="mode-btn"
-            :class="{ 'is-active': mode === 'wx' }"
-            @click="switchMode('wx')"
-          >
-            微信扫码
-          </button>
-        </div>
+        <p class="cnki-auth-subtitle">论文场景智能服务平台</p>
+        <p class="cnki-auth-lead">
+          聚焦仿知网检测、降重复率与降 AIGC 率，统一账号体系与积分体系，减少重复操作。
+        </p>
 
-        <form v-if="mode === 'phone'" class="entry-form" @submit.prevent="submitPhoneAuth">
-          <label class="field">
-            <span>手机号</span>
-            <input
-              v-model.trim="phone"
-              class="field-input"
-              autocomplete="tel"
-              placeholder="请输入 11 位手机号"
-            />
-          </label>
+        <ul class="cnki-auth-service-list">
+          <li v-for="item in serviceHighlights" :key="item.title" class="cnki-auth-service-item">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.desc }}</p>
+          </li>
+        </ul>
 
-          <label class="field">
-            <span>验证码</span>
-            <div class="code-row">
+        <footer class="cnki-auth-note">
+          <p>任务记录与积分流水统一归档至个人中心，便于后续复核与下载。</p>
+          <p v-if="newUserCredits !== null">
+            新用户注册默认赠送 <strong>{{ newUserCredits }} 积分</strong>（后台可配置）。
+          </p>
+        </footer>
+      </section>
+
+      <section class="cnki-auth-right">
+        <article class="cnki-auth-card">
+          <header class="cnki-auth-card-head">
+            <p class="cnki-auth-kicker">{{ entryKicker }}</p>
+            <h2>{{ entryTitle }}</h2>
+            <p>输入手机号与验证码即可继续，未注册手机号会自动创建账号并登录。</p>
+          </header>
+
+          <div v-if="phoneLoginEnabled || wechatLoginEnabled" class="cnki-auth-mode-switch">
+            <button
+              v-if="phoneLoginEnabled"
+              type="button"
+              class="cnki-auth-mode-btn"
+              :class="{ 'is-active': mode === 'phone' }"
+              @click="switchMode('phone')"
+            >
+              手机验证码登录
+            </button>
+            <button
+              v-if="wechatLoginEnabled"
+              type="button"
+              class="cnki-auth-mode-btn"
+              :class="{ 'is-active': mode === 'wx' }"
+              @click="switchMode('wx')"
+            >
+              微信扫码登录
+            </button>
+          </div>
+
+          <form v-if="mode === 'phone'" class="cnki-auth-form" @submit.prevent="submitPhoneAuth">
+            <label class="cnki-auth-field">
+              <span>手机号</span>
               <input
-                v-model.trim="code"
-                class="field-input"
-                style="flex: 1"
-                autocomplete="one-time-code"
-                placeholder="请输入验证码"
+                v-model.trim="phone"
+                class="cnki-auth-input"
+                autocomplete="tel"
+                placeholder="请输入 11 位手机号"
               />
-              <button
-                type="button"
-                class="text-btn"
-                :disabled="sending || countdown > 0"
-                @click="sendCode"
-              >
-                {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
+            </label>
+
+            <label class="cnki-auth-field">
+              <span>验证码</span>
+              <div class="cnki-auth-code-row">
+                <input
+                  v-model.trim="code"
+                  class="cnki-auth-input"
+                  style="flex: 1"
+                  autocomplete="one-time-code"
+                  placeholder="请输入验证码"
+                />
+                <button
+                  type="button"
+                  class="cnki-auth-code-btn"
+                  :disabled="sending || countdown > 0"
+                  @click="sendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
+                </button>
+              </div>
+            </label>
+
+            <label class="cnki-auth-policy">
+              <input v-model="agreedPolicy" type="checkbox" />
+              <span>我已阅读并同意服务协议与隐私政策</span>
+            </label>
+
+            <button class="cnki-auth-submit" :disabled="loading">
+              {{ loading ? "处理中..." : primaryButtonText }}
+            </button>
+          </form>
+
+          <div v-else class="cnki-auth-wx-shell">
+            <div class="cnki-auth-wx-qr">
+              <img v-if="wxQrcodeDataUrl" :src="wxQrcodeDataUrl" alt="微信扫码登录二维码" class="cnki-auth-wx-qr-image" />
+              <span v-else class="cnki-auth-wx-empty">二维码生成中</span>
+            </div>
+            <div class="cnki-auth-wx-meta">
+              <span>{{ wxStatusText }}</span>
+              <span>剩余 {{ wxCountdown }} 秒</span>
+            </div>
+            <div class="cnki-auth-wx-actions">
+              <button type="button" class="cnki-auth-secondary" @click="loadWxQrcode">刷新二维码</button>
+              <button v-if="wxMockEnabled" type="button" class="cnki-auth-submit" @click="mockWxAuthorize">
+                模拟扫码成功
               </button>
             </div>
-          </label>
-
-          <label class="policy-line">
-            <input v-model="agreedPolicy" type="checkbox" />
-            <span>我已阅读并同意服务协议与隐私政策</span>
-          </label>
-
-          <button class="primary-btn" :disabled="loading">
-            {{ loading ? "处理中..." : primaryButtonText }}
-          </button>
-        </form>
-
-        <div v-else class="wx-shell">
-          <div class="wx-qr">
-            <img v-if="wxQrcodeDataUrl" :src="wxQrcodeDataUrl" alt="微信扫码登录二维码" class="wx-qr-image" />
-            <span v-else class="wx-empty">二维码生成中</span>
           </div>
-          <div class="wx-meta">
-            <span>{{ wxStatusText }}</span>
-            <span>剩余 {{ wxCountdown }} 秒</span>
+
+          <p v-if="errorText" class="cnki-auth-notice cnki-auth-notice--error">{{ errorText }}</p>
+          <p v-if="hintText" class="cnki-auth-notice cnki-auth-notice--success">{{ hintText }}</p>
+
+          <div class="cnki-auth-footer">
+            <RouterLink class="cnki-auth-switch-link" :to="alternateEntryLink">{{ alternateEntryText }}</RouterLink>
+            <button type="button" class="cnki-auth-ghost" @click="enterGuest">游客先浏览</button>
           </div>
-          <div class="wx-actions">
-            <button type="button" class="secondary-btn" @click="loadWxQrcode">刷新二维码</button>
-            <button v-if="wxMockEnabled" type="button" class="primary-btn" @click="mockWxAuthorize">模拟扫码成功</button>
-          </div>
-        </div>
 
-        <p v-if="errorText" class="notice notice-error">{{ errorText }}</p>
-        <p v-if="hintText" class="notice notice-success">{{ hintText }}</p>
-
-        <div class="entry-footer">
-          <RouterLink class="switch-link" :to="alternateEntryLink">{{ alternateEntryText }}</RouterLink>
-          <button type="button" class="ghost-btn" @click="enterGuest">先体验</button>
-        </div>
-
-        <p class="security-tip">
-          验证码 5 分钟有效，连续输错会短暂锁定账号
-          <template v-if="newUserCredits !== null">，新用户初始积分 {{ newUserCredits }}</template>。
-        </p>
+          <p class="cnki-auth-security-tip">验证码 5 分钟内有效，连续输入错误会短暂锁定账号。</p>
+        </article>
       </section>
     </div>
   </div>
@@ -131,6 +148,21 @@ const props = defineProps({
     default: "login",
   },
 })
+
+const serviceHighlights = [
+  {
+    title: "仿知网 AIGC 检测",
+    desc: "按目标平台策略输出风险区段与检测报告，适合提交前自查。",
+  },
+  {
+    title: "降重复率",
+    desc: "结合语义重构降低重复表达，兼顾论点连贯性与阅读流畅度。",
+  },
+  {
+    title: "降 AIGC 率",
+    desc: "在保留结构与观点前提下优化文本表达，降低 AI 痕迹感。",
+  },
+]
 
 const route = useRoute()
 const router = useRouter()
@@ -162,7 +194,7 @@ let wxCountTimer = null
 let wxPollTimer = null
 
 const isRegisterPage = computed(() => props.entryType === "register")
-const entryKicker = computed(() => (isRegisterPage.value ? "新用户入口" : "账号入口"))
+const entryKicker = computed(() => (isRegisterPage.value ? "新用户注册" : "账号登录"))
 const entryTitle = computed(() => (isRegisterPage.value ? "注册并进入工作台" : "登录进入工作台"))
 const primaryButtonText = computed(() => (isRegisterPage.value ? "注册并进入工作台" : "继续"))
 const alternateEntryText = computed(() => (isRegisterPage.value ? "已有账号，去登录" : "新用户注册"))
@@ -371,7 +403,7 @@ async function pollWxStatus() {
       stopWxTimers()
     }
   } catch {
-    // Keep polling in case of transient failures.
+    // Keep polling for transient failures.
   }
 }
 
@@ -399,340 +431,471 @@ function enterGuest() {
 </script>
 
 <style scoped>
-.auth-page {
+.cnki-auth-page {
   min-height: 100vh;
-  padding: clamp(16px, 3.4vw, 36px);
+  padding: clamp(16px, 3.4vw, 34px);
   background:
-    radial-gradient(680px 420px at 0% 8%, rgba(215, 236, 247, 0.74), transparent 70%),
-    radial-gradient(760px 480px at 100% 100%, rgba(246, 228, 203, 0.48), transparent 72%),
-    #f4f6f7;
-  font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    radial-gradient(860px 420px at 8% 0%, rgba(43, 109, 201, 0.12), transparent 72%),
+    radial-gradient(760px 500px at 96% 100%, rgba(23, 132, 201, 0.08), transparent 70%),
+    linear-gradient(180deg, #f5f8fd 0%, #edf3fb 100%);
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 }
 
-.auth-layout {
-  width: min(1060px, 100%);
+.cnki-auth-shell {
+  width: min(1180px, 100%);
+  min-height: min(760px, calc(100vh - 68px));
   margin: 0 auto;
-  background: #ffffff;
-  border-radius: 24px;
-  border: 1px solid #d8e0e4;
+  border-radius: 26px;
+  border: 1px solid rgba(64, 116, 187, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.94));
+  box-shadow: 0 24px 56px rgba(28, 53, 94, 0.12);
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(380px, 0.88fr);
   overflow: hidden;
-  display: grid;
-  grid-template-columns: 1.12fr 0.88fr;
-  box-shadow: 0 20px 52px rgba(34, 53, 69, 0.12);
 }
 
-.brand-area {
-  padding: clamp(30px, 4vw, 46px);
-  background:
-    radial-gradient(circle at 78% 16%, rgba(255, 224, 180, 0.2), transparent 42%),
-    linear-gradient(153deg, #153a53 0%, #1e4f63 55%, #266270 100%);
-  color: #eef5f9;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 16px;
-}
-
-.brand-mark {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  opacity: 0.8;
-}
-
-.brand-title {
-  margin: 0;
-  font-size: clamp(36px, 5.4vw, 54px);
-  line-height: 1.03;
-  letter-spacing: 0.06em;
-  color: #fff6e8;
-  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
-}
-
-.brand-intro {
-  margin: 0;
-  max-width: 33ch;
-  font-size: 14px;
-  line-height: 1.85;
-  color: rgba(237, 245, 249, 0.92);
-}
-
-.brand-points {
-  margin: 4px 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 8px;
-  font-size: 13px;
-  color: rgba(245, 250, 252, 0.92);
-}
-
-.brand-points li {
+.cnki-auth-left {
   position: relative;
-  padding-left: 18px;
+  padding: clamp(28px, 4vw, 46px);
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  background:
+    radial-gradient(circle at 10% 8%, rgba(67, 125, 211, 0.11), transparent 24%),
+    linear-gradient(180deg, rgba(245, 250, 255, 0.98), rgba(240, 247, 255, 0.95));
 }
 
-.brand-points li::before {
+.cnki-auth-left::after {
   content: "";
   position: absolute;
-  left: 0;
-  top: 7px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 236, 205, 0.95);
+  right: 28px;
+  top: 24px;
+  width: 120px;
+  height: 120px;
+  border-radius: 18px;
+  border: 1px dashed rgba(63, 113, 178, 0.24);
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(10deg);
+  pointer-events: none;
 }
 
-.entry-area {
-  padding: clamp(22px, 3.2vw, 36px);
-  background: linear-gradient(180deg, #fdfefe 0%, #f6f8f9 100%);
-}
-
-.entry-header {
-  margin-bottom: 14px;
-}
-
-.entry-kicker {
-  margin: 0;
-  color: #2d7081;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
-
-.entry-header h2 {
-  margin: 6px 0 8px;
-  color: #1c2f3a;
-  font-size: 30px;
-  line-height: 1.14;
-  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
-}
-
-.entry-header p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.8;
-  color: #596c79;
-}
-
-.mode-switch {
-  margin-bottom: 14px;
+.cnki-auth-brand {
   display: flex;
-  gap: 9px;
+  align-items: center;
+  gap: 12px;
 }
 
-.mode-btn {
-  flex: 1;
-  height: 38px;
-  border-radius: 11px;
-  border: 1px solid #ccd7de;
-  background: #edf2f5;
-  color: #3f5462;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.cnki-auth-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #1e5cb2 0%, #2f7ec9 100%);
+  box-shadow: 0 10px 20px rgba(34, 87, 159, 0.22);
 }
 
-.mode-btn.is-active {
-  border-color: #1f5d74;
-  background: #1f5d74;
-  color: #ffffff;
+.cnki-auth-brand-top {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: #6c83a6;
 }
 
-.entry-form {
+.cnki-auth-brand-title {
+  margin: 6px 0 0;
+  font-size: clamp(35px, 4.3vw, 52px);
+  line-height: 1.04;
+  color: #1c3f7f;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.cnki-auth-subtitle {
+  margin: 6px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2d5696;
+}
+
+.cnki-auth-lead {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 14px;
+  line-height: 1.85;
+  color: #4c6689;
+}
+
+.cnki-auth-service-list {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
   display: grid;
   gap: 12px;
 }
 
-.field {
-  display: grid;
-  gap: 7px;
+.cnki-auth-service-item {
+  padding: 14px 15px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(72, 119, 187, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 250, 255, 0.86)),
+    linear-gradient(135deg, rgba(43, 109, 201, 0.05), transparent 62%);
 }
 
-.field span {
+.cnki-auth-service-item h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #285293;
+  font-weight: 800;
+}
+
+.cnki-auth-service-item p {
+  margin: 8px 0 0;
   font-size: 13px;
-  color: #405666;
-  font-weight: 600;
+  line-height: 1.7;
+  color: #516d8f;
 }
 
-.field-input {
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid #c9d6df;
-  background: #ffffff;
-  padding: 0 13px;
-  color: #1f3443;
-  font-size: 14px;
+.cnki-auth-note {
+  margin-top: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(79, 123, 183, 0.2);
+  background: rgba(255, 255, 255, 0.78);
+  display: grid;
+  gap: 4px;
 }
 
-.field-input:focus {
-  outline: none;
-  border-color: #2f667e;
-  box-shadow: 0 0 0 3px rgba(47, 102, 126, 0.15);
+.cnki-auth-note p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #617899;
 }
 
-.code-row {
-  display: flex;
+.cnki-auth-note strong {
+  color: #1f569f;
+}
+
+.cnki-auth-right {
+  padding: clamp(24px, 3.1vw, 36px);
+  border-left: 1px solid rgba(72, 116, 177, 0.2);
+  background: linear-gradient(180deg, rgba(252, 254, 255, 0.98), rgba(246, 250, 255, 0.96));
+}
+
+.cnki-auth-card {
+  min-height: 100%;
+  border-radius: 22px;
+  border: 1px solid rgba(93, 131, 182, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 252, 255, 0.92)),
+    linear-gradient(135deg, rgba(43, 109, 201, 0.04), transparent 58%);
+  padding: 24px 22px;
+  box-shadow: 0 14px 34px rgba(30, 63, 106, 0.1);
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.cnki-auth-card-head {
+  display: grid;
   gap: 8px;
 }
 
-.text-btn,
-.secondary-btn,
-.primary-btn,
-.ghost-btn {
-  height: 44px;
-  border-radius: 12px;
-  border: none;
-  padding: 0 14px;
+.cnki-auth-kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.13em;
+  color: #6382ad;
+  font-weight: 700;
+}
+
+.cnki-auth-card-head h2 {
+  margin: 0;
+  font-size: 31px;
+  line-height: 1.1;
+  color: #1d457f;
+  font-weight: 800;
+}
+
+.cnki-auth-card-head p {
+  margin: 0;
   font-size: 13px;
-  font-weight: 600;
+  line-height: 1.75;
+  color: #5c7698;
+}
+
+.cnki-auth-mode-switch {
+  display: flex;
+  gap: 10px;
+}
+
+.cnki-auth-mode-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 11px;
+  border: 1px solid rgba(106, 133, 170, 0.42);
+  background: rgba(241, 247, 255, 0.92);
+  color: #44638f;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
 }
 
-.text-btn {
-  min-width: 112px;
-  border: 1px solid #ccd7de;
-  background: #f0f4f7;
-  color: #3f5462;
+.cnki-auth-mode-btn.is-active {
+  border-color: rgba(45, 98, 175, 0.72);
+  background: linear-gradient(135deg, #2a67bf, #2f83c9);
+  color: #fff;
+  box-shadow: 0 12px 20px rgba(44, 90, 157, 0.2);
 }
 
-.text-btn:disabled,
-.secondary-btn:disabled,
-.primary-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+.cnki-auth-form {
+  display: grid;
+  gap: 12px;
 }
 
-.policy-line {
+.cnki-auth-field {
+  display: grid;
+  gap: 7px;
+}
+
+.cnki-auth-field span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #45648d;
+}
+
+.cnki-auth-input {
+  height: 44px;
+  border-radius: 11px;
+  border: 1px solid rgba(99, 130, 172, 0.45);
+  background: #fff;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #234469;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.cnki-auth-input:focus {
+  outline: none;
+  border-color: rgba(45, 98, 175, 0.72);
+  box-shadow: 0 0 0 3px rgba(46, 102, 178, 0.14);
+}
+
+.cnki-auth-code-row {
+  display: flex;
+  gap: 8px;
+}
+
+.cnki-auth-code-btn,
+.cnki-auth-secondary,
+.cnki-auth-submit,
+.cnki-auth-ghost {
+  border-radius: 11px;
+  border: 0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.cnki-auth-code-btn {
+  min-width: 114px;
+  height: 44px;
+  border: 1px solid rgba(109, 137, 174, 0.42);
+  background: rgba(240, 246, 255, 0.96);
+  color: #44648f;
+}
+
+.cnki-auth-policy {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #5c7080;
+  color: #60799a;
 }
 
-.policy-line input {
-  width: 15px;
-  height: 15px;
+.cnki-auth-policy input {
+  width: 14px;
+  height: 14px;
 }
 
-.primary-btn {
+.cnki-auth-submit {
   width: 100%;
-  color: #ffffff;
-  background: linear-gradient(128deg, #1c4e69 0%, #27677a 100%);
+  min-height: 44px;
+  color: #fff;
+  background: linear-gradient(135deg, #2460b7, #2f7fc8);
+  box-shadow: 0 14px 22px rgba(42, 85, 152, 0.18);
 }
 
-.secondary-btn {
-  background: #eef3f6;
-  color: #3f5566;
+.cnki-auth-submit:disabled,
+.cnki-auth-code-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
 }
 
-.wx-shell {
+.cnki-auth-wx-shell {
   display: grid;
   gap: 11px;
 }
 
-.wx-qr {
-  aspect-ratio: 1 / 1;
-  border: 1px dashed #beced8;
+.cnki-auth-wx-qr {
   border-radius: 14px;
-  background: #ffffff;
+  border: 1px dashed rgba(89, 124, 170, 0.46);
+  background: #fff;
+  min-height: 236px;
   display: grid;
   place-items: center;
-  padding: 12px;
+  padding: 14px;
 }
 
-.wx-qr-image {
-  width: min(214px, 100%);
+.cnki-auth-wx-qr-image {
+  width: min(220px, 100%);
   height: auto;
 }
 
-.wx-empty {
-  color: #758a98;
+.cnki-auth-wx-empty {
   font-size: 13px;
+  color: #718aab;
 }
 
-.wx-meta {
+.cnki-auth-wx-meta {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   font-size: 12px;
-  color: #4f6675;
+  color: #5f789a;
 }
 
-.wx-actions {
+.cnki-auth-wx-actions {
   display: flex;
-  gap: 9px;
+  gap: 8px;
 }
 
-.wx-actions .secondary-btn,
-.wx-actions .primary-btn {
+.cnki-auth-secondary {
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid rgba(109, 137, 174, 0.42);
+  background: rgba(240, 246, 255, 0.96);
+  color: #44648f;
+}
+
+.cnki-auth-wx-actions .cnki-auth-submit {
   flex: 1;
 }
 
-.notice {
-  margin: 12px 0 0;
-  border-radius: 12px;
+.cnki-auth-notice {
+  margin: 0;
+  border-radius: 11px;
   padding: 9px 11px;
   font-size: 13px;
+  line-height: 1.6;
 }
 
-.notice-error {
-  border: 1px solid #f0d3cd;
-  background: #fff5f3;
-  color: #a74238;
+.cnki-auth-notice--error {
+  border: 1px solid rgba(184, 75, 69, 0.25);
+  background: rgba(255, 244, 242, 0.95);
+  color: #ad4540;
 }
 
-.notice-success {
-  border: 1px solid #cbe8da;
-  background: #f1fbf6;
-  color: #19664a;
+.cnki-auth-notice--success {
+  border: 1px solid rgba(25, 123, 82, 0.23);
+  background: rgba(238, 250, 245, 0.95);
+  color: #1f7756;
 }
 
-.entry-footer {
-  margin-top: 14px;
+.cnki-auth-footer {
+  margin-top: 2px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
 }
 
-.switch-link {
-  color: #1f6078;
-  text-decoration: none;
+.cnki-auth-switch-link {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #2758a3;
+  text-decoration: none;
 }
 
-.switch-link:hover {
+.cnki-auth-switch-link:hover {
   text-decoration: underline;
 }
 
-.ghost-btn {
+.cnki-auth-ghost {
   height: 34px;
-  border: 1px solid #d4dee4;
-  background: #f7fafc;
-  color: #5d707f;
   padding: 0 12px;
+  border: 1px solid rgba(114, 140, 174, 0.38);
+  background: rgba(247, 251, 255, 0.95);
+  color: #627d9d;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.security-tip {
-  margin: 10px 0 0;
-  color: #6f808c;
+.cnki-auth-security-tip {
+  margin: 0;
   font-size: 12px;
   line-height: 1.7;
+  color: #6c84a3;
 }
 
-@media (max-width: 960px) {
-  .auth-layout {
+@media (max-width: 980px) {
+  .cnki-auth-shell {
     grid-template-columns: 1fr;
+    min-height: auto;
   }
 
-  .brand-area {
-    min-height: 240px;
+  .cnki-auth-right {
+    border-left: 0;
+    border-top: 1px solid rgba(72, 116, 177, 0.2);
+  }
+
+  .cnki-auth-brand-title {
+    font-size: clamp(31px, 9vw, 44px);
+  }
+}
+
+@media (max-width: 720px) {
+  .cnki-auth-page {
+    padding: 12px;
+  }
+
+  .cnki-auth-left,
+  .cnki-auth-right {
+    padding: 18px;
+  }
+
+  .cnki-auth-card {
+    padding: 16px;
+  }
+
+  .cnki-auth-card-head h2 {
+    font-size: 26px;
+  }
+
+  .cnki-auth-mode-switch,
+  .cnki-auth-wx-actions {
+    flex-direction: column;
+  }
+
+  .cnki-auth-mode-btn,
+  .cnki-auth-code-btn,
+  .cnki-auth-secondary,
+  .cnki-auth-submit {
+    width: 100%;
+  }
+
+  .cnki-auth-code-row {
+    flex-direction: column;
   }
 }
 </style>
