@@ -40,7 +40,7 @@
 
         <div class="scholar-rail-card scholar-rail-card--accent">
           <div class="scholar-rail-card__eyeline">账户状态</div>
-          <div class="scholar-rail-card__headline">{{ hasUserToken ? '已登录并同步数据' : '浏览中，提交时再登录' }}</div>
+          <div class="scholar-rail-card__headline">{{ hasUserToken ? '账户已连接' : '先体验后提交' }}</div>
           <div class="scholar-rail-card__grid">
             <div class="scholar-rail-card__metric">
               <span>当前功能</span>
@@ -92,9 +92,9 @@
               <p>任务记录、积分流水和账户信息都汇总在一个页面中。</p>
             </article>
             <article class="scholar-topbar__brief-item">
-              <span>账号同步</span>
-              <strong>{{ hasUserToken ? '已自动同步' : '需要时再登录' }}</strong>
-              <p>浏览流程不受影响，提交任务或支付时再完成登录即可。</p>
+              <span>提交与支付</span>
+              <strong>{{ hasUserToken ? '可直接提交任务' : '提交时再完成登录' }}</strong>
+              <p>浏览流程不受影响，真正提交任务或支付时再完成验证即可。</p>
             </article>
           </div>
         </header>

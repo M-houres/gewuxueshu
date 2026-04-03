@@ -8,13 +8,10 @@
 
     <div class="scholar-panel__body">
       <div class="scholar-step-list">
-        <section class="scholar-panel scholar-panel--soft">
+        <section class="scholar-panel scholar-panel--soft scholar-step-block">
           <div class="scholar-panel__body">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <div class="scholar-kicker scholar-kicker--step">第一步</div>
-                <h3 class="scholar-subtitle">选择目标平台</h3>
-              </div>
+            <div class="scholar-step-head">
+              <h3 class="scholar-step-head__title">第一步 选择目标平台</h3>
               <span class="scholar-pill">默认推荐仿知网检测</span>
             </div>
 
@@ -44,10 +41,9 @@
           </div>
         </section>
 
-        <section class="scholar-panel scholar-panel--soft">
+        <section class="scholar-panel scholar-panel--soft scholar-step-block">
           <div class="scholar-panel__body">
-            <div class="scholar-kicker scholar-kicker--step">第二步</div>
-            <h3 class="scholar-subtitle">上传正文文件</h3>
+            <h3 class="scholar-step-head__title">第二步 上传正文文件</h3>
             <p class="scholar-lead">{{ paperHint }}</p>
 
             <label class="scholar-dropzone" style="margin-top: 18px">
@@ -82,13 +78,10 @@
           </div>
         </section>
 
-        <section v-if="needReport" class="scholar-panel scholar-panel--soft">
+        <section v-if="needReport" class="scholar-panel scholar-panel--soft scholar-step-block">
           <div class="scholar-panel__body">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <div class="scholar-kicker scholar-kicker--step">第三步</div>
-                <h3 class="scholar-subtitle">上传辅助报告</h3>
-              </div>
+            <div class="scholar-step-head">
+              <h3 class="scholar-step-head__title">第三步 上传辅助报告</h3>
               <span class="scholar-pill">可选</span>
             </div>
             <p class="scholar-lead">{{ reportHint }}</p>
@@ -124,10 +117,9 @@
           </div>
         </section>
 
-        <section class="scholar-panel scholar-panel--soft">
+        <section class="scholar-panel scholar-panel--soft scholar-step-block">
           <div class="scholar-panel__body">
-            <div class="scholar-kicker scholar-kicker--step">{{ confirmationStepLabel }}</div>
-            <h3 class="scholar-subtitle">提交前确认</h3>
+            <h3 class="scholar-step-head__title">{{ confirmationStepLabel }} 提交前确认</h3>
 
             <div class="scholar-stack" style="margin-top: 18px">
               <div class="scholar-stat">
