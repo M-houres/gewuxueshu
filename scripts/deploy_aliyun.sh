@@ -53,13 +53,13 @@ fi
 
 compose() {
   if $SUDO docker compose version >/dev/null 2>&1; then
-    $SUDO docker compose "$@"
+    $SUDO docker compose --env-file "$ENV_FILE" -f "$APP_DIR/docker-compose.prod.yml" "$@"
   elif command -v docker-compose >/dev/null 2>&1; then
-    $SUDO docker-compose "$@"
+    $SUDO docker-compose --env-file "$ENV_FILE" -f "$APP_DIR/docker-compose.prod.yml" "$@"
   else
     install_pkg docker-compose-plugin || true
     if $SUDO docker compose version >/dev/null 2>&1; then
-      $SUDO docker compose "$@"
+      $SUDO docker compose --env-file "$ENV_FILE" -f "$APP_DIR/docker-compose.prod.yml" "$@"
     else
       echo "docker compose is unavailable."
       exit 1
@@ -113,8 +113,8 @@ ensure_secret "PAYMENT_SIGN_SECRET" "$(openssl rand -hex 32)"
 ensure_secret "ADMIN_INIT_PASSWORD" "$(openssl rand -base64 18 | tr -d '=+/' | cut -c1-16)"
 set_env "APP_ENV" "prod"
 
-compose -f "$APP_DIR/docker-compose.prod.yml" up -d --build
-compose -f "$APP_DIR/docker-compose.prod.yml" ps
+compose up -d --build
+compose ps
 
 echo "Done: $APP_DIR"
 echo "Remember to open port 80 (and 443 for HTTPS) in Alibaba Cloud security group."
