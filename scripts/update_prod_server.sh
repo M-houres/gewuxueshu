@@ -98,6 +98,13 @@ patch_compose_for_host_nginx() {
   run_root sed -i "s#\"80:80\"#\"${escaped_bind}\"#g" "${COMPOSE_FILE}"
 }
 
+normalize_runtime_scripts() {
+  if [ -f "${APP_DIR}/scripts/update_prod_server.sh" ]; then
+    run_root sed -i 's/\r$//' "${APP_DIR}/scripts/update_prod_server.sh" || true
+    run_root chmod +x "${APP_DIR}/scripts/update_prod_server.sh" || true
+  fi
+}
+
 deploy_compose() {
   log "Deploying containers"
   cd "${APP_DIR}"
@@ -133,6 +140,7 @@ main() {
   download_source
   sync_source
   patch_compose_for_host_nginx
+  normalize_runtime_scripts
   deploy_compose
   health_check
   log "Update complete"
