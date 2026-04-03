@@ -1,81 +1,86 @@
 <template>
   <div class="auth-page">
-    <div class="auth-wrap">
-      <section class="brand-panel">
-        <p class="brand-kicker">GEWU SCHOLAR PLATFORM</p>
-        <h1 class="brand-title">格物致知</h1>
-        <p class="brand-desc">
-          面向学术写作的检测与优化平台，提供 AIGC 检测、降重复率、降 AIGC 率三类能力，任务与结果统一管理。
+    <div class="auth-shell">
+      <section class="auth-hero">
+        <p class="hero-kicker">GEWU ACADEMIC PLATFORM</p>
+        <h1 class="hero-title">格物致知</h1>
+        <p class="hero-desc">
+          面向学术写作的检测与优化平台，覆盖 AIGC 检测、降重复率、降 AIGC 率，全流程结果统一归档到个人中心。
         </p>
+        <div class="hero-tags">
+          <span>可信检测</span>
+          <span>流程统一</span>
+          <span>结果可追溯</span>
+        </div>
       </section>
 
-      <section class="form-panel">
-        <header class="panel-head">
-          <span class="panel-tag">登录状态</span>
-          <h2>未登录</h2>
-          <p>请输入手机号和验证码完成登录。</p>
-        </header>
+      <section class="auth-main">
+        <div class="auth-card">
+          <header class="auth-card__head">
+            <span class="auth-chip">登录状态</span>
+            <h2>未登录</h2>
+            <p>请输入手机号和验证码完成登录。</p>
+          </header>
 
-        <div v-if="phoneLoginEnabled || wechatLoginEnabled" class="mode-switch">
-          <button
-            v-if="phoneLoginEnabled"
-            type="button"
-            class="mode-btn"
-            :class="{ 'is-active': mode === 'phone' }"
-            @click="switchMode('phone')"
-          >
-            手机验证码
-          </button>
-          <button
-            v-if="wechatLoginEnabled"
-            type="button"
-            class="mode-btn"
-            :class="{ 'is-active': mode === 'wx' }"
-            @click="switchMode('wx')"
-          >
-            微信扫码
-          </button>
-        </div>
+          <div v-if="phoneLoginEnabled || wechatLoginEnabled" class="mode-switch">
+            <button
+              v-if="phoneLoginEnabled"
+              type="button"
+              class="mode-btn"
+              :class="{ 'is-active': mode === 'phone' }"
+              @click="switchMode('phone')"
+            >
+              手机验证码
+            </button>
+            <button
+              v-if="wechatLoginEnabled"
+              type="button"
+              class="mode-btn"
+              :class="{ 'is-active': mode === 'wx' }"
+              @click="switchMode('wx')"
+            >
+              微信扫码
+            </button>
+          </div>
 
-        <form v-if="mode === 'phone'" class="form-stack" @submit.prevent="login">
-          <label class="field">
-            <span>手机号</span>
-            <input
-              v-model.trim="phone"
-              class="input"
-              autocomplete="tel"
-              placeholder="请输入 11 位手机号"
-            />
-          </label>
-
-          <label class="field">
-            <span>验证码</span>
-            <div class="code-row">
+          <form v-if="mode === 'phone'" class="form-stack" @submit.prevent="login">
+            <label class="field">
+              <span>手机号</span>
               <input
-                v-model.trim="code"
+                v-model.trim="phone"
                 class="input"
-                style="flex: 1"
-                autocomplete="one-time-code"
-                placeholder="请输入验证码"
+                autocomplete="tel"
+                placeholder="请输入 11 位手机号"
               />
-              <button
-                type="button"
-                class="btn btn-light"
-                :disabled="sending || countdown > 0"
-                @click="sendCode"
-              >
-                {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
-              </button>
-            </div>
-          </label>
+            </label>
 
-          <button class="btn btn-primary" :disabled="loading">
-            {{ loading ? "登录中..." : "登录" }}
-          </button>
-        </form>
+            <label class="field">
+              <span>验证码</span>
+              <div class="code-row">
+                <input
+                  v-model.trim="code"
+                  class="input"
+                  style="flex: 1"
+                  autocomplete="one-time-code"
+                  placeholder="请输入验证码"
+                />
+                <button
+                  type="button"
+                  class="btn btn-light"
+                  :disabled="sending || countdown > 0"
+                  @click="sendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
+                </button>
+              </div>
+            </label>
 
-        <div v-else class="wx-shell">
-          <div class="wx-board">
+            <button class="btn btn-primary" :disabled="loading">
+              {{ loading ? "登录中..." : "登录" }}
+            </button>
+          </form>
+
+          <div v-else class="wx-shell">
             <div class="wx-qr">
               <img
                 v-if="wxQrcodeDataUrl"
@@ -86,8 +91,10 @@
               <span v-else class="wx-empty">等待二维码生成</span>
             </div>
             <div class="wx-meta">
-              <span class="wx-status">状态：{{ wxStatusText }}</span>
-              <span class="wx-expire">剩余 {{ wxCountdown }} 秒</span>
+              <span>状态：{{ wxStatusText }}</span>
+              <span>剩余 {{ wxCountdown }} 秒</span>
+            </div>
+            <div class="wx-actions">
               <button
                 type="button"
                 class="btn btn-light"
@@ -105,13 +112,14 @@
               </button>
             </div>
           </div>
-        </div>
 
-        <p v-if="errorText" class="message message-error">{{ errorText }}</p>
-        <p v-if="hintText" class="message message-success">{{ hintText }}</p>
+          <p v-if="errorText" class="message message-error">{{ errorText }}</p>
+          <p v-if="hintText" class="message message-success">{{ hintText }}</p>
 
-        <div class="panel-foot">
-          <RouterLink class="link-btn" :to="registerLink">去注册</RouterLink>
+          <div class="card-foot">
+            <RouterLink class="link-btn" :to="registerLink">去注册</RouterLink>
+            <button type="button" class="ghost-btn" @click="enterGuest">先体验</button>
+          </div>
         </div>
       </section>
     </div>
@@ -344,162 +352,188 @@ function completeLogin(token, user) {
   setUserInfo(user)
   router.push(resolveUserRedirect(route.query.redirect, "/app/detect"))
 }
+
+function enterGuest() {
+  router.push("/app/detect")
+}
 </script>
 
 <style scoped>
 .auth-page {
   min-height: 100vh;
-  padding: clamp(18px, 4vw, 42px);
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 32px);
   background:
-    radial-gradient(1200px 620px at 16% -8%, rgba(246, 233, 205, 0.6), transparent 72%),
-    radial-gradient(900px 500px at 86% 108%, rgba(203, 226, 233, 0.5), transparent 70%),
-    #f4f6f8;
+    radial-gradient(900px 520px at 12% 0%, rgba(253, 244, 224, 0.55), transparent 70%),
+    radial-gradient(860px 500px at 92% 100%, rgba(212, 228, 236, 0.55), transparent 70%),
+    #f2f5f7;
   font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
 }
 
-.auth-wrap {
-  width: min(1080px, 100%);
-  margin: 0 auto;
-  min-height: calc(100vh - clamp(36px, 8vw, 84px));
+.auth-shell {
+  width: min(960px, 100%);
+  border-radius: 22px;
+  border: 1px solid #d7dee5;
   background: #ffffff;
-  border-radius: 24px;
   overflow: hidden;
-  border: 1px solid #d9dee4;
-  box-shadow: 0 20px 58px rgba(18, 33, 52, 0.08);
+  box-shadow: 0 24px 60px rgba(25, 45, 62, 0.1);
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1.05fr 0.95fr;
 }
 
-.brand-panel {
-  padding: clamp(28px, 5vw, 62px);
+.auth-hero {
+  padding: clamp(26px, 4.2vw, 44px);
   background:
-    linear-gradient(158deg, rgba(19, 67, 103, 0.98), rgba(34, 98, 114, 0.9)),
-    radial-gradient(circle at 88% 15%, rgba(244, 235, 216, 0.3), transparent 38%);
-  color: #f4f7fb;
+    linear-gradient(154deg, #173f63 0%, #22576c 52%, #2b6675 100%),
+    radial-gradient(circle at 85% 14%, rgba(244, 227, 194, 0.32), transparent 40%);
+  color: #f4f8fc;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 18px;
+  gap: 16px;
 }
 
-.brand-kicker {
+.hero-kicker {
   margin: 0;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   font-size: 11px;
-  opacity: 0.72;
+  opacity: 0.74;
 }
 
-.brand-title {
+.hero-title {
   margin: 0;
-  font-size: clamp(34px, 6vw, 58px);
-  line-height: 1.05;
+  font-size: clamp(30px, 4.6vw, 46px);
+  line-height: 1.08;
   letter-spacing: 0.08em;
-  color: #fff8e6;
+  color: #fff7e7;
   font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
 }
 
-.brand-desc {
+.hero-desc {
   margin: 0;
-  max-width: 34ch;
-  line-height: 1.9;
-  font-size: 15px;
-  color: rgba(245, 247, 252, 0.9);
-}
-
-.form-panel {
-  padding: clamp(24px, 4vw, 40px);
-  display: flex;
-  flex-direction: column;
-}
-
-.panel-head h2 {
-  margin: 8px 0 6px;
-  font-size: 30px;
-  color: #1d2a36;
-  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
-}
-
-.panel-head p {
-  margin: 0;
-  color: #5f6d79;
+  max-width: 32ch;
+  line-height: 1.8;
   font-size: 14px;
+  color: rgba(244, 249, 252, 0.92);
 }
 
-.panel-tag {
+.hero-tags {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero-tags span {
+  border: 1px solid rgba(236, 244, 250, 0.3);
+  background: rgba(236, 244, 250, 0.12);
+  color: #eff5fb;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.auth-main {
+  padding: clamp(20px, 3.2vw, 34px);
+  background: linear-gradient(180deg, #fbfcfd 0%, #f4f7fa 100%);
+}
+
+.auth-card {
+  border: 1px solid #d9e2ea;
+  border-radius: 16px;
+  padding: clamp(18px, 2.6vw, 26px);
+  background: #ffffff;
+}
+
+.auth-card__head h2 {
+  margin: 8px 0 6px;
+  font-size: 28px;
+  color: #1b2a36;
+  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
+}
+
+.auth-card__head p {
+  margin: 0;
+  font-size: 14px;
+  color: #5f6f7d;
+}
+
+.auth-chip {
   display: inline-flex;
-  align-items: center;
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
-  color: #14574b;
-  background: #e5f3ef;
+  color: #145f4d;
+  background: #e8f4ef;
 }
 
 .mode-switch {
-  margin-top: 18px;
+  margin-top: 16px;
   display: flex;
   gap: 8px;
 }
 
 .mode-btn {
   flex: 1;
-  border: 1px solid #d4dde6;
-  background: #f7fafc;
-  color: #3f4f5e;
-  border-radius: 12px;
   height: 38px;
+  border-radius: 11px;
+  border: 1px solid #cfdae4;
+  background: #f3f7fa;
+  color: #3e5264;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .mode-btn.is-active {
-  background: #113f58;
+  border-color: #194c70;
+  background: #194c70;
   color: #ffffff;
-  border-color: #113f58;
 }
 
 .form-stack {
-  margin-top: 18px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   font-size: 13px;
-  color: #4f5d69;
+  color: #4d6173;
 }
 
 .input {
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid #cfd9e2;
-  padding: 0 14px;
-  font-size: 14px;
-  color: #22313e;
+  height: 42px;
+  border: 1px solid #cad5df;
+  border-radius: 11px;
+  padding: 0 13px;
   background: #ffffff;
+  color: #213142;
+  font-size: 14px;
 }
 
 .input:focus {
   outline: none;
-  border-color: #2f688a;
-  box-shadow: 0 0 0 3px rgba(47, 104, 138, 0.14);
+  border-color: #2f6584;
+  box-shadow: 0 0 0 3px rgba(47, 101, 132, 0.14);
 }
 
 .code-row {
   display: flex;
-  gap: 10px;
+  gap: 9px;
 }
 
 .btn {
+  height: 42px;
   border: none;
-  border-radius: 12px;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 14px;
+  border-radius: 11px;
+  padding: 0 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -510,99 +544,112 @@ function completeLogin(token, user) {
 }
 
 .btn-primary {
-  background: linear-gradient(132deg, #135278, #1b6b80);
+  background: linear-gradient(134deg, #1a4f75, #266982);
   color: #ffffff;
-  width: 100%;
 }
 
 .btn-light {
-  background: #edf3f7;
-  color: #2f4152;
+  background: #eaf1f6;
+  color: #304456;
 }
 
 .wx-shell {
-  margin-top: 18px;
-}
-
-.wx-board {
-  border: 1px solid #d6e0e8;
-  border-radius: 14px;
-  padding: 14px;
-  background: #f9fbfd;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .wx-qr {
   width: 100%;
   aspect-ratio: 1 / 1;
+  border: 1px dashed #bfd0dd;
   border-radius: 12px;
-  border: 1px dashed #becad6;
+  background: #ffffff;
   display: grid;
   place-items: center;
-  background: #ffffff;
 }
 
 .wx-qr-image {
-  width: min(210px, 100%);
+  width: min(200px, 100%);
   height: auto;
 }
 
 .wx-empty {
-  color: #7b8997;
+  color: #7e8e9d;
   font-size: 13px;
 }
 
 .wx-meta {
-  margin-top: 12px;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   gap: 8px;
+  font-size: 12px;
+  color: #506273;
 }
 
-.wx-status,
-.wx-expire {
-  font-size: 12px;
-  color: #4f6070;
+.wx-actions {
+  display: flex;
+  gap: 9px;
+}
+
+.wx-actions .btn {
+  flex: 1;
 }
 
 .message {
   margin: 12px 0 0;
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 11px;
+  padding: 9px 11px;
   font-size: 13px;
 }
 
 .message-error {
-  border: 1px solid #f0d3cd;
+  border: 1px solid #efd1cb;
   background: #fff6f4;
-  color: #9f3f34;
+  color: #a54137;
 }
 
 .message-success {
-  border: 1px solid #cde8dc;
-  background: #f2fbf6;
-  color: #17674f;
+  border: 1px solid #cce8dc;
+  background: #f1fbf5;
+  color: #1c684f;
 }
 
-.panel-foot {
-  margin-top: 16px;
+.card-foot {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 .link-btn {
-  display: inline-block;
-  color: #205d80;
+  color: #1f6288;
   text-decoration: none;
   font-size: 14px;
-  border-bottom: 1px solid rgba(32, 93, 128, 0.35);
+  border-bottom: 1px solid rgba(31, 98, 136, 0.4);
   padding-bottom: 2px;
 }
 
-@media (max-width: 960px) {
-  .auth-wrap {
+.ghost-btn {
+  height: 32px;
+  border: 1px solid #d4dde5;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #5d6f80;
+  padding: 0 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+@media (max-width: 920px) {
+  .auth-shell {
     grid-template-columns: 1fr;
   }
 
-  .brand-panel {
-    min-height: 260px;
+  .auth-hero {
+    min-height: 220px;
   }
 }
 </style>

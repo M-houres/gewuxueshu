@@ -1,64 +1,71 @@
 <template>
   <div class="auth-page">
-    <div class="auth-wrap">
-      <section class="brand-panel">
-        <p class="brand-kicker">GEWU SCHOLAR PLATFORM</p>
-        <h1 class="brand-title">格物致知</h1>
-        <p class="brand-desc">
-          创建账号后即可使用 AIGC 检测、降重复率、降 AIGC 率。任务记录和积分流水统一在个人中心管理。
+    <div class="auth-shell">
+      <section class="auth-hero">
+        <p class="hero-kicker">GEWU ACADEMIC PLATFORM</p>
+        <h1 class="hero-title">格物致知</h1>
+        <p class="hero-desc">
+          创建账号后即可进入统一工作台，使用 AIGC 检测、降重复率、降 AIGC 率能力，任务和积分记录集中管理。
         </p>
+        <div class="hero-tags">
+          <span>账号即开即用</span>
+          <span>流程统一</span>
+          <span>结果集中</span>
+        </div>
       </section>
 
-      <section class="form-panel">
-        <header class="panel-head">
-          <span class="panel-tag">账号创建</span>
-          <h2>注册</h2>
-          <p>请输入手机号和验证码完成注册。</p>
-          <p v-if="referrerCode" class="invite-note">邀请码：{{ referrerCode }}</p>
-        </header>
+      <section class="auth-main">
+        <div class="auth-card">
+          <header class="auth-card__head">
+            <span class="auth-chip">账号创建</span>
+            <h2>注册</h2>
+            <p>请输入手机号和验证码完成注册。</p>
+            <p v-if="referrerCode" class="invite-note">邀请码：{{ referrerCode }}</p>
+          </header>
 
-        <form class="form-stack" @submit.prevent="register">
-          <label class="field">
-            <span>手机号</span>
-            <input
-              v-model.trim="phone"
-              class="input"
-              autocomplete="tel"
-              placeholder="请输入 11 位手机号"
-            />
-          </label>
-
-          <label class="field">
-            <span>验证码</span>
-            <div class="code-row">
+          <form class="form-stack" @submit.prevent="register">
+            <label class="field">
+              <span>手机号</span>
               <input
-                v-model.trim="code"
+                v-model.trim="phone"
                 class="input"
-                style="flex: 1"
-                autocomplete="one-time-code"
-                placeholder="请输入验证码"
+                autocomplete="tel"
+                placeholder="请输入 11 位手机号"
               />
-              <button
-                type="button"
-                class="btn btn-light"
-                :disabled="sending || countdown > 0"
-                @click="sendCode"
-              >
-                {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
-              </button>
-            </div>
-          </label>
+            </label>
 
-          <button class="btn btn-primary" :disabled="loading">
-            {{ loading ? "注册中..." : "完成注册" }}
-          </button>
-        </form>
+            <label class="field">
+              <span>验证码</span>
+              <div class="code-row">
+                <input
+                  v-model.trim="code"
+                  class="input"
+                  style="flex: 1"
+                  autocomplete="one-time-code"
+                  placeholder="请输入验证码"
+                />
+                <button
+                  type="button"
+                  class="btn btn-light"
+                  :disabled="sending || countdown > 0"
+                  @click="sendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : "发送验证码" }}
+                </button>
+              </div>
+            </label>
 
-        <p v-if="errorText" class="message message-error">{{ errorText }}</p>
-        <p v-if="hintText" class="message message-success">{{ hintText }}</p>
+            <button class="btn btn-primary" :disabled="loading">
+              {{ loading ? "注册中..." : "完成注册" }}
+            </button>
+          </form>
 
-        <div class="panel-foot">
-          <RouterLink class="link-btn" :to="loginLink">返回登录</RouterLink>
+          <p v-if="errorText" class="message message-error">{{ errorText }}</p>
+          <p v-if="hintText" class="message message-success">{{ hintText }}</p>
+
+          <div class="card-foot">
+            <RouterLink class="link-btn" :to="loginLink">返回登录</RouterLink>
+          </div>
         </div>
       </section>
     </div>
@@ -172,143 +179,164 @@ async function register() {
 <style scoped>
 .auth-page {
   min-height: 100vh;
-  padding: clamp(18px, 4vw, 42px);
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 32px);
   background:
-    radial-gradient(1200px 620px at 16% -8%, rgba(246, 233, 205, 0.6), transparent 72%),
-    radial-gradient(900px 500px at 86% 108%, rgba(203, 226, 233, 0.5), transparent 70%),
-    #f4f6f8;
+    radial-gradient(900px 520px at 12% 0%, rgba(253, 244, 224, 0.55), transparent 70%),
+    radial-gradient(860px 500px at 92% 100%, rgba(212, 228, 236, 0.55), transparent 70%),
+    #f2f5f7;
   font-family: "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
 }
 
-.auth-wrap {
-  width: min(1080px, 100%);
-  margin: 0 auto;
-  min-height: calc(100vh - clamp(36px, 8vw, 84px));
+.auth-shell {
+  width: min(960px, 100%);
+  border-radius: 22px;
+  border: 1px solid #d7dee5;
   background: #ffffff;
-  border-radius: 24px;
   overflow: hidden;
-  border: 1px solid #d9dee4;
-  box-shadow: 0 20px 58px rgba(18, 33, 52, 0.08);
+  box-shadow: 0 24px 60px rgba(25, 45, 62, 0.1);
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1.05fr 0.95fr;
 }
 
-.brand-panel {
-  padding: clamp(28px, 5vw, 62px);
+.auth-hero {
+  padding: clamp(26px, 4.2vw, 44px);
   background:
-    linear-gradient(158deg, rgba(19, 67, 103, 0.98), rgba(34, 98, 114, 0.9)),
-    radial-gradient(circle at 88% 15%, rgba(244, 235, 216, 0.3), transparent 38%);
-  color: #f4f7fb;
+    linear-gradient(154deg, #173f63 0%, #22576c 52%, #2b6675 100%),
+    radial-gradient(circle at 85% 14%, rgba(244, 227, 194, 0.32), transparent 40%);
+  color: #f4f8fc;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 18px;
+  gap: 16px;
 }
 
-.brand-kicker {
+.hero-kicker {
   margin: 0;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   font-size: 11px;
-  opacity: 0.72;
+  opacity: 0.74;
 }
 
-.brand-title {
+.hero-title {
   margin: 0;
-  font-size: clamp(34px, 6vw, 58px);
-  line-height: 1.05;
+  font-size: clamp(30px, 4.6vw, 46px);
+  line-height: 1.08;
   letter-spacing: 0.08em;
-  color: #fff8e6;
+  color: #fff7e7;
   font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
 }
 
-.brand-desc {
+.hero-desc {
   margin: 0;
-  max-width: 34ch;
-  line-height: 1.9;
-  font-size: 15px;
-  color: rgba(245, 247, 252, 0.9);
-}
-
-.form-panel {
-  padding: clamp(24px, 4vw, 40px);
-  display: flex;
-  flex-direction: column;
-}
-
-.panel-head h2 {
-  margin: 8px 0 6px;
-  font-size: 30px;
-  color: #1d2a36;
-  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
-}
-
-.panel-head p {
-  margin: 0;
-  color: #5f6d79;
+  max-width: 32ch;
+  line-height: 1.8;
   font-size: 14px;
+  color: rgba(244, 249, 252, 0.92);
 }
 
-.panel-tag {
+.hero-tags {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero-tags span {
+  border: 1px solid rgba(236, 244, 250, 0.3);
+  background: rgba(236, 244, 250, 0.12);
+  color: #eff5fb;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.auth-main {
+  padding: clamp(20px, 3.2vw, 34px);
+  background: linear-gradient(180deg, #fbfcfd 0%, #f4f7fa 100%);
+}
+
+.auth-card {
+  border: 1px solid #d9e2ea;
+  border-radius: 16px;
+  padding: clamp(18px, 2.6vw, 26px);
+  background: #ffffff;
+}
+
+.auth-card__head h2 {
+  margin: 8px 0 6px;
+  font-size: 28px;
+  color: #1b2a36;
+  font-family: "Source Han Serif SC", "Songti SC", "STSong", serif;
+}
+
+.auth-card__head p {
+  margin: 0;
+  font-size: 14px;
+  color: #5f6f7d;
+}
+
+.auth-chip {
   display: inline-flex;
-  align-items: center;
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
-  color: #14574b;
-  background: #e5f3ef;
+  color: #145f4d;
+  background: #e8f4ef;
 }
 
 .invite-note {
   margin-top: 10px !important;
   border-radius: 10px;
-  border: 1px solid #cde8dc;
-  background: #f2fbf6;
-  color: #17674f !important;
+  border: 1px solid #cce8dc;
+  background: #f1fbf5;
+  color: #1c684f !important;
   padding: 8px 10px;
 }
 
 .form-stack {
-  margin-top: 18px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   font-size: 13px;
-  color: #4f5d69;
+  color: #4d6173;
 }
 
 .input {
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid #cfd9e2;
-  padding: 0 14px;
-  font-size: 14px;
-  color: #22313e;
+  height: 42px;
+  border: 1px solid #cad5df;
+  border-radius: 11px;
+  padding: 0 13px;
   background: #ffffff;
+  color: #213142;
+  font-size: 14px;
 }
 
 .input:focus {
   outline: none;
-  border-color: #2f688a;
-  box-shadow: 0 0 0 3px rgba(47, 104, 138, 0.14);
+  border-color: #2f6584;
+  box-shadow: 0 0 0 3px rgba(47, 101, 132, 0.14);
 }
 
 .code-row {
   display: flex;
-  gap: 10px;
+  gap: 9px;
 }
 
 .btn {
+  height: 42px;
   border: none;
-  border-radius: 12px;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 14px;
+  border-radius: 11px;
+  padding: 0 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -319,55 +347,53 @@ async function register() {
 }
 
 .btn-primary {
-  background: linear-gradient(132deg, #135278, #1b6b80);
+  background: linear-gradient(134deg, #1a4f75, #266982);
   color: #ffffff;
-  width: 100%;
 }
 
 .btn-light {
-  background: #edf3f7;
-  color: #2f4152;
+  background: #eaf1f6;
+  color: #304456;
 }
 
 .message {
   margin: 12px 0 0;
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 11px;
+  padding: 9px 11px;
   font-size: 13px;
 }
 
 .message-error {
-  border: 1px solid #f0d3cd;
+  border: 1px solid #efd1cb;
   background: #fff6f4;
-  color: #9f3f34;
+  color: #a54137;
 }
 
 .message-success {
-  border: 1px solid #cde8dc;
-  background: #f2fbf6;
-  color: #17674f;
+  border: 1px solid #cce8dc;
+  background: #f1fbf5;
+  color: #1c684f;
 }
 
-.panel-foot {
-  margin-top: 16px;
+.card-foot {
+  margin-top: 14px;
 }
 
 .link-btn {
-  display: inline-block;
-  color: #205d80;
+  color: #1f6288;
   text-decoration: none;
   font-size: 14px;
-  border-bottom: 1px solid rgba(32, 93, 128, 0.35);
+  border-bottom: 1px solid rgba(31, 98, 136, 0.4);
   padding-bottom: 2px;
 }
 
-@media (max-width: 960px) {
-  .auth-wrap {
+@media (max-width: 920px) {
+  .auth-shell {
     grid-template-columns: 1fr;
   }
 
-  .brand-panel {
-    min-height: 260px;
+  .auth-hero {
+    min-height: 220px;
   }
 }
 </style>
