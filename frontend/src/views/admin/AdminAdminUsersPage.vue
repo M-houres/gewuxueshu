@@ -8,21 +8,41 @@
     </section>
 
     <template v-else>
+      <section class="scholar-grid md:grid-cols-3">
+        <article class="scholar-stat">
+          <div class="scholar-stat__label">管理员总数</div>
+          <div class="scholar-stat__value" style="font-size: 26px">{{ summary.total }}</div>
+        </article>
+        <article class="scholar-stat">
+          <div class="scholar-stat__label">启用账号</div>
+          <div class="scholar-stat__value" style="font-size: 26px; color: var(--success)">{{ summary.active }}</div>
+        </article>
+        <article class="scholar-stat">
+          <div class="scholar-stat__label">停用账号</div>
+          <div class="scholar-stat__value" style="font-size: 26px; color: var(--danger)">{{ summary.inactive }}</div>
+        </article>
+      </section>
+
       <section class="scholar-panel">
         <div class="scholar-panel__header">
           <div class="scholar-kicker">创建管理员</div>
           <h3 class="scholar-subtitle">新增普通管理员账号</h3>
         </div>
         <div class="scholar-panel__body">
-          <div class="scholar-grid md:grid-cols-2">
+          <div class="scholar-grid md:grid-cols-[1fr_1fr_auto]">
             <label class="scholar-field">
               <span class="scholar-field__label">用户名</span>
               <input v-model.trim="createForm.username" class="scholar-input" placeholder="如: ops_editor" />
             </label>
             <label class="scholar-field">
               <span class="scholar-field__label">初始密码</span>
-              <input v-model.trim="createForm.password" type="password" class="scholar-input" placeholder="至少8位" />
+              <input v-model.trim="createForm.password" type="text" class="scholar-input" placeholder="至少8位" />
             </label>
+            <div class="scholar-inline-actions" style="align-self: end">
+              <button class="scholar-button scholar-button--secondary" type="button" @click="fillCreateRandomPassword">
+                生成密码
+              </button>
+            </div>
           </div>
 
           <div class="scholar-inline-actions" style="margin-top: 16px">
@@ -30,14 +50,32 @@
               <input v-model="createForm.is_active" type="checkbox" />
               账号启用
             </label>
+            <button class="scholar-button scholar-button--ghost" type="button" @click="setCreateDefaultPermissions">
+              默认权限
+            </button>
+            <button class="scholar-button scholar-button--ghost" type="button" @click="selectAllCreatePermissions">
+              全选权限
+            </button>
+            <button class="scholar-button scholar-button--ghost" type="button" @click="clearCreatePermissions">
+              清空权限
+            </button>
           </div>
 
           <div class="scholar-grid md:grid-cols-2" style="margin-top: 16px">
             <article v-for="group in permissionGroups" :key="group.group" class="scholar-note">
               <div style="font-weight: 600; color: var(--ink)">{{ group.group }}</div>
               <div class="scholar-stack" style="margin-top: 10px">
-                <label v-for="item in group.items" :key="item.key" class="scholar-chip" style="justify-content: flex-start">
-                  <input :checked="createForm.permissions.includes(item.key)" type="checkbox" @change="toggleCreatePermission(item.key)" />
+                <label
+                  v-for="item in group.items"
+                  :key="item.key"
+                  class="scholar-chip"
+                  style="justify-content: flex-start"
+                >
+                  <input
+                    :checked="createForm.permissions.includes(item.key)"
+                    type="checkbox"
+                    @change="toggleCreatePermission(item.key)"
+                  />
                   <span>{{ item.label }}</span>
                 </label>
               </div>
@@ -55,6 +93,37 @@
         </div>
       </section>
 
+      <section class="scholar-panel scholar-panel--soft">
+        <div class="scholar-panel__body">
+          <div class="scholar-grid md:grid-cols-[1.2fr_0.8fr_0.8fr_auto]">
+            <label class="scholar-field">
+              <span class="scholar-field__label">搜索用户名</span>
+              <input v-model.trim="filters.keyword" class="scholar-input" placeholder="输入用户名关键字" />
+            </label>
+            <label class="scholar-field">
+              <span class="scholar-field__label">角色</span>
+              <select v-model="filters.role" class="scholar-select">
+                <option value="">全部角色</option>
+                <option value="super_admin">超级管理员</option>
+                <option value="operator">普通管理员</option>
+              </select>
+            </label>
+            <label class="scholar-field">
+              <span class="scholar-field__label">账号状态</span>
+              <select v-model="filters.status" class="scholar-select">
+                <option value="all">全部状态</option>
+                <option value="active">仅启用</option>
+                <option value="inactive">仅停用</option>
+              </select>
+            </label>
+            <div class="scholar-inline-actions" style="align-self: end">
+              <button class="scholar-button scholar-button--secondary" type="button" @click="loadAll">查询</button>
+              <button class="scholar-button scholar-button--ghost" type="button" @click="resetFilters">重置</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="scholar-panel">
         <div class="scholar-panel__header">
           <div class="scholar-kicker">管理员列表</div>
@@ -69,6 +138,7 @@
                   <th>用户名</th>
                   <th>角色</th>
                   <th>状态</th>
+                  <th>权限摘要</th>
                   <th>最近登录</th>
                   <th>创建时间</th>
                   <th>操作</th>
@@ -77,21 +147,29 @@
               <tbody>
                 <tr v-for="row in rows" :key="row.id">
                   <td>{{ row.id }}</td>
-                  <td>{{ row.username }}</td>
+                  <td>
+                    <div class="text-sm font-semibold">{{ row.username }}</div>
+                    <div v-if="row.id === currentAdminId" class="text-xs text-[var(--ink-faint)]">当前登录账号</div>
+                  </td>
                   <td>{{ row.role }}</td>
                   <td>
                     <span class="scholar-badge" :class="row.is_active ? 'scholar-badge--success' : 'scholar-badge--danger'">
                       {{ row.is_active ? "启用" : "停用" }}
                     </span>
                   </td>
+                  <td>
+                    <div class="text-xs leading-6 text-[var(--ink-soft)]" :title="fullPermissionText(row)">
+                      {{ permissionBrief(row) }}
+                    </div>
+                  </td>
                   <td>{{ formatTime(row.last_login) }}</td>
                   <td>{{ formatTime(row.created_at) }}</td>
                   <td>
                     <div class="scholar-inline-actions">
-                      <button class="scholar-button scholar-button--secondary" @click="openEdit(row)">编辑权限</button>
+                      <button class="scholar-button scholar-button--secondary" @click="openEdit(row)">编辑</button>
                       <button
                         class="scholar-button scholar-button--ghost"
-                        :disabled="row.role === 'super_admin'"
+                        :disabled="row.role === 'super_admin' || row.id === currentAdminId"
                         @click="toggleStatus(row)"
                       >
                         {{ row.is_active ? "停用账号" : "启用账号" }}
@@ -100,7 +178,7 @@
                   </td>
                 </tr>
                 <tr v-if="rows.length === 0">
-                  <td colspan="7">
+                  <td colspan="8">
                     <div class="scholar-empty">暂无管理员数据</div>
                   </td>
                 </tr>
@@ -115,6 +193,35 @@
           <div class="scholar-kicker">编辑管理员</div>
           <h3 class="scholar-subtitle">{{ editing.username }}</h3>
 
+          <div class="scholar-inline-actions" style="margin-top: 12px">
+            <span class="scholar-pill">角色：{{ editing.role }}</span>
+            <span class="scholar-pill">状态：{{ editing.is_active ? "启用" : "停用" }}</span>
+            <button
+              v-if="editing.role !== 'super_admin'"
+              class="scholar-button scholar-button--ghost"
+              type="button"
+              @click="setEditDefaultPermissions"
+            >
+              默认权限
+            </button>
+            <button
+              v-if="editing.role !== 'super_admin'"
+              class="scholar-button scholar-button--ghost"
+              type="button"
+              @click="selectAllEditPermissions"
+            >
+              全选权限
+            </button>
+            <button
+              v-if="editing.role !== 'super_admin'"
+              class="scholar-button scholar-button--ghost"
+              type="button"
+              @click="clearEditPermissions"
+            >
+              清空权限
+            </button>
+          </div>
+
           <div v-if="editing.role === 'super_admin'" class="scholar-note" style="margin-top: 16px">
             超级管理员拥有全量权限，不支持修改权限集。
           </div>
@@ -123,8 +230,17 @@
             <article v-for="group in permissionGroups" :key="group.group" class="scholar-note">
               <div style="font-weight: 600; color: var(--ink)">{{ group.group }}</div>
               <div class="scholar-stack" style="margin-top: 10px">
-                <label v-for="item in group.items" :key="item.key" class="scholar-chip" style="justify-content: flex-start">
-                  <input :checked="editPermissions.includes(item.key)" type="checkbox" @change="toggleEditPermission(item.key)" />
+                <label
+                  v-for="item in group.items"
+                  :key="item.key"
+                  class="scholar-chip"
+                  style="justify-content: flex-start"
+                >
+                  <input
+                    :checked="editPermissions.includes(item.key)"
+                    type="checkbox"
+                    @change="toggleEditPermission(item.key)"
+                  />
                   <span>{{ item.label }}</span>
                 </label>
               </div>
@@ -134,9 +250,12 @@
           <div class="scholar-grid md:grid-cols-[1fr_auto]" style="margin-top: 16px">
             <label class="scholar-field">
               <span class="scholar-field__label">重置密码（至少8位）</span>
-              <input v-model.trim="newPassword" type="password" class="scholar-input" placeholder="留空则不修改密码" />
+              <input v-model.trim="newPassword" type="text" class="scholar-input" placeholder="留空则不修改密码" />
             </label>
             <div class="scholar-inline-actions" style="align-self: end">
+              <button class="scholar-button scholar-button--secondary" type="button" @click="fillEditRandomPassword">
+                生成密码
+              </button>
               <button class="scholar-button" :disabled="savingEdit" @click="saveEdit">
                 {{ savingEdit ? "保存中..." : "保存设置" }}
               </button>
@@ -156,13 +275,32 @@ import AdminShell from "../../components/AdminShell.vue"
 import { adminHttp } from "../../lib/http"
 import { getAdminInfo } from "../../lib/session"
 
+const DEFAULT_OPERATOR_PERMISSIONS = [
+  "dashboard:view",
+  "users:view",
+  "users:manage",
+  "tasks:view",
+  "orders:view",
+  "orders:refund",
+  "referrals:view",
+  "logs:view",
+  "credits:view",
+  "algo:view",
+]
+
 const rows = ref([])
 const catalog = ref([])
+const summary = ref({ total: 0, active: 0, inactive: 0 })
+const filters = ref({
+  keyword: "",
+  role: "",
+  status: "all",
+})
 const createForm = ref({
   username: "",
   password: "",
   is_active: true,
-  permissions: [],
+  permissions: [...DEFAULT_OPERATOR_PERMISSIONS],
 })
 const editing = ref(null)
 const editPermissions = ref([])
@@ -173,6 +311,7 @@ const hintText = ref("")
 const errorText = ref("")
 
 const adminInfo = getAdminInfo()
+const currentAdminId = Number(adminInfo?.id || 0)
 const isSuperAdmin = computed(() => adminInfo?.role === "super_admin")
 const permissionGroups = computed(() => {
   const grouped = new Map()
@@ -192,9 +331,36 @@ async function loadAll() {
   if (!isSuperAdmin.value) {
     return
   }
-  const data = await adminHttp.get("/admin/admin-users")
-  rows.value = data.items || []
-  catalog.value = data.permission_catalog || []
+  try {
+    const params = {}
+    if (filters.value.keyword) {
+      params.keyword = filters.value.keyword
+    }
+    if (filters.value.role) {
+      params.role = filters.value.role
+    }
+    if (filters.value.status === "active") {
+      params.is_active = true
+    } else if (filters.value.status === "inactive") {
+      params.is_active = false
+    }
+    const data = await adminHttp.get("/admin/admin-users", { params })
+    rows.value = data.items || []
+    catalog.value = data.permission_catalog || []
+    summary.value = data.summary || calcSummary(rows.value)
+  } catch (error) {
+    errorText.value = error.message || "加载管理员列表失败"
+  }
+}
+
+function calcSummary(items) {
+  const total = items.length
+  const active = items.filter((item) => item.is_active).length
+  return {
+    total,
+    active,
+    inactive: Math.max(total - active, 0),
+  }
 }
 
 function toggleCreatePermission(key) {
@@ -217,6 +383,47 @@ function toggleEditPermission(key) {
   editPermissions.value = Array.from(current)
 }
 
+function setCreateDefaultPermissions() {
+  createForm.value.permissions = [...DEFAULT_OPERATOR_PERMISSIONS]
+}
+
+function selectAllCreatePermissions() {
+  createForm.value.permissions = catalog.value.map((item) => item.key)
+}
+
+function clearCreatePermissions() {
+  createForm.value.permissions = []
+}
+
+function setEditDefaultPermissions() {
+  editPermissions.value = [...DEFAULT_OPERATOR_PERMISSIONS]
+}
+
+function selectAllEditPermissions() {
+  editPermissions.value = catalog.value.map((item) => item.key)
+}
+
+function clearEditPermissions() {
+  editPermissions.value = []
+}
+
+function fillCreateRandomPassword() {
+  createForm.value.password = randomPassword()
+}
+
+function fillEditRandomPassword() {
+  newPassword.value = randomPassword()
+}
+
+function randomPassword() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*"
+  let out = ""
+  for (let i = 0; i < 14; i += 1) {
+    out += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return out
+}
+
 async function createAdmin() {
   hintText.value = ""
   errorText.value = ""
@@ -228,6 +435,10 @@ async function createAdmin() {
     errorText.value = "初始密码至少 8 位"
     return
   }
+  if (!Array.isArray(createForm.value.permissions) || createForm.value.permissions.length === 0) {
+    errorText.value = "至少选择 1 项权限"
+    return
+  }
   savingCreate.value = true
   try {
     await adminHttp.post("/admin/admin-users", createForm.value)
@@ -236,7 +447,7 @@ async function createAdmin() {
       username: "",
       password: "",
       is_active: true,
-      permissions: [],
+      permissions: [...DEFAULT_OPERATOR_PERMISSIONS],
     }
     await loadAll()
   } catch (error) {
@@ -269,6 +480,9 @@ async function saveEdit() {
   errorText.value = ""
   try {
     if (editing.value.role !== "super_admin") {
+      if (!Array.isArray(editPermissions.value) || editPermissions.value.length === 0) {
+        throw new Error("至少选择 1 项权限")
+      }
       await adminHttp.post(`/admin/admin-users/${editing.value.id}/permissions`, {
         permissions: editPermissions.value,
       })
@@ -295,15 +509,53 @@ async function toggleStatus(row) {
   if (row.role === "super_admin") {
     return
   }
+  if (row.id === currentAdminId) {
+    errorText.value = "当前登录管理员账号不可自行停用"
+    return
+  }
   const targetStatus = !row.is_active
   const ok = window.confirm(targetStatus ? "确认启用该管理员账号？" : "确认停用该管理员账号？")
   if (!ok) {
     return
   }
-  await adminHttp.post(`/admin/admin-users/${row.id}/status`, {
-    is_active: targetStatus,
-  })
-  await loadAll()
+  try {
+    await adminHttp.post(`/admin/admin-users/${row.id}/status`, {
+      is_active: targetStatus,
+    })
+    hintText.value = targetStatus ? "管理员账号已启用" : "管理员账号已停用"
+    await loadAll()
+  } catch (error) {
+    errorText.value = error.message || "更新管理员状态失败"
+  }
+}
+
+function resetFilters() {
+  filters.value = {
+    keyword: "",
+    role: "",
+    status: "all",
+  }
+  loadAll()
+}
+
+function permissionBrief(row) {
+  if (row.role === "super_admin") {
+    return "全量权限"
+  }
+  const list = Array.isArray(row.permissions) ? row.permissions : []
+  if (list.length === 0) {
+    return "未配置"
+  }
+  const head = list.slice(0, 3).join(" / ")
+  return list.length > 3 ? `${list.length} 项: ${head} ...` : `${list.length} 项: ${head}`
+}
+
+function fullPermissionText(row) {
+  if (row.role === "super_admin") {
+    return "全量权限"
+  }
+  const list = Array.isArray(row.permissions) ? row.permissions : []
+  return list.join(", ")
 }
 
 function formatTime(value) {

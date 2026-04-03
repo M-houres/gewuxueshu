@@ -1,6 +1,8 @@
 from datetime import date, datetime, timedelta
 from copy import deepcopy
 import ipaddress
+import re
+import secrets
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -219,6 +221,7 @@ DEFAULT_OPERATOR_PERMISSIONS = {
     "credits:view",
     "algo:view",
 }
+ADMIN_USERNAME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{2,31}$")
 
 
 def _effective_admin_permissions(admin: AdminUser) -> list[str]:
@@ -249,6 +252,13 @@ def _normalize_permission_list(raw) -> list[str]:
     if unsupported:
         raise BizError(code=4308, message=f"存在不支持的权限: {','.join(unsupported)}")
     return sorted(values)
+
+
+def _generate_admin_password(length: int = 14) -> str:
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*"
+    if length < 12:
+        length = 12
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 def _assert_category(category: str) -> str:
@@ -939,14 +949,37 @@ def admin_login(req: AdminLoginReq, db: Session = Depends(db_dep)) -> APIResp:
 
 @router.get("/admin-users", response_model=APIResp)
 def list_admin_users(
+    keyword: str | None = Query(default=None),
+    role: str | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
     _: AdminUser = Depends(current_super_admin),
     db: Session = Depends(db_dep),
 ) -> APIResp:
-    rows = db.query(AdminUser).order_by(desc(AdminUser.created_at)).all()
+    query = db.query(AdminUser)
+    if keyword:
+        raw = str(keyword).strip()
+        if raw:
+            query = query.filter(AdminUser.username.like(f"%{raw}%"))
+    if role:
+        role_val = str(role).strip().lower()
+        if role_val in {"super_admin", "operator"}:
+            query = query.filter(AdminUser.role == role_val)
+    if is_active is not None:
+        query = query.filter(AdminUser.is_active == bool(is_active))
+
+    rows = query.order_by(desc(AdminUser.created_at)).all()
+    total_count = db.query(func.count(AdminUser.id)).scalar() or 0
+    active_count = db.query(func.count(AdminUser.id)).filter(AdminUser.is_active == True).scalar() or 0  # noqa: E712
+    inactive_count = max(int(total_count) - int(active_count), 0)
     return ok(
         data={
             "items": [_admin_payload(row) for row in rows],
             "permission_catalog": ADMIN_PERMISSION_CATALOG,
+            "summary": {
+                "total": int(total_count),
+                "active": int(active_count),
+                "inactive": int(inactive_count),
+            },
         }
     )
 
@@ -965,11 +998,13 @@ def create_admin_user(
     is_active = bool(payload.get("is_active", True))
     if len(username) < 3:
         raise BizError(code=4303, message="管理员用户名至少 3 位")
+    if not ADMIN_USERNAME_RE.fullmatch(username):
+        raise BizError(code=4312, message="用户名仅支持字母开头，且只能包含字母/数字/._-（3~32 位）")
     if len(password) < 8:
         raise BizError(code=4304, message="管理员密码至少 8 位")
     if role == "super_admin":
         raise BizError(code=4305, message="禁止通过该接口创建超级管理员")
-    if db.query(AdminUser.id).filter(AdminUser.username == username).first():
+    if db.query(AdminUser.id).filter(func.lower(AdminUser.username) == username.lower()).first():
         raise BizError(code=4306, message="管理员用户名已存在")
 
     permissions = payload.get("permissions")
@@ -977,6 +1012,8 @@ def create_admin_user(
         normalized_permissions = sorted(DEFAULT_OPERATOR_PERMISSIONS)
     else:
         normalized_permissions = _normalize_permission_list(permissions)
+        if not normalized_permissions:
+            raise BizError(code=4313, message="至少需要分配 1 项权限")
 
     row = AdminUser(
         username=username,
@@ -1022,6 +1059,8 @@ def update_admin_permissions(
     if target.role == "super_admin":
         raise BizError(code=4310, message="超级管理员权限固定为全量权限")
     permissions = _normalize_permission_list(payload.get("permissions", []))
+    if not permissions:
+        raise BizError(code=4313, message="至少需要分配 1 项权限")
     before = _effective_admin_permissions(target)
     target.permissions_json = permissions
     db.add(
@@ -1048,7 +1087,10 @@ def reset_admin_password(
 ) -> APIResp:
     if not isinstance(payload, dict):
         raise BizError(code=4302, message="请求体必须为 JSON 对象")
+    auto_generate = bool(payload.get("auto_generate", False))
     password = str(payload.get("password", "")).strip()
+    if not password and auto_generate:
+        password = _generate_admin_password()
     if len(password) < 8:
         raise BizError(code=4304, message="管理员密码至少 8 位")
     target = db.get(AdminUser, admin_id)
@@ -1067,7 +1109,12 @@ def reset_admin_password(
     )
     db.commit()
     db.refresh(target)
-    return ok(data={"admin": _admin_payload(target)})
+    return ok(
+        data={
+            "admin": _admin_payload(target),
+            "generated_password": password if auto_generate else None,
+        }
+    )
 
 
 @router.post("/admin-users/{admin_id}/status", response_model=APIResp)
@@ -1083,6 +1130,8 @@ def update_admin_status(
     if target is None:
         raise BizError(code=4307, message="管理员不存在", http_status=404)
     next_status = bool(payload.get("is_active", True))
+    if actor.id == target.id and not next_status:
+        raise BizError(code=4314, message="当前登录管理员账号不可自行停用")
     if target.role == "super_admin" and not next_status:
         raise BizError(code=4311, message="超级管理员账号不可停用")
     before = bool(getattr(target, "is_active", True))
