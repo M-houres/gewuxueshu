@@ -1,9 +1,9 @@
-﻿<template>
-  <AdminShell title="算法包管理" subtitle="上传、启停与版本查看。">
+<template>
+  <AdminShell title="算法包与策略" subtitle="运营只维护 9 宫格策略与激活算法包，用户侧不暴露处理模式。">
     <div class="space-y-4">
       <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h3 class="text-base font-semibold">算法包操作</h3>
+          <h3 class="text-base font-semibold text-[#1f2d3a]">算法包操作</h3>
           <div class="flex flex-wrap items-center gap-2">
             <button
               v-if="canManageAlgo"
@@ -11,7 +11,7 @@
               :disabled="bootstrapping"
               @click="bootstrapBuiltinPackages"
             >
-              {{ bootstrapping ? "初始化中..." : "一键初始化知网+维普+PaperPass 算法包" }}
+              {{ bootstrapping ? "初始化中..." : "一键初始化 9 个标准算法包" }}
             </button>
             <button
               class="rounded-lg border border-[#cbd5de] bg-white px-3 py-2 text-sm text-[#344250] hover:border-[#8ca2b2] disabled:cursor-not-allowed disabled:opacity-60"
@@ -35,7 +35,6 @@
                 @click="uploadForm.platform = item.value"
               >
                 <div class="text-sm font-semibold">{{ item.label }}</div>
-                <div class="mt-1 text-xs text-[#60707b]">{{ item.desc }}</div>
               </button>
             </div>
           </div>
@@ -51,7 +50,6 @@
                 @click="uploadForm.function_type = item.value"
               >
                 <div class="text-sm font-semibold">{{ item.label }}</div>
-                <div class="mt-1 text-xs text-[#60707b]">{{ item.desc }}</div>
               </button>
             </div>
           </div>
@@ -80,8 +78,9 @@
             {{ uploading ? "上传中..." : "上传" }}
           </button>
         </div>
+
         <p v-else class="mt-3 rounded-xl border border-[#dce4eb] bg-[#f8fbff] px-3 py-2 text-sm text-[#4f5d69]">
-          当前账号仅有查看权限，如需上传或切换算法包，请联系超级管理员授权。
+          当前账号只有查看权限，如需上传或切换算法包，请联系超级管理员授权。
         </p>
 
         <p v-if="hintText" class="mt-3 text-sm text-[#106c4f]">{{ hintText }}</p>
@@ -89,7 +88,93 @@
       </section>
 
       <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-        <h3 class="text-base font-semibold">槽位当前版本</h3>
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <h3 class="text-base font-semibold text-[#1f2d3a]">处理策略矩阵（9 宫格）</h3>
+          <button class="rounded-lg bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="loadStrategies">刷新</button>
+        </div>
+        <p class="mb-3 rounded-xl border border-[#dde6ee] bg-[#f8fbff] px-3 py-2 text-xs text-[#4f5d69]">
+          每个“平台 × 功能”独立配置：处理模式、是否启用、超时时间。用户端不会看到这些内部策略。
+        </p>
+
+        <div class="grid gap-3 md:grid-cols-3">
+          <article
+            v-for="cell in strategyCards"
+            :key="`${cell.task_type}:${cell.platform}`"
+            class="rounded-xl border border-[#d9e2eb] bg-[#fbfdff] p-3"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-sm font-semibold text-[#263442]">
+                {{ mapStrategyPlatform(cell.platform) }} · {{ mapFunctionType(cell.task_type) }}
+              </div>
+              <span class="rounded-full bg-[#eef3f8] px-2 py-0.5 text-[11px] text-[#5d6a76]">
+                {{ cell.is_enabled ? "已启用" : "已停用" }}
+              </span>
+            </div>
+
+            <div class="mt-2 text-xs text-[#64717d]">
+              激活算法包：{{ cell.active_package?.name || "-" }} {{ cell.active_package?.version || "" }}
+            </div>
+
+            <div class="mt-3 flex gap-2">
+              <button
+                type="button"
+                class="flex-1 rounded-lg border px-2 py-1.5 text-xs"
+                :class="
+                  cell.process_mode === 'algo_only'
+                    ? 'border-[#0f7a5f] bg-[#e8f4ef] text-[#0f6c53]'
+                    : 'border-[#cad4de] bg-white text-[#4c5b68]'
+                "
+                :disabled="!canManageAlgo"
+                @click="cell.process_mode = 'algo_only'"
+              >
+                算法包
+              </button>
+              <button
+                type="button"
+                class="flex-1 rounded-lg border px-2 py-1.5 text-xs"
+                :class="
+                  cell.process_mode === 'algo_llm'
+                    ? 'border-[#0f7a5f] bg-[#e8f4ef] text-[#0f6c53]'
+                    : 'border-[#cad4de] bg-white text-[#4c5b68]'
+                "
+                :disabled="!canManageAlgo"
+                @click="cell.process_mode = 'algo_llm'"
+              >
+                算法包+大模型
+              </button>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-xs text-[#4e5d69]">
+                <input v-model="cell.is_enabled" :disabled="!canManageAlgo" type="checkbox" class="h-4 w-4 rounded border-[#c7d0d8]" />
+                对用户开放
+              </label>
+              <select
+                v-model.number="cell.timeout_sec"
+                :disabled="!canManageAlgo"
+                class="rounded-md border border-[#cfd8e0] bg-white px-2 py-1 text-xs text-[#3f4d58]"
+              >
+                <option :value="180">180 秒</option>
+                <option :value="300">300 秒</option>
+                <option :value="600">600 秒</option>
+                <option :value="900">900 秒</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              class="mt-3 w-full rounded-lg bg-[#0f7a5f] px-3 py-1.5 text-xs text-white disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="savingStrategyKey === `${cell.task_type}:${cell.platform}` || !canManageAlgo"
+              @click="saveStrategy(cell)"
+            >
+              {{ savingStrategyKey === `${cell.task_type}:${cell.platform}` ? "保存中..." : "保存策略" }}
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
+        <h3 class="text-base font-semibold text-[#1f2d3a]">槽位当前版本</h3>
         <div class="mt-3 overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead>
@@ -98,7 +183,7 @@
                 <th class="px-2 py-2">功能类型</th>
                 <th class="px-2 py-2">当前包名</th>
                 <th class="px-2 py-2">当前版本</th>
-                <th class="px-2 py-2">smoke</th>
+                <th class="px-2 py-2">Smoke</th>
                 <th class="px-2 py-2">上传时间</th>
               </tr>
             </thead>
@@ -121,7 +206,7 @@
 
       <section class="rounded-2xl border border-[#d9dee4] bg-white p-5">
         <div class="mb-3 flex items-center justify-between">
-          <h3 class="text-base font-semibold">已上传算法包</h3>
+          <h3 class="text-base font-semibold text-[#1f2d3a]">已上传算法包</h3>
           <button class="rounded-lg bg-[#edf2f6] px-3 py-2 text-sm text-[#344250]" @click="loadPackages">刷新</button>
         </div>
 
@@ -134,7 +219,7 @@
                 <th class="px-2 py-2">功能类型</th>
                 <th class="px-2 py-2">版本</th>
                 <th class="px-2 py-2">入口</th>
-                <th class="px-2 py-2">smoke</th>
+                <th class="px-2 py-2">Smoke</th>
                 <th class="px-2 py-2">激活开关</th>
                 <th class="px-2 py-2">上传时间</th>
                 <th class="px-2 py-2">操作</th>
@@ -195,9 +280,11 @@ import { adminHasPermission } from "../../lib/session"
 
 const rows = ref([])
 const slots = ref([])
+const strategyCards = ref([])
 const selectedFile = ref(null)
 const uploading = ref(false)
 const togglingKey = ref("")
+const savingStrategyKey = ref("")
 const activateAfterUpload = ref(true)
 const hintText = ref("")
 const errorText = ref("")
@@ -210,24 +297,92 @@ const uploadForm = ref({
 const downloadingGuide = ref(false)
 
 const canManageAlgo = computed(() => adminHasPermission("algo:manage"))
+
 const platformOptions = [
-  { value: "cnki", label: "知网 CNKI", desc: "高校论文检测规则" },
-  { value: "vip", label: "维普 VIP", desc: "期刊库检测规则" },
-  { value: "paperpass", label: "PaperPass", desc: "通用预审规则" },
-]
-const functionTypeOptions = [
-  { value: "aigc_detect", label: "AIGC 检测", desc: "判断生成内容风险" },
-  { value: "dedup", label: "降重复率", desc: "文本相似度处理" },
-  { value: "rewrite", label: "降AIGC率", desc: "同文降AIGC改写优化" },
+  { value: "cnki", label: "知网" },
+  { value: "vip", label: "维普" },
+  { value: "paperpass", label: "PaperPass" },
 ]
 
-onMounted(loadPackages)
+const functionTypeOptions = [
+  { value: "aigc_detect", label: "AIGC检测" },
+  { value: "rewrite", label: "降AIGC率" },
+  { value: "dedup", label: "降重复率" },
+]
+
+const platformOrder = {
+  cnki: 1,
+  vip: 2,
+  paperpass: 3,
+}
+
+const taskTypeOrder = {
+  aigc_detect: 1,
+  rewrite: 2,
+  dedup: 3,
+}
+
+onMounted(async () => {
+  await Promise.all([loadPackages(), loadStrategies()])
+})
 
 async function loadPackages() {
   errorText.value = ""
   const data = await adminHttp.get("/admin/algo-packages")
   rows.value = data.items || []
   slots.value = data.slots || []
+}
+
+async function loadStrategies() {
+  errorText.value = ""
+  try {
+    const data = await adminHttp.get("/admin/strategies")
+    const items = Array.isArray(data.items) ? data.items : []
+    strategyCards.value = items
+      .map((item) => ({
+        ...item,
+        process_mode: item.process_mode === "algo_llm" ? "algo_llm" : "algo_only",
+        is_enabled: Boolean(item.is_enabled),
+        timeout_sec: Number(item.timeout_sec) > 0 ? Number(item.timeout_sec) : 300,
+      }))
+      .sort((a, b) => {
+        const taskDiff = (taskTypeOrder[a.task_type] || 99) - (taskTypeOrder[b.task_type] || 99)
+        if (taskDiff !== 0) {
+          return taskDiff
+        }
+        return (platformOrder[a.platform] || 99) - (platformOrder[b.platform] || 99)
+      })
+  } catch (error) {
+    errorText.value = error.message || "加载策略失败"
+  }
+}
+
+async function saveStrategy(cell) {
+  const key = `${cell.task_type}:${cell.platform}`
+  savingStrategyKey.value = key
+  hintText.value = ""
+  errorText.value = ""
+  try {
+    const payload = {
+      process_mode: cell.process_mode,
+      is_enabled: Boolean(cell.is_enabled),
+      timeout_sec: Number(cell.timeout_sec) || 300,
+    }
+    const saved = await adminHttp.put(`/admin/strategies/${cell.task_type}/${cell.platform}`, payload)
+    Object.assign(cell, {
+      process_mode: saved.process_mode,
+      is_enabled: Boolean(saved.is_enabled),
+      timeout_sec: Number(saved.timeout_sec) || 300,
+      active_package: saved.active_package || cell.active_package || null,
+      updated_at: saved.updated_at,
+      updated_by: saved.updated_by,
+    })
+    hintText.value = `策略已保存：${mapStrategyPlatform(cell.platform)} / ${mapFunctionType(cell.task_type)}`
+  } catch (error) {
+    errorText.value = error.message || "保存策略失败"
+  } finally {
+    savingStrategyKey.value = ""
+  }
 }
 
 function onFileChange(event) {
@@ -249,9 +404,9 @@ async function uploadPackage() {
     form.append("activate", String(activateAfterUpload.value))
     form.append("file", selectedFile.value)
     const data = await adminHttp.post("/admin/algo-packages/upload", form)
-    hintText.value = `上传成功：${data.platform}/${data.function_type} @ ${data.version}`
+    hintText.value = `上传成功：${mapPlatform(data.platform)}/${mapFunctionType(data.function_type)} @ ${data.version}`
     selectedFile.value = null
-    await loadPackages()
+    await Promise.all([loadPackages(), loadStrategies()])
   } catch (error) {
     errorText.value = error.message || "上传失败"
   } finally {
@@ -266,9 +421,9 @@ async function downloadGuide() {
   try {
     const response = await adminHttp.get("/admin/algo-packages/authoring-bundle", { responseType: "blob" })
     downloadAxiosBlobResponse(response, "ALGO_PACKAGE_AUTHORING_SPEC_BUNDLE.zip")
-    hintText.value = "算法编写规范包已开始下载。"
+    hintText.value = "算法包编写规范包已开始下载。"
   } catch (error) {
-    errorText.value = error.message || "下载算法编写规范包失败"
+    errorText.value = error.message || "下载算法包编写规范失败"
   } finally {
     downloadingGuide.value = false
   }
@@ -281,7 +436,7 @@ async function bootstrapBuiltinPackages() {
   try {
     const data = await adminHttp.post("/admin/algo-packages/bootstrap", {})
     hintText.value = `已完成初始化：${data.count || 0} 个算法包已写入并激活对应槽位。`
-    await loadPackages()
+    await Promise.all([loadPackages(), loadStrategies()])
   } catch (error) {
     errorText.value = error.message || "初始化算法包失败"
   } finally {
@@ -316,11 +471,12 @@ async function toggleRowActive(row) {
   const key = buildRowKey(row)
   const enabling = !row.active
   const confirmText = enabling
-    ? `确认启用 ${row.platform}/${row.function_type} 槽位到版本 ${row.version} 吗？`
-    : `确认停用 ${row.platform}/${row.function_type} 槽位当前激活版本吗？`
+    ? `确认启用 ${mapPlatform(row.platform)}/${mapFunctionType(row.function_type)} 到版本 ${row.version} 吗？`
+    : `确认停用 ${mapPlatform(row.platform)}/${mapFunctionType(row.function_type)} 当前激活版本吗？`
   if (!window.confirm(confirmText)) {
     return
   }
+
   togglingKey.value = key
   hintText.value = ""
   errorText.value = ""
@@ -337,9 +493,9 @@ async function toggleRowActive(row) {
         platform: row.platform,
         function_type: row.function_type,
       })
-      hintText.value = `已停用槽位：${row.platform}/${row.function_type}`
+      hintText.value = `已停用槽位：${mapPlatform(row.platform)}/${mapFunctionType(row.function_type)}`
     }
-    await loadPackages()
+    await Promise.all([loadPackages(), loadStrategies()])
   } catch (error) {
     errorText.value = error.message || (enabling ? "启用失败" : "停用失败")
   } finally {
@@ -347,10 +503,14 @@ async function toggleRowActive(row) {
   }
 }
 
+function mapStrategyPlatform(platform) {
+  return mapPlatform(platform)
+}
+
 function mapPlatform(platform) {
   const mapping = {
-    cnki: "知网 CNKI",
-    vip: "维普 VIP",
+    cnki: "知网",
+    vip: "维普",
     paperpass: "PaperPass",
   }
   return mapping[platform] || platform
@@ -358,7 +518,7 @@ function mapPlatform(platform) {
 
 function mapFunctionType(type) {
   const mapping = {
-    aigc_detect: "AIGC 检测",
+    aigc_detect: "AIGC检测",
     dedup: "降重复率",
     rewrite: "降AIGC率",
   }

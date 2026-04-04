@@ -1,0 +1,10 @@
+<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="24" height="24" rx="9" fill="url(#rewriteGrad)"/>
+  <path d="M8 20L12.8 18.6L20.6 10.8C21.2 10.2 21.2 9.3 20.6 8.8L19.2 7.4C18.7 6.8 17.8 6.8 17.2 7.4L9.4 15.2L8 20Z" fill="white"/>
+  <defs>
+    <linearGradient id="rewriteGrad" x1="4" y1="3" x2="24" y2="25" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2755FF"/>
+      <stop offset="1" stop-color="#00C8D8"/>
+    </linearGradient>
+  </defs>
+</svg>

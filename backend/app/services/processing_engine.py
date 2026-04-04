@@ -1,3 +1,4 @@
+import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -30,6 +31,7 @@ class ProcessingEngine:
         self._current_switch: SystemSwitch | None = None
         self._current_task_id: int | None = None
         self._pipeline_usage = {"llm_used": False, "algo_package_used": False}
+        self._effective_mode = MODE_ALGO_ONLY
 
     def _get_or_init_switch(self) -> SystemSwitch:
         switch = self.db.query(SystemSwitch).first()
@@ -53,6 +55,27 @@ class ProcessingEngine:
         switch.current_mode = target_mode
         self.db.flush()
 
+    def _normalize_requested_mode(self, processing_mode: str | None) -> str | None:
+        raw = str(processing_mode or "").strip()
+        mode = raw.upper()
+        if mode in {MODE_ALGO_ONLY, MODE_LLM_PLUS_ALGO}:
+            return mode
+        lowered = raw.lower()
+        if lowered in {"algo_only", "algo"}:
+            return MODE_ALGO_ONLY
+        if lowered in {"algo_llm", "llm_plus_algo", "algo+llm"}:
+            return MODE_LLM_PLUS_ALGO
+        return None
+
+    def _resolve_effective_mode(self, switch: SystemSwitch, requested_mode: str | None) -> str:
+        if requested_mode == MODE_ALGO_ONLY:
+            return MODE_ALGO_ONLY
+        if requested_mode == MODE_LLM_PLUS_ALGO:
+            if switch.llm_enabled and switch.current_mode == MODE_LLM_PLUS_ALGO:
+                return MODE_LLM_PLUS_ALGO
+            return MODE_ALGO_ONLY
+        return switch.current_mode
+
     def process(
         self,
         task_type: TaskType,
@@ -61,6 +84,7 @@ class ProcessingEngine:
         output_path: Path,
         task_id: int | None = None,
         report_path: Path | None = None,
+        processing_mode: str | None = None,
     ) -> ProcessResult:
         switch = self._get_or_init_switch()
         self._current_switch = switch
@@ -74,6 +98,8 @@ class ProcessingEngine:
             self._switch_mode(MODE_ALGO_ONLY, "llm disabled")
         elif switch.current_mode != MODE_ALGO_ONLY or switch.llm_fail_count < switch.llm_fail_threshold:
             self._switch_mode(MODE_LLM_PLUS_ALGO, "llm healthy")
+        requested_mode = self._normalize_requested_mode(processing_mode)
+        self._effective_mode = self._resolve_effective_mode(switch, requested_mode)
 
         source_text = extract_text_from_file(input_path)
         report_text = self._load_optional_report(report_path)
@@ -81,12 +107,14 @@ class ProcessingEngine:
 
         if task_type == TaskType.AIGC_DETECT:
             algo_result = self._run_algo_package(normalized_platform, task_type, source_text)
+            llm_detect_result = self._parse_llm_detect_result(self._run_llm(task_type, source_text))
             detect_result = self._build_detect_result(
                 text=source_text,
                 platform=normalized_platform,
-                mode=switch.current_mode,
+                mode=self._effective_mode,
                 report_summary=report_summary,
                 algo_result=algo_result,
+                llm_result=llm_detect_result,
             )
             self._write_detect_report_pdf(output_path, detect_result)
             return ProcessResult(output_path=str(output_path), result_json=detect_result)
@@ -101,7 +129,7 @@ class ProcessingEngine:
         result_json = self._build_transform_result(
             task_type=task_type,
             platform=normalized_platform,
-            mode=switch.current_mode,
+            mode=self._effective_mode,
             source_text=source_text,
             output_text=output_text,
             report_summary=report_summary,
@@ -174,9 +202,7 @@ class ProcessingEngine:
 
     def _run_llm(self, task_type: TaskType, text: str) -> str | None:
         switch = self._current_switch or self._get_or_init_switch()
-        if switch.current_mode != MODE_LLM_PLUS_ALGO or not switch.llm_enabled:
-            return None
-        if task_type not in {TaskType.DEDUP, TaskType.REWRITE}:
+        if self._effective_mode != MODE_LLM_PLUS_ALGO or not switch.llm_enabled:
             return None
         try:
             output = generate_with_llm(self.db, task_type=task_type, text=text)
@@ -200,20 +226,172 @@ class ProcessingEngine:
             self.db.flush()
             return None
 
+    def _parse_llm_detect_result(self, raw: str | None) -> dict | None:
+        if not isinstance(raw, str) or not raw.strip():
+            return None
+
+        payload: dict | None = None
+        text = raw.strip()
+        match = re.search(r"\{[\s\S]*\}", text)
+        if match:
+            try:
+                candidate = json.loads(match.group(0))
+                if isinstance(candidate, dict):
+                    payload = candidate
+            except Exception:
+                payload = None
+
+        if payload is None:
+            return self._parse_llm_detect_fallback(text)
+
+        score = self._coerce_ratio(payload.get("ai_score"))
+        if score is None:
+            score = self._coerce_ratio(payload.get("score"))
+        if score is None:
+            return self._parse_llm_detect_fallback(text)
+
+        label = self._normalize_detect_label(payload.get("label"))
+        if not label:
+            label = self._normalize_detect_label(payload.get("risk_level"))
+        reason = payload.get("reason")
+        return {
+            "ai_score": score,
+            "label": label,
+            "reason": str(reason).strip()[:180] if isinstance(reason, str) else "",
+        }
+
+    def _parse_llm_detect_fallback(self, text: str) -> dict | None:
+        percent_match = re.search(r"(\d+(?:\.\d+)?)\s*%", text)
+        if percent_match:
+            score = self._coerce_ratio(percent_match.group(1))
+        else:
+            score = self._coerce_ratio(self._first_numeric(text))
+        if score is None:
+            return None
+        return {
+            "ai_score": score,
+            "label": self._normalize_detect_label(text),
+            "reason": "",
+        }
+
+    def _first_numeric(self, text: str) -> str | None:
+        match = re.search(r"(\d+(?:\.\d+)?)", text)
+        if not match:
+            return None
+        return match.group(1)
+
+    def _coerce_ratio(self, raw) -> float | None:
+        if raw is None:
+            return None
+        if isinstance(raw, str):
+            raw = raw.strip().replace("%", "")
+        try:
+            value = float(raw)
+        except Exception:
+            return None
+        if value > 1:
+            value = value / 100
+        return round(self._clamp_score(value), 4)
+
+    def _normalize_detect_label(self, raw) -> str:
+        value = str(raw or "").strip().lower()
+        if not value:
+            return ""
+        if "high" in value or "高" in value:
+            return "high"
+        if "medium" in value or "mid" in value or "中" in value:
+            return "medium"
+        if "low" in value or "低" in value:
+            return "low"
+        return ""
+
+    def _iter_result_dicts(self, payload) -> list[dict]:
+        if not isinstance(payload, dict):
+            return []
+        queue: list[tuple[dict, int]] = [(payload, 0)]
+        visited: set[int] = set()
+        items: list[dict] = []
+        while queue:
+            current, depth = queue.pop(0)
+            marker = id(current)
+            if marker in visited:
+                continue
+            visited.add(marker)
+            items.append(current)
+            if depth >= 2:
+                continue
+            for value in current.values():
+                if isinstance(value, dict):
+                    queue.append((value, depth + 1))
+        return items
+
+    def _extract_algo_score(self, algo_result) -> float | None:
+        keys = (
+            "ai_score",
+            "aigc_score",
+            "score",
+            "risk_score",
+            "probability",
+            "ai_probability",
+        )
+        for current in self._iter_result_dicts(algo_result):
+            for key in keys:
+                if key not in current:
+                    continue
+                score = self._coerce_ratio(current.get(key))
+                if score is not None:
+                    return score
+        return None
+
+    def _extract_algo_label(self, algo_result) -> str:
+        keys = (
+            "label",
+            "level",
+            "risk_level",
+            "risk",
+            "grade",
+        )
+        for current in self._iter_result_dicts(algo_result):
+            for key in keys:
+                if key not in current:
+                    continue
+                label = self._normalize_detect_label(current.get(key))
+                if label:
+                    return label
+        return ""
+
+    def _extract_algo_text(self, algo_result) -> str | None:
+        if isinstance(algo_result, str) and algo_result.strip():
+            return algo_result
+        keys = (
+            "text",
+            "rewritten_text",
+            "rewrite_text",
+            "output_text",
+            "result_text",
+            "content",
+            "body",
+            "output",
+            "result",
+        )
+        for current in self._iter_result_dicts(algo_result):
+            for key in keys:
+                if key not in current:
+                    continue
+                value = current.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value
+        return None
+
     def _transform_text(self, text: str, task_type: TaskType, platform: str, report_summary: dict) -> str:
         llm_output = self._run_llm(task_type, text)
         if isinstance(llm_output, str) and llm_output.strip():
             return llm_output
 
         algo_result = self._run_algo_package(platform, task_type, text)
-        if isinstance(algo_result, str) and algo_result.strip():
-            return algo_result
-        if isinstance(algo_result, dict):
-            candidate_keys = ("text", "rewritten_text", "output_text", "result_text")
-            for key in candidate_keys:
-                output = algo_result.get(key)
-                if isinstance(output, str) and output.strip():
-                    return output
+        algo_text = self._extract_algo_text(algo_result)
+        if algo_text:
+            return algo_text
 
         pressure = report_summary.get("pressure", "low")
         normalized = self._normalize_text(text)
@@ -443,38 +621,47 @@ class ProcessingEngine:
         mode: str,
         report_summary: dict,
         algo_result,
+        llm_result: dict | None,
     ) -> dict:
         base_score = self._heuristic_ai_score(text)
         score, profile, breakdown = self._simulate_platform_detect_score(platform, text, base_score)
         label = "high" if score >= profile["high"] else "medium" if score >= profile["medium"] else "low"
+        algo_has_label = False
 
         if isinstance(algo_result, dict):
-            result_score = algo_result.get("ai_score")
-            if not isinstance(result_score, (float, int)):
-                result_score = algo_result.get("aigc_score")
-            if isinstance(result_score, (float, int)):
-                package_score = float(result_score)
-                if package_score > 1:
-                    package_score = package_score / 100
-                package_score = self._clamp_score(package_score)
+            package_score = self._extract_algo_score(algo_result)
+            if package_score is not None:
                 score = round(self._clamp_score(score * 0.65 + package_score * 0.35), 4)
                 breakdown["algo_package_score"] = round(package_score, 4)
                 breakdown["blended"] = True
-            if algo_result.get("label"):
-                label = str(algo_result.get("label")).strip().lower()
-            elif algo_result.get("level"):
-                level_raw = str(algo_result.get("level")).strip().lower()
-                level_map = {
-                    "高": "high",
-                    "中": "medium",
-                    "低": "low",
-                    "high": "high",
-                    "medium": "medium",
-                    "low": "low",
-                }
-                label = level_map.get(level_raw, level_raw)
+            else:
+                breakdown["blended"] = False
+
+            algo_label = self._extract_algo_label(algo_result)
+            if algo_label:
+                label = algo_label
+                algo_has_label = True
         else:
             breakdown["blended"] = False
+
+        if isinstance(llm_result, dict):
+            llm_score = self._coerce_ratio(llm_result.get("ai_score"))
+            if llm_score is not None:
+                score = round(self._clamp_score(score * 0.8 + llm_score * 0.2), 4)
+                breakdown["llm_score"] = round(llm_score, 4)
+                breakdown["llm_blended"] = True
+            else:
+                breakdown["llm_blended"] = False
+
+            llm_label = self._normalize_detect_label(llm_result.get("label"))
+            if llm_label and not algo_has_label:
+                label = llm_label
+
+            reason = llm_result.get("reason")
+            if isinstance(reason, str) and reason.strip():
+                breakdown["llm_reason"] = reason.strip()[:180]
+        else:
+            breakdown["llm_blended"] = False
 
         band = self._risk_band(score, high=profile["high"], medium=profile["medium"])
         risk_paragraphs = self._top_risk_paragraphs(text, platform=platform)
@@ -489,7 +676,7 @@ class ProcessingEngine:
             "score_pct": round(score * 100, 2),
             "label": label,
             "risk_band": band,
-            "summary": f"AIGC检测完成，当前文本判定为{band}，建议结合高风险段落进行人工复核。",
+            "summary": f"AIGC detection completed. Current risk level: {band}.",
             "source_stats": self._text_stats(text),
             "report_summary": report_summary,
             "score_breakdown": breakdown,
@@ -548,9 +735,6 @@ class ProcessingEngine:
             "1. Detection Summary",
             f"   - Composite Score: {score_pct:.2f}%",
             f"   - Risk Level: {risk_level}",
-            f"   - Pipeline Mode: {result.get('mode') or '-'}",
-            f"   - Model Assisted: {'YES' if result.get('llm_used') else 'NO'}",
-            f"   - Algorithm Package Used: {'YES' if result.get('algo_package_used') else 'NO'}",
             "",
             "2. Source Text Statistics",
             f"   - Characters: {stats.get('char_count', 0)}",
@@ -706,7 +890,6 @@ class ProcessingEngine:
         lines = [
             "格物学术 AIGC 检测报告",
             f"平台：{result.get('platform')}",
-            f"处理模式：{result.get('mode')}",
             f"综合分值：{result.get('score_pct')}%",
             f"风险等级：{result.get('risk_band')}",
             f"摘要：{result.get('summary')}",

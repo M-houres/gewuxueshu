@@ -110,18 +110,23 @@ def load_llm_config(db: Session) -> dict:
 def _build_prompt(task_type: TaskType, text: str) -> str:
     if task_type == TaskType.DEDUP:
         return (
-            "你是学术降重助手。请在不改变原意的前提下改写文本表达，"
-            "只返回改写后的正文，不要输出解释。\n\n"
-            f"原文：\n{text}"
+            "Rewrite the academic text to reduce duplication risk without changing meaning. "
+            "Return only the rewritten正文 content without explanation.\n\n"
+            f"原文:\n{text}"
         )
     if task_type == TaskType.REWRITE:
         return (
-            "你是学术润色助手。请将文本改写为更自然、规范的中文学术表达，"
-            "不得改变论点和数据，只返回改写后的正文。\n\n"
-            f"原文：\n{text}"
+            "Rewrite the academic text to sound more natural and compliant while preserving arguments and data. "
+            "Return only the rewritten正文 content without explanation.\n\n"
+            f"原文:\n{text}"
+        )
+    if task_type == TaskType.AIGC_DETECT:
+        return (
+            "You are an academic text risk assessor. Estimate the AI-generated likelihood for the text.\n"
+            "Return strict JSON only with fields: ai_score (0-1 float), label (high|medium|low), reason (short).\n\n"
+            f"Text:\n{text}"
         )
     return text
-
 
 def generate_with_llm(db: Session, *, task_type: TaskType, text: str) -> str:
     cfg = load_llm_config(db)

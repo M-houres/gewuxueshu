@@ -1,16 +1,48 @@
+import io
+import json
 from io import BytesIO
+import zipfile
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.main import app
 from app.models import CreditTransaction, Order, ReferralRelation, SystemConfig, Task, User, UserInviteCode
+from app.services.algo_package_service import install_algorithm_package
+
+
+def _build_package_zip(*, platform: str, function_type: str, name: str = "engine") -> bytes:
+    manifest = {
+        "name": name,
+        "version": "1.0.0",
+        "platform": platform,
+        "function_type": function_type,
+        "entry": "main.py",
+    }
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))
+        zf.writestr("main.py", "def process(text):\n    return {'text': str(text)}\n")
+    return buf.getvalue()
+
+
+def _activate_slot(db_session: Session, *, platform: str, function_type: str) -> None:
+    install_algorithm_package(
+        db_session,
+        file_bytes=_build_package_zip(platform=platform, function_type=function_type, name=f"{function_type}_engine"),
+        platform=platform,
+        function_type=function_type,
+        uploaded_by=1,
+        activate_after_upload=True,
+    )
+    db_session.commit()
 
 
 def test_client_source_flows_through_login_task_and_payment(
     client: TestClient,
     db_session: Session,
     monkeypatch,
+    settings_override,
 ) -> None:
     inviter = User(phone="13800002000", nickname="inviter", source="web", credits=0)
     db_session.add(inviter)
@@ -25,6 +57,7 @@ def test_client_source_flows_through_login_task_and_payment(
         )
     )
     db_session.commit()
+    _activate_slot(db_session, platform="cnki", function_type="aigc_detect")
 
     monkeypatch.setattr("app.worker_tasks.dispatch_background_task", lambda *_args, **_kwargs: "test")
 

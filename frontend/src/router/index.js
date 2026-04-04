@@ -25,6 +25,8 @@ const UserRewritePage = () => import('../views/user/UserRewritePage.vue')
 const UserRewriteRecordsPage = () => import('../views/user/UserRewriteRecordsPage.vue')
 const UserDedupPage = () => import('../views/user/UserDedupPage.vue')
 const UserDedupRecordsPage = () => import('../views/user/UserDedupRecordsPage.vue')
+const UserReviewPage = () => import('../views/user/UserReviewPage.vue')
+const UserDefensePage = () => import('../views/user/UserDefensePage.vue')
 
 const adminEntryRoutes = [
   { path: '/admin/dashboard', permission: 'dashboard:view' },
@@ -56,6 +58,8 @@ const router = createRouter({
     { path: '/detect', redirect: '/app/detect' },
     { path: '/dedup', redirect: '/app/dedup' },
     { path: '/rewrite', redirect: '/app/rewrite' },
+    { path: '/review', redirect: '/app/review' },
+    { path: '/defense', redirect: '/app/defense' },
     { path: '/history', redirect: '/app/profile?tab=history' },
     { path: '/buy', redirect: '/app/buy' },
     { path: '/credits', redirect: '/app/profile?tab=credits' },
@@ -69,6 +73,8 @@ const router = createRouter({
     { path: '/app/dedup/records', component: UserDedupRecordsPage, meta: { auth: 'user', title: '降重复率记录' } },
     { path: '/app/rewrite', component: UserRewritePage, meta: { auth: 'user', title: '降AIGC率' } },
     { path: '/app/rewrite/records', component: UserRewriteRecordsPage, meta: { auth: 'user', title: '降AIGC率记录' } },
+    { path: '/app/review', component: UserReviewPage, meta: { auth: 'user', title: '智能审稿' } },
+    { path: '/app/defense', component: UserDefensePage, meta: { auth: 'user', title: '答辩服务' } },
     { path: '/app/referral', component: UserReferralPage, meta: { auth: 'user', title: '推广福利' } },
     { path: '/app/buy', component: UserBuyPage, meta: { auth: 'user', title: '购买积分' } },
     { path: '/app/profile', component: UserProfilePage, meta: { auth: 'user', title: '个人中心' } },

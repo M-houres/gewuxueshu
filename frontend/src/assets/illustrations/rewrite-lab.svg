@@ -1,0 +1,25 @@
+<svg width="520" height="320" viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rewriteBg" x1="56" y1="10" x2="466" y2="306" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B31FF"/>
+      <stop offset="1" stop-color="#00D0DA"/>
+    </linearGradient>
+    <linearGradient id="rewritePanel" x1="96" y1="58" x2="416" y2="258" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.97"/>
+      <stop offset="1" stop-color="#E9F3FF" stop-opacity="0.99"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="504" height="304" rx="34" fill="url(#rewriteBg)"/>
+  <rect x="10" y="10" width="500" height="300" rx="32" stroke="white" stroke-opacity="0.24" stroke-width="2"/>
+  <rect x="92" y="56" width="336" height="208" rx="28" fill="url(#rewritePanel)"/>
+  <rect x="118" y="84" width="282" height="120" rx="16" fill="#EFF6FF"/>
+  <rect x="138" y="108" width="200" height="10" rx="5" fill="#C8DAFC"/>
+  <rect x="138" y="126" width="176" height="10" rx="5" fill="#C8DAFC"/>
+  <rect x="138" y="144" width="220" height="10" rx="5" fill="#C8DAFC"/>
+  <rect x="138" y="162" width="164" height="10" rx="5" fill="#C8DAFC"/>
+  <path d="M285 174L365 97" stroke="#2B63E4" stroke-width="8" stroke-linecap="round"/>
+  <path d="M362 95L379 83L392 96L379 113L362 95Z" fill="#295FE0"/>
+  <path d="M282 177L273 203L299 194L282 177Z" fill="#1F8AB7"/>
+  <rect x="126" y="220" width="124" height="24" rx="12" fill="#DCE8FF"/>
+  <rect x="260" y="220" width="142" height="24" rx="12" fill="#D6FFF8"/>
+</svg>

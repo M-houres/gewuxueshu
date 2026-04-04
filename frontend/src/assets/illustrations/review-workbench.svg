@@ -1,0 +1,35 @@
+<svg width="520" height="320" viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="reviewBg" x1="40" y1="18" x2="468" y2="301" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2034FF"/>
+      <stop offset="1" stop-color="#00CACE"/>
+    </linearGradient>
+    <linearGradient id="reviewCard" x1="112" y1="76" x2="402" y2="252" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#EAF1FF" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="reviewBadge" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#2A6AFF"/>
+      <stop offset="1" stop-color="#00CFD6"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="504" height="304" rx="34" fill="url(#reviewBg)"/>
+  <rect x="10" y="10" width="500" height="300" rx="32" stroke="white" stroke-opacity="0.24" stroke-width="2"/>
+  <circle cx="430" cy="74" r="48" fill="white" fill-opacity="0.14"/>
+  <circle cx="104" cy="252" r="62" fill="white" fill-opacity="0.12"/>
+  <rect x="90" y="58" width="340" height="204" rx="26" fill="url(#reviewCard)"/>
+  <rect x="122" y="90" width="196" height="14" rx="7" fill="#D9E6FF"/>
+  <rect x="122" y="116" width="142" height="10" rx="5" fill="#BFD1F8"/>
+  <rect x="122" y="146" width="276" height="8" rx="4" fill="#CAD8F7"/>
+  <rect x="122" y="164" width="260" height="8" rx="4" fill="#CAD8F7"/>
+  <rect x="122" y="182" width="232" height="8" rx="4" fill="#CAD8F7"/>
+  <rect x="122" y="212" width="138" height="26" rx="13" fill="url(#reviewBadge)"/>
+  <g opacity="0.95">
+    <rect x="342" y="98" width="58" height="58" rx="16" fill="#EDF4FF"/>
+    <path d="M358.5 127.5L369 138L386 117" stroke="#2D61D3" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g opacity="0.95">
+    <rect x="342" y="172" width="58" height="58" rx="16" fill="#EDF4FF"/>
+    <path d="M362 204L370.5 194.5L379 204L388 186" stroke="#1F89B4" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

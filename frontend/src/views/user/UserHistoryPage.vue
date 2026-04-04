@@ -311,9 +311,9 @@ const taskTypeOptions = [
 ]
 const platformOptions = [
   { value: "", label: "全部" },
-  { value: "cnki", label: "仿知网检测" },
-  { value: "vip", label: "仿维普检测" },
-  { value: "paperpass", label: "仿PaperPass检测" },
+  { value: "cnki", label: "格物学术标准版" },
+  { value: "vip", label: "格物学术专业版" },
+  { value: "paperpass", label: "格物学术极速版" },
 ]
 const statusOptions = [
   { value: "", label: "全部" },
@@ -473,9 +473,9 @@ function mapStatus(status) {
 
 function mapPlatform(platform) {
   const mapping = {
-    cnki: "仿知网检测",
-    vip: "仿维普检测",
-    paperpass: "仿PaperPass检测",
+    cnki: "格物学术标准版",
+    vip: "格物学术专业版",
+    paperpass: "格物学术极速版",
   }
   return mapping[platform] || platform
 }

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="scholar-panel">
     <div class="scholar-panel__header">
       <div class="flex flex-wrap items-start justify-between gap-3">
@@ -71,9 +71,9 @@ function formatTime(value) {
 
 function platformLabel(platform) {
   const mapping = {
-    cnki: "仿知网检测",
-    vip: "仿维普检测",
-    paperpass: "仿PaperPass检测",
+    cnki: "格物学术标准版",
+    vip: "格物学术专业版",
+    paperpass: "格物学术极速版",
   }
   return mapping[platform] || platform || "-"
 }

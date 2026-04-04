@@ -211,6 +211,78 @@ def test_run_active_package_executes_in_subprocess(
     assert int(output["pid"]) != os.getpid()
 
 
+def test_run_active_package_supports_keyword_only_process_signature(
+    db_session: Session,
+    settings_override,
+) -> None:
+    manifest = {
+        "name": "kw_engine",
+        "version": "1.0.0",
+        "platform": "cnki",
+        "function_type": "rewrite",
+        "entry": "main.py",
+    }
+    file_bytes = _build_package_zip(
+        manifest,
+        entry_content="def process(*, input_text):\n    return {'text': str(input_text) + '::ok'}\n",
+    )
+
+    install_algorithm_package(
+        db_session,
+        file_bytes=file_bytes,
+        platform="cnki",
+        function_type="rewrite",
+        uploaded_by=1,
+        activate_after_upload=True,
+    )
+
+    active_result = run_active_package(
+        db_session,
+        platform="cnki",
+        function_type="rewrite",
+        text="payload",
+    )
+    assert active_result is not None
+    output, _active = active_result
+    assert output["text"] == "payload::ok"
+
+
+def test_run_active_package_ignores_package_stdout_noise(
+    db_session: Session,
+    settings_override,
+) -> None:
+    manifest = {
+        "name": "print_engine",
+        "version": "1.0.0",
+        "platform": "cnki",
+        "function_type": "dedup",
+        "entry": "main.py",
+    }
+    file_bytes = _build_package_zip(
+        manifest,
+        entry_content="def process(text):\n    print('debug line from package')\n    return {'text': str(text)}\n",
+    )
+
+    install_algorithm_package(
+        db_session,
+        file_bytes=file_bytes,
+        platform="cnki",
+        function_type="dedup",
+        uploaded_by=1,
+        activate_after_upload=True,
+    )
+
+    active_result = run_active_package(
+        db_session,
+        platform="cnki",
+        function_type="dedup",
+        text="input",
+    )
+    assert active_result is not None
+    output, _active = active_result
+    assert output["text"] == "input"
+
+
 def test_admin_download_algorithm_package_guide(
     client: TestClient,
     admin_override,

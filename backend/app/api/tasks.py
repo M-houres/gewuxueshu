@@ -16,6 +16,11 @@ from app.pagination import paginate
 from app.responses import ok
 from app.schemas import APIResp
 from app.services.credit_service import change_credits
+from app.services.process_strategy_service import (
+    normalize_platform,
+    resolve_task_processing_mode,
+    sanitize_user_result_json,
+)
 from app.utils import count_billable_chars, detect_file_magic, extract_text_from_file, safe_filename
 
 router = APIRouter()
@@ -32,8 +37,6 @@ TASK_REPORT_EXTENSIONS: dict[TaskType, set[str]] = {
     TaskType.DEDUP: {".docx", ".pdf"},
     TaskType.REWRITE: {".docx", ".pdf"},
 }
-
-
 def _parse_task_type(raw: str) -> TaskType:
     try:
         return TaskType(raw)
@@ -151,6 +154,8 @@ def submit_task(
     db: Session = Depends(db_dep),
 ) -> APIResp:
     t = _parse_task_type(task_type)
+    normalized_platform = normalize_platform(platform)
+    internal_processing_mode, strategy = resolve_task_processing_mode(db, task_type=t, platform=normalized_platform)
     ext = Path(paper.filename or "").suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise BizError(code=4104, message="文件格式不支持")
@@ -194,7 +199,8 @@ def submit_task(
     task = Task(
         user_id=user.id,
         task_type=t,
-        platform=platform.lower(),
+        platform=normalized_platform,
+        processing_mode=internal_processing_mode,
         source=client_source,
         status=TaskStatus.PENDING,
         source_filename=src_name,
@@ -221,6 +227,8 @@ def submit_task(
             "task_id": task.id,
             "user_id": user.id,
             "task_type": t.value,
+            "strategy_mode": strategy.get("process_mode"),
+            "engine_mode": internal_processing_mode,
             "char_count": char_count,
             "cost_credits": cost,
         },
@@ -229,7 +237,14 @@ def submit_task(
     from app.worker_tasks import dispatch_background_task, process_task_async
 
     dispatch_background_task(process_task_async, task.id)
-    return ok(data={"id": task.id, "status": task.status.value, "cost_credits": cost})
+    return ok(
+        data={
+            "id": task.id,
+            "status": task.status.value,
+            "cost_credits": cost,
+            "estimated_time": int(strategy.get("timeout_sec", 300)),
+        }
+    )
 
 
 @router.get("/my", response_model=APIResp)
@@ -251,7 +266,8 @@ def my_tasks(
         except Exception:
             raise BizError(code=4101, message="任务类型不支持")
     if platform:
-        base_query = base_query.filter(Task.platform == platform.lower().strip())
+        normalized_platform = normalize_platform(platform)
+        base_query = base_query.filter(Task.platform == normalized_platform)
     if status:
         try:
             base_query = base_query.filter(Task.status == TaskStatus(status))
@@ -288,7 +304,7 @@ def my_tasks(
             "has_report": bool(row.report_path),
             "char_count": row.char_count,
             "cost_credits": row.cost_credits,
-            "result_json": row.result_json,
+            "result_json": sanitize_user_result_json(row.result_json),
             "error_message": row.error_message,
             "created_at": row.created_at,
             "updated_at": row.updated_at,
@@ -314,7 +330,7 @@ def task_detail(task_id: int, user: User = Depends(current_user), db: Session = 
             "has_report": bool(row.report_path),
             "char_count": row.char_count,
             "cost_credits": row.cost_credits,
-            "result_json": row.result_json,
+            "result_json": sanitize_user_result_json(row.result_json),
             "error_message": row.error_message,
             "output_path": row.output_path,
             "created_at": row.created_at,

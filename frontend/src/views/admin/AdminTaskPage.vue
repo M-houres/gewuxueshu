@@ -220,9 +220,9 @@ const taskTypeOptions = [
 ]
 const platformOptions = [
   { value: "", label: "全部" },
-  { value: "cnki", label: "知网 CNKI" },
-  { value: "vip", label: "维普 VIP" },
-  { value: "paperpass", label: "PaperPass" },
+  { value: "cnki", label: "格物学术标准版" },
+  { value: "vip", label: "格物学术专业版" },
+  { value: "paperpass", label: "格物学术极速版" },
 ]
 const statusOptions = [
   { value: "", label: "全部" },
@@ -326,9 +326,9 @@ function mapTaskType(type) {
 
 function mapPlatform(platform) {
   const mapping = {
-    cnki: "知网 CNKI",
-    vip: "维普 VIP",
-    paperpass: "PaperPass",
+    cnki: "格物学术标准版",
+    vip: "格物学术专业版",
+    paperpass: "格物学术极速版",
   }
   return mapping[platform] || platform
 }

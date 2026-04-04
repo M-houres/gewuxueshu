@@ -1,0 +1,11 @@
+<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="24" height="24" rx="9" fill="url(#reviewGrad)"/>
+  <rect x="8" y="7.5" width="12" height="13" rx="3" fill="white"/>
+  <path d="M10.5 11H17.5M10.5 14H17.5M10.5 17H15.5" stroke="#2C62E5" stroke-width="1.9" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="reviewGrad" x1="4" y1="3" x2="24" y2="25" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2B5CFF"/>
+      <stop offset="1" stop-color="#00D0D7"/>
+    </linearGradient>
+  </defs>
+</svg>

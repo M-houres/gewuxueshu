@@ -110,3 +110,46 @@ def test_aigc_detect_platform_profiles_are_close_but_not_identical(
 
     assert len(set(round(value, 2) for value in results.values())) >= 2
     assert max(results.values()) - min(results.values()) <= 15
+
+
+def test_rewrite_process_accepts_nested_algo_text_fields(tmp_path: Path, db_session: Session, monkeypatch) -> None:
+    source_path = tmp_path / "rewrite.txt"
+    output_path = tmp_path / "rewrite_out.txt"
+    source_path.write_text("原始文本", encoding="utf-8")
+
+    monkeypatch.setattr(ProcessingEngine, "_run_llm", lambda self, *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        ProcessingEngine,
+        "_run_algo_package",
+        lambda self, *_args, **_kwargs: {"result": {"content": "算法包输出正文"}},
+    )
+
+    engine = ProcessingEngine(db_session)
+    result = engine.process(TaskType.REWRITE, "cnki", source_path, output_path, task_id=3)
+
+    assert output_path.exists()
+    assert output_path.read_text(encoding="utf-8") == "算法包输出正文"
+    assert result.result_json["type"] == "rewrite"
+    assert result.result_json["output_stats"]["char_count"] > 0
+
+
+def test_aigc_detect_accepts_nested_score_and_chinese_label(tmp_path: Path, db_session: Session, monkeypatch) -> None:
+    source_path = tmp_path / "detect.txt"
+    output_path = tmp_path / "detect.pdf"
+    source_path.write_text("用于检测的正文内容。", encoding="utf-8")
+
+    monkeypatch.setattr(ProcessingEngine, "_run_llm", lambda self, *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        ProcessingEngine,
+        "_run_algo_package",
+        lambda self, *_args, **_kwargs: {"data": {"risk_score": "63%", "risk_level": "高风险"}},
+    )
+
+    engine = ProcessingEngine(db_session)
+    result = engine.process(TaskType.AIGC_DETECT, "cnki", source_path, output_path, task_id=4)
+
+    assert output_path.exists()
+    assert result.result_json["label"] == "high"
+    assert result.result_json["score_pct"] > 0
+    assert result.result_json["score_breakdown"].get("algo_package_score") == 0.63
+    assert "algo_package_score" in result.result_json["score_breakdown"]

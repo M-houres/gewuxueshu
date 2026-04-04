@@ -139,6 +139,28 @@ def _algo_package_runner_cwd() -> str:
     return str(Path(__file__).resolve().parents[2])
 
 
+def _parse_runner_response(stdout: str) -> dict | None:
+    text = str(stdout or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = json.loads(text)
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        pass
+
+    for line in reversed(text.splitlines()):
+        candidate = line.strip()
+        if not candidate.startswith("{") or not candidate.endswith("}"):
+            continue
+        try:
+            parsed = json.loads(candidate)
+            return parsed if isinstance(parsed, dict) else None
+        except json.JSONDecodeError:
+            continue
+    return None
+
+
 def _run_package_in_subprocess(
     package_path: Path,
     *,
@@ -170,12 +192,7 @@ def _run_package_in_subprocess(
 
     stdout = (completed.stdout or "").strip()
     stderr = (completed.stderr or "").strip()
-    response = None
-    if stdout:
-        try:
-            response = json.loads(stdout)
-        except json.JSONDecodeError:
-            response = None
+    response = _parse_runner_response(stdout)
 
     if completed.returncode != 0:
         if isinstance(response, dict) and response.get("error"):

@@ -180,6 +180,7 @@ def process_task_async(task_id: int) -> dict:
                 output_path,
                 task_id=task.id,
                 report_path=Path(task.report_path) if task.report_path else None,
+                processing_mode=task.processing_mode,
             )
 
             task.status = TaskStatus.COMPLETED

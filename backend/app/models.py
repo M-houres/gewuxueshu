@@ -154,6 +154,7 @@ class Task(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     task_type: Mapped[TaskType] = mapped_column(SQLEnum(TaskType), index=True)
     platform: Mapped[str] = mapped_column(String(20), index=True)
+    processing_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
     source: Mapped[str] = mapped_column(String(20), default="web", index=True)
     status: Mapped[TaskStatus] = mapped_column(SQLEnum(TaskStatus), default=TaskStatus.PENDING)
     source_filename: Mapped[str] = mapped_column(String(255))

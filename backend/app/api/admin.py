@@ -51,6 +51,7 @@ from app.security import create_token, hash_password, verify_password
 from app.services.algo_package_service import (
     activate_algorithm_package,
     deactivate_algorithm_package,
+    get_active_slot_config,
     get_algorithm_package_archive_path,
     install_algorithm_package,
     list_algorithm_packages,
@@ -63,6 +64,14 @@ from app.services.builtin_algo_packages import (
 from app.services.credit_service import change_credits
 from app.services.llm_service import LLM_PROVIDER_PRESETS, SUPPORTED_LLM_PROVIDERS, normalize_llm_provider
 from app.services.payment_service import DEFAULT_PAYMENT_CONFIG, normalize_payment_provider
+from app.services.process_strategy_service import (
+    get_process_strategy,
+    list_process_strategies,
+    normalize_platform,
+    normalize_process_mode,
+    normalize_task_type,
+    update_process_strategy,
+)
 from app.services.referral_service import get_referral_rules, update_referral_rules
 
 router = APIRouter()
@@ -934,6 +943,24 @@ def _save_category_config(db: Session, category: str, value: dict, admin: AdminU
     return value
 
 
+def _platform_label(platform: str) -> str:
+    mapping = {
+        "cnki": "知网",
+        "vip": "维普",
+        "paperpass": "PaperPass",
+    }
+    return mapping.get(platform, platform)
+
+
+def _task_type_label(task_type: str) -> str:
+    mapping = {
+        "aigc_detect": "AIGC检测",
+        "rewrite": "降AIGC率",
+        "dedup": "降重复率",
+    }
+    return mapping.get(task_type, task_type)
+
+
 @router.post("/auth/login", response_model=APIResp)
 def admin_login(req: AdminLoginReq, db: Session = Depends(db_dep)) -> APIResp:
     admin = db.query(AdminUser).filter(AdminUser.username == req.username).first()
@@ -1559,6 +1586,7 @@ def admin_tasks(
             "user_id": t.user_id,
             "task_type": t.task_type.value,
             "platform": t.platform,
+            "processing_mode": t.processing_mode,
             "status": t.status.value,
             "char_count": t.char_count,
             "cost_credits": t.cost_credits,
@@ -1586,6 +1614,7 @@ def admin_task_detail(
             "user_phone": user.phone if user else "",
             "task_type": row.task_type.value,
             "platform": row.platform,
+            "processing_mode": row.processing_mode,
             "status": row.status.value,
             "char_count": row.char_count,
             "cost_credits": row.cost_credits,
@@ -1918,6 +1947,112 @@ def retry_referral_reward(
 
     dispatch_background_task(retry_referral_reward_async, reward_id)
     return ok(data={"reward_id": reward_id, "status": "queued"})
+
+
+@router.get("/strategies", response_model=APIResp)
+def admin_process_strategies(
+    _: AdminUser = Depends(require_admin_permission("algo:view")),
+    db: Session = Depends(db_dep),
+) -> APIResp:
+    data = list_process_strategies(db)
+    items = []
+    for row in data.get("items", []):
+        platform = str(row.get("platform", ""))
+        task_type = str(row.get("task_type", ""))
+        active_slot = get_active_slot_config(db, platform=platform, function_type=task_type)
+        item = dict(row)
+        item["platform_label"] = _platform_label(platform)
+        item["task_type_label"] = _task_type_label(task_type)
+        item["active_package"] = (
+            {
+                "name": active_slot.get("name"),
+                "version": active_slot.get("version"),
+                "entry": active_slot.get("entry"),
+            }
+            if isinstance(active_slot, dict)
+            else None
+        )
+        items.append(item)
+    return ok(
+        data={
+            "task_types": data.get("task_types", []),
+            "platforms": data.get("platforms", []),
+            "items": items,
+        }
+    )
+
+
+@router.put("/strategies/{task_type}/{platform}", response_model=APIResp)
+def admin_update_process_strategy(
+    task_type: str,
+    platform: str,
+    payload: dict,
+    admin: AdminUser = Depends(require_admin_permission("algo:manage")),
+    db: Session = Depends(db_dep),
+) -> APIResp:
+    if not isinstance(payload, dict):
+        raise BizError(code=4302, message="请求体必须为 JSON 对象")
+    if not any(key in payload for key in ("process_mode", "is_enabled", "timeout_sec")):
+        raise BizError(code=4341, message="至少需要提供 process_mode / is_enabled / timeout_sec 其中之一")
+
+    normalized_task_type = normalize_task_type(task_type)
+    normalized_platform = normalize_platform(platform)
+    before = get_process_strategy(db, task_type=normalized_task_type, platform=normalized_platform)
+
+    process_mode = payload.get("process_mode") if "process_mode" in payload else None
+    if process_mode is not None:
+        process_mode = normalize_process_mode(process_mode)
+    is_enabled = _as_bool(payload.get("is_enabled"), default=False) if "is_enabled" in payload else None
+    timeout_sec = payload.get("timeout_sec") if "timeout_sec" in payload else None
+
+    if is_enabled:
+        active_slot = get_active_slot_config(
+            db,
+            platform=normalized_platform,
+            function_type=normalized_task_type.value,
+        )
+        if not active_slot:
+            raise BizError(code=4118, message="该平台功能尚未激活算法包，无法启用")
+
+    try:
+        result = update_process_strategy(
+            db,
+            task_type=normalized_task_type,
+            platform=normalized_platform,
+            process_mode=process_mode,
+            is_enabled=is_enabled,
+            timeout_sec=timeout_sec,
+            updated_by=admin.id,
+        )
+        db.add(
+            AdminAuditLog(
+                admin_id=admin.id,
+                action="strategy_update",
+                target_type="process_strategy",
+                target_id=f"{normalized_task_type.value}:{normalized_platform}",
+                before_json=before,
+                after_json=result,
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    active_slot = get_active_slot_config(db, platform=normalized_platform, function_type=normalized_task_type.value)
+    result_payload = dict(result)
+    result_payload["platform_label"] = _platform_label(normalized_platform)
+    result_payload["task_type_label"] = _task_type_label(normalized_task_type.value)
+    result_payload["active_package"] = (
+        {
+            "name": active_slot.get("name"),
+            "version": active_slot.get("version"),
+            "entry": active_slot.get("entry"),
+        }
+        if isinstance(active_slot, dict)
+        else None
+    )
+    return ok(data=result_payload)
 
 
 @router.get("/credit-transactions", response_model=APIResp)
