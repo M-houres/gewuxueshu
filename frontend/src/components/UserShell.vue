@@ -278,8 +278,8 @@ function isRouteMatch(currentPath, targetPath) {
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.96);
-  color: #5f37c4;
-  border: 1px solid rgba(255, 255, 255, 0.88);
+  color: #165dff;
+  border: 1px solid #d8e6ff;
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
@@ -311,23 +311,23 @@ function isRouteMatch(currentPath, targetPath) {
   height: 31px;
   padding: 0 13px;
   border-radius: 10px;
-  border: 1px solid #dac7f7;
+  border: 1px solid #c6d9ff;
   background: #ffffff;
-  color: #5c3fc0;
+  color: #1d5cdd;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  box-shadow: 0 1px 0 rgba(92, 63, 176, 0.08);
+  box-shadow: 0 1px 0 rgba(34, 90, 201, 0.09);
   cursor: pointer;
   transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .header-topup:hover {
-  background: #f8f3ff;
-  border-color: #cdb1ff;
-  color: #4f35af;
+  background: #edf4ff;
+  border-color: #9fbfff;
+  color: #134fcb;
   transform: translateY(-1px);
-  box-shadow: 0 5px 10px rgba(84, 56, 152, 0.16);
+  box-shadow: 0 5px 10px rgba(22, 93, 255, 0.16);
 }
 
 .header-topup:active {
@@ -340,7 +340,7 @@ function isRouteMatch(currentPath, targetPath) {
   height: 30px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid #dbcaf8;
+  border: 1px solid #c5dafd;
   background: rgba(255, 255, 255, 0.72);
   display: inline-flex;
   align-items: center;
@@ -352,8 +352,8 @@ function isRouteMatch(currentPath, targetPath) {
   height: 18px;
   padding: 0 7px;
   border-radius: 999px;
-  background: #efe5ff;
-  color: #5b39b3;
+  background: #e8f1ff;
+  color: #1f56d5;
   font-size: 11px;
   font-weight: 700;
   line-height: 18px;
@@ -361,7 +361,7 @@ function isRouteMatch(currentPath, targetPath) {
 
 .header-notice__text {
   min-width: 0;
-  color: #624f86;
+  color: #39598c;
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
@@ -397,21 +397,21 @@ function isRouteMatch(currentPath, targetPath) {
   height: 31px;
   padding: 0 12px;
   border-radius: 10px;
-  border: 1px solid #dac7f7;
+  border: 1px solid #c6d9ff;
   background: #ffffff;
-  color: #5c3fc0;
+  color: #1d5cdd;
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1;
-  box-shadow: 0 1px 0 rgba(92, 63, 176, 0.08);
+  box-shadow: 0 1px 0 rgba(34, 90, 201, 0.09);
   cursor: pointer;
   transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
 }
 
 .header-link:hover {
-  background: #f8f3ff;
-  color: #4f35af;
-  border-color: #cdb1ff;
+  background: #edf4ff;
+  color: #134fcb;
+  border-color: #9fbfff;
   transform: translateY(-1px);
 }
 
@@ -421,15 +421,15 @@ function isRouteMatch(currentPath, targetPath) {
 
 .header-link--muted {
   background: #ffffff;
-  color: #5c3fc0;
-  border: 1px solid #dac7f7;
-  box-shadow: 0 1px 0 rgba(92, 63, 176, 0.08);
+  color: #1d5cdd;
+  border: 1px solid #c6d9ff;
+  box-shadow: 0 1px 0 rgba(34, 90, 201, 0.09);
 }
 
 .header-link--muted:hover {
-  background: #f8f3ff;
-  color: #4f35af;
-  border-color: #cdb1ff;
+  background: #edf4ff;
+  color: #134fcb;
+  border-color: #9fbfff;
 }
 
 .content-wrap {
@@ -437,16 +437,16 @@ function isRouteMatch(currentPath, targetPath) {
   min-height: 0;
   display: grid;
   grid-template-columns: var(--sider-width) minmax(0, 1fr);
-  background: linear-gradient(180deg, #e6ebf4 0%, #f1f4fa 100%);
+  background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%);
 }
 
 .sider-wrap {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border);
-  background: linear-gradient(180deg, #e1e7f1 0%, #eaf0f8 100%);
+  border-right: 1px solid rgba(17, 76, 193, 0.2);
+  background: linear-gradient(180deg, #165dff 0%, #4080ff 100%);
   overflow: hidden;
-  box-shadow: inset -1px 0 0 rgba(44, 64, 92, 0.12);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.18);
 }
 
 .scrollbar-wrapper {
@@ -459,9 +459,9 @@ function isRouteMatch(currentPath, targetPath) {
   margin: 8px 10px 14px;
   padding: 14px;
   border-radius: 14px;
-  border: 1px solid #c7d8ec;
-  background: linear-gradient(160deg, #f7fbff 0%, #eef5ff 54%, #e7f0fc 100%);
-  box-shadow: 0 10px 22px rgba(24, 50, 84, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.18) 100%);
+  box-shadow: 0 10px 22px rgba(8, 52, 151, 0.2);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -471,9 +471,9 @@ function isRouteMatch(currentPath, targetPath) {
   width: 100%;
   height: 38px;
   border-radius: 10px;
-  border: 1px solid #d0c2ff;
-  background: linear-gradient(135deg, #f4eeff 0%, #ece4ff 100%);
-  color: #5d44ce;
+  border: 1px solid #b6ceff;
+  background: #ffffff;
+  color: #1155de;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -482,9 +482,9 @@ function isRouteMatch(currentPath, targetPath) {
 }
 
 .sider-credits-card__buy-block:hover {
-  background: #ece3ff;
-  border-color: #b9a1ff;
-  color: #4f38bd;
+  background: #edf4ff;
+  border-color: #8cb2ff;
+  color: #0d4ac4;
   transform: translateY(-1px);
 }
 
@@ -496,15 +496,15 @@ function isRouteMatch(currentPath, targetPath) {
   gap: 6px;
   min-height: 82px;
   border-radius: 10px;
-  border: 1px solid #d3e0f1;
-  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.18);
   padding: 10px 12px;
 }
 
 .sider-credits-card__balance-label {
   margin: 0;
   font-size: 12px;
-  color: #5a6f8a;
+  color: rgba(245, 250, 255, 0.9);
   line-height: 1.4;
 }
 
@@ -522,7 +522,7 @@ function isRouteMatch(currentPath, targetPath) {
   font-size: clamp(16px, 1.15vw, 21px);
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: #1f426f;
+  color: #ffffff;
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -531,7 +531,7 @@ function isRouteMatch(currentPath, targetPath) {
 .sider-credits-card__balance-unit {
   font-size: 12px;
   line-height: 1.2;
-  color: #5a6f8a;
+  color: rgba(245, 250, 255, 0.92);
   font-weight: 600;
 }
 
@@ -552,7 +552,7 @@ function isRouteMatch(currentPath, targetPath) {
 
 .nav-divider {
   margin: 6px 16px;
-  border-top: 1px solid #c3cfdf;
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
   list-style: none;
 }
 
@@ -570,22 +570,22 @@ function isRouteMatch(currentPath, targetPath) {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.45;
-  color: #2f445f;
+  color: rgba(255, 255, 255, 0.92);
   background: transparent;
   transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .el-menu-item:hover {
-  background: #cfdaea;
-  color: #1f3f67;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 .el-menu-item.is-active {
-  background: linear-gradient(135deg, #f8fbff 0%, #e8f0fc 100%);
-  color: #1d3d65;
+  background: #ffffff;
+  color: #165dff;
   font-weight: 600;
-  border-left-color: var(--primary);
-  box-shadow: 0 8px 18px rgba(34, 63, 104, 0.16);
+  border-left-color: #ffffff;
+  box-shadow: 0 8px 18px rgba(8, 52, 151, 0.22);
 }
 
 .el-menu-item.is-disabled {
@@ -595,7 +595,7 @@ function isRouteMatch(currentPath, targetPath) {
 
 .el-menu-item.is-disabled:hover {
   background: transparent;
-  color: var(--text-sub);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .siderIcon {
@@ -739,7 +739,7 @@ function isRouteMatch(currentPath, targetPath) {
   .sider-wrap {
     display: block;
     border-right: 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
     overflow: auto;
   }
 

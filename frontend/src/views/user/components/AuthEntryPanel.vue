@@ -60,6 +60,7 @@
                     </div>
                   </div>
                   <p class="login_mode_hint">{{ loginModeHint }}</p>
+                  <p class="login_mode_hint login_mode_hint--sub">{{ thirdPartyHint }}</p>
                 </div>
 
                 <form v-if="mode === 'phone'" class="login_form_body" @submit.prevent="submitPhoneAuth">
@@ -85,10 +86,11 @@
                     {{ loading ? "处理中..." : primaryButtonText }}
                   </button>
 
-                  <div v-if="hasWechatEntry" class="third-login-row">
-                    <span class="third-login-row__line"></span>
-                    <button type="button" class="third-login-btn" @click="switchMode('wx')">微信扫码登录</button>
-                    <span class="third-login-row__line"></span>
+                  <div v-if="hasWechatEntry" class="third-auth">
+                    <div class="third-auth__label">第三方登录</div>
+                    <button type="button" class="third-auth__wechat" @click="switchMode('wx')">
+                      微信扫码登录
+                    </button>
                   </div>
                 </form>
 
@@ -185,6 +187,9 @@ const loginModeHint = computed(() => {
   if (wechatLoginEnabled.value) return "当前为微信扫码登录"
   return "当前为手机号验证码登录"
 })
+const thirdPartyHint = computed(() =>
+  wechatLoginEnabled.value ? "支持第三方微信登录，支付通道由后台统一配置" : "第三方微信能力可在后台配置后启用"
+)
 
 watch([phoneLoginEnabled, wechatLoginEnabled], ([phoneEnabled, wxEnabled]) => {
   if (mode.value === "wx" && !wxEnabled) {
@@ -455,7 +460,7 @@ function enterGuest() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #5f37c4;
+  color: #165dff;
   font-size: 14px;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.96);
@@ -490,7 +495,7 @@ function enterGuest() {
 }
 
 .login_header_r .text {
-  color: rgba(247, 237, 255, 0.94);
+  color: #46649a;
   font-size: 13px;
   line-height: 1.3;
   font-weight: 600;
@@ -500,7 +505,7 @@ function enterGuest() {
   width: 1px;
   height: 14px;
   margin: 0 10px;
-  background: rgba(255, 255, 255, 0.34);
+  background: #d5e3ff;
 }
 
 .auth-board {
@@ -516,22 +521,22 @@ function enterGuest() {
 .auth-board__inner {
   display: flex;
   width: 100%;
-  max-width: 1060px;
+  max-width: 940px;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 14px 36px rgba(59, 40, 107, 0.14);
-  border: 1px solid #d7d1ea;
+  box-shadow: 0 14px 34px rgba(22, 93, 255, 0.14);
+  border: 1px solid #d7e5ff;
   background: #ffffff;
 }
 
 .auth-board__intro {
   flex: 1;
-  padding: 44px 42px;
+  padding: 40px 34px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(152deg, #f8f4ff 0%, #f1e9ff 52%, #e8ddff 100%);
-  border-right: 1px solid #ddd4f1;
+  background: linear-gradient(152deg, #f4f8ff 0%, #ecf3ff 52%, #e5efff 100%);
+  border-right: 1px solid #d8e7ff;
 }
 
 .auth-board__title {
@@ -539,14 +544,14 @@ function enterGuest() {
   font-size: 30px;
   line-height: 1.25;
   font-weight: 700;
-  color: #2c1762;
+  color: #1d4fae;
 }
 
 .auth-board__lead {
   margin: 16px 0 0;
   font-size: 14px;
   line-height: 1.85;
-  color: #5b4f79;
+  color: #4b638f;
   max-width: 500px;
 }
 
@@ -560,11 +565,11 @@ function enterGuest() {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.7;
-  color: #56486f;
+  color: #445b84;
 }
 
 .auth-board__form {
-  width: 420px;
+  width: 360px;
   flex-shrink: 0;
   background: #ffffff;
 }
@@ -577,14 +582,20 @@ function enterGuest() {
 }
 
 .auth-form__inner {
-  padding: 28px 28px 24px;
+  padding: 26px 24px 22px;
 }
 
 .login_mode_hint {
   margin: 0 0 14px;
   font-size: 12px;
   line-height: 1.4;
-  color: #6d5896;
+  color: #5f77a8;
+}
+
+.login_mode_hint--sub {
+  margin-top: -8px;
+  margin-bottom: 16px;
+  color: #7a8fb8;
 }
 
 .login_type_tab_box {
@@ -633,7 +644,7 @@ function enterGuest() {
 .login_input_box input:focus,
 .code_input input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(107, 78, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.13);
 }
 
 .loginCodeBox {
@@ -675,18 +686,18 @@ function enterGuest() {
   height: 48px;
   border: 0;
   border-radius: var(--radius-btn);
-  background: #7b5cff;
+  background: var(--btn-primary-bg);
   color: #ffffff;
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 2px;
-  box-shadow: 0 4px 14px rgba(107, 78, 255, 0.35);
+  box-shadow: var(--btn-primary-shadow);
   transition: transform 0.16s ease, background-color 0.16s ease;
 }
 
 .login_sub:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: var(--btn-primary-bg-hover);
   transform: translateY(-1px);
 }
 
@@ -695,33 +706,39 @@ function enterGuest() {
   box-shadow: none;
 }
 
-.third-login-row {
+.third-auth {
   margin-top: 12px;
-  display: flex;
-  align-items: center;
+  border: 1px solid #d7e5ff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f7faff;
+  display: grid;
   gap: 8px;
 }
 
-.third-login-row__line {
-  flex: 1;
-  height: 1px;
-  background: #ddd3f4;
+.third-auth__label {
+  font-size: 12px;
+  color: #5f77a8;
+  line-height: 1.2;
 }
 
-.third-login-btn {
-  border: 0;
-  background: transparent;
-  color: #5748c4;
-  font-size: 12px;
+.third-auth__wechat {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #bdd4ff;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1758db;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 }
 
-.third-login-btn:hover {
-  color: #4637a6;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+.third-auth__wechat:hover {
+  background: #ecf4ff;
+  border-color: #8fb4ff;
+  color: #0f4ac5;
 }
 
 .login_form_wechat_box {
@@ -730,12 +747,12 @@ function enterGuest() {
 }
 
 .imgCodeBox {
-  border: 1px dashed #c5d8ce;
+  border: 1px dashed #bfd4ff;
   border-radius: 10px;
   min-height: 220px;
   display: grid;
   place-items: center;
-  background: #f6fbf9;
+  background: #f5f9ff;
 }
 
 .imgCode_img {
@@ -811,10 +828,10 @@ function enterGuest() {
   min-height: 38px;
   line-height: 38px;
   text-align: center;
-  background: #f3ecff;
-  border-top: 1px solid #ddd0fb;
+  background: #f0f5ff;
+  border-top: 1px solid #d7e5ff;
   font-size: 12px;
-  color: #5f5682;
+  color: #5d7298;
 }
 
 .login_bot_wechat_box img {
@@ -831,7 +848,7 @@ function enterGuest() {
 
   .auth-board__inner {
     flex-direction: column;
-    max-width: 540px;
+    max-width: 500px;
   }
 
   .auth-board__intro {
@@ -898,8 +915,9 @@ function enterGuest() {
     padding: 18px 14px 14px;
   }
 
-  .third-login-row {
+  .third-auth {
     gap: 6px;
+    padding: 9px 10px;
   }
 
   .registPwdBox {
