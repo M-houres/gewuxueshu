@@ -18,6 +18,7 @@
           <span class="header-notice__text">{{ headerNoticeText }}</span>
         </div>
         <button type="button" class="header-topup" @click="hasUserToken ? goBuy() : goLogin()">充值</button>
+        <span class="header-live-credits">实时积分 {{ remainingCreditsNumber }}</span>
         <button type="button" class="header-link" @click="hasUserToken ? goProfile() : goLogin()">
           {{ hasUserToken ? "个人中心" : "登录" }}
         </button>
@@ -67,16 +68,6 @@
               </RouterLink>
             </li>
           </ul>
-        </div>
-        <div class="sider-credits-card">
-          <button type="button" class="sider-credits-card__buy-block" @click="hasUserToken ? goBuy() : goLogin()">购买积分</button>
-          <div class="sider-credits-card__balance">
-            <p class="sider-credits-card__balance-label">实时积分余额</p>
-            <p class="sider-credits-card__balance-value">
-              <span class="sider-credits-card__balance-number">{{ remainingCreditsNumber }}</span>
-              <span class="sider-credits-card__balance-unit">积分</span>
-            </p>
-          </div>
         </div>
       </aside>
 
@@ -432,6 +423,22 @@ function isRouteMatch(currentPath, targetPath) {
   border-color: #9fbfff;
 }
 
+.header-live-credits {
+  height: 31px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #c6d9ff;
+  background: #ffffff;
+  color: #1d5cdd;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(34, 90, 201, 0.09);
+}
+
 .content-wrap {
   flex: 1;
   min-height: 0;
@@ -453,86 +460,6 @@ function isRouteMatch(currentPath, targetPath) {
   flex: 1;
   overflow: auto;
   padding: 10px 0;
-}
-
-.sider-credits-card {
-  margin: 8px 10px 14px;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.18) 100%);
-  box-shadow: 0 10px 22px rgba(8, 52, 151, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sider-credits-card__buy-block {
-  width: 100%;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid #b6ceff;
-  background: #ffffff;
-  color: #1155de;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
-}
-
-.sider-credits-card__buy-block:hover {
-  background: #edf4ff;
-  border-color: #8cb2ff;
-  color: #0d4ac4;
-  transform: translateY(-1px);
-}
-
-.sider-credits-card__balance {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 6px;
-  min-height: 82px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  background: rgba(255, 255, 255, 0.18);
-  padding: 10px 12px;
-}
-
-.sider-credits-card__balance-label {
-  margin: 0;
-  font-size: 12px;
-  color: rgba(245, 250, 255, 0.9);
-  line-height: 1.4;
-}
-
-.sider-credits-card__balance-value {
-  margin: 0;
-  display: inline-flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 4px;
-  line-height: 1.2;
-  min-width: 0;
-}
-
-.sider-credits-card__balance-number {
-  font-size: clamp(16px, 1.15vw, 21px);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #ffffff;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.sider-credits-card__balance-unit {
-  font-size: 12px;
-  line-height: 1.2;
-  color: rgba(245, 250, 255, 0.92);
-  font-weight: 600;
 }
 
 .el-menu {
@@ -772,10 +699,6 @@ function isRouteMatch(currentPath, targetPath) {
 
   .main-wrap {
     padding: 16px;
-  }
-
-  .sider-credits-card {
-    display: none;
   }
 }
 </style>
