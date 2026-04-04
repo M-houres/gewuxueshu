@@ -12,7 +12,7 @@
   --border: #e5e8f0;
   --border-focus: #165dff;
 
-  --bg-page: #f5f8ff;
+  --bg-page: #f8fbff;
   --bg-white: #ffffff;
   --bg-upload: #f2f7ff;
 
@@ -39,8 +39,8 @@
   --btn-money-bg-hover: linear-gradient(135deg, #ffcd7a 0%, #ffb24a 100%);
   --btn-money-ink: #5e3b00;
   --header-gradient-deep: linear-gradient(180deg, #f0f5ff 0%, #ffffff 100%);
-  --header-border-deep: #d8e6ff;
-  --header-shadow-deep: 0 8px 18px rgba(22, 93, 255, 0.1);
+  --header-border-deep: #bdd6ff;
+  --header-shadow-deep: 0 10px 22px rgba(22, 93, 255, 0.2);
   --header-ink-deep: #1f4eb4;
 
   --font-sans: "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
