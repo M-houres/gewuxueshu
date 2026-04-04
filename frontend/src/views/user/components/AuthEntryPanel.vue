@@ -495,7 +495,7 @@ function enterGuest() {
 }
 
 .login_header_r .text {
-  color: #46649a;
+  color: rgba(239, 247, 255, 0.96);
   font-size: 13px;
   line-height: 1.3;
   font-weight: 600;
@@ -505,7 +505,7 @@ function enterGuest() {
   width: 1px;
   height: 14px;
   margin: 0 10px;
-  background: #d5e3ff;
+  background: rgba(232, 243, 255, 0.52);
 }
 
 .auth-board {
