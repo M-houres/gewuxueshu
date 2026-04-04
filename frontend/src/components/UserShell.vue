@@ -443,8 +443,8 @@ function isRouteMatch(currentPath, targetPath) {
 .sider-wrap {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(17, 76, 193, 0.2);
-  background: linear-gradient(180deg, #165dff 0%, #4080ff 100%);
+  border-right: 1px solid var(--sider-border-deep);
+  background: var(--sider-gradient-deep);
   overflow: hidden;
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.18);
 }
