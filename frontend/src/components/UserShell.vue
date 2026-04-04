@@ -6,7 +6,6 @@
           <span class="brand-mark">格</span>
           <div class="brand-copy">
             <strong>格物学术</strong>
-            <span>论文服务平台</span>
           </div>
         </div>
       </div>
@@ -16,7 +15,7 @@
       <div class="header-right">
         <div class="header-notice">
           <span class="header-notice__tag">公告</span>
-          <span class="header-notice__text">平台系统持续优化中，任务提交后请在个人中心查看处理进度。</span>
+          <span class="header-notice__text">{{ headerNoticeText }}</span>
         </div>
         <button type="button" class="header-topup" @click="hasUserToken ? goBuy() : goLogin()">充值</button>
         <button type="button" class="header-link" @click="hasUserToken ? goProfile() : goLogin()">
@@ -70,16 +69,14 @@
           </ul>
         </div>
         <div class="sider-credits-card">
-          <button type="button" class="sider-credits-card__buy" @click="hasUserToken ? goBuy() : goLogin()">购买点数</button>
-          <div class="sider-credits-card__head">
-            <span class="sider-credits-card__icon" aria-hidden="true">
-              <Coins :size="14" />
-            </span>
-            <p class="sider-credits-card__label">剩余积分</p>
-            <span class="sider-credits-card__meta">{{ hasUserToken ? "实时" : "未登录" }}</span>
+          <button type="button" class="sider-credits-card__buy-block" @click="hasUserToken ? goBuy() : goLogin()">购买积分</button>
+          <div class="sider-credits-card__balance">
+            <p class="sider-credits-card__balance-label">实时积分余额</p>
+            <p class="sider-credits-card__balance-value">
+              <span class="sider-credits-card__balance-number">{{ remainingCreditsNumber }}</span>
+              <span class="sider-credits-card__balance-unit">积分</span>
+            </p>
           </div>
-          <p class="sider-credits-card__value">{{ remainingCredits }}</p>
-          <p class="sider-credits-card__hint">{{ hasUserToken ? "任务提交后将自动扣减积分" : "登录后查看实时积分并充值" }}</p>
         </div>
       </aside>
 
@@ -107,10 +104,11 @@
 </template>
 
 <script setup>
-import { Bot, Coins, FilePenLine, FileSearch2, Gift, ScanSearch, ShieldCheck, UserRound } from "lucide-vue-next"
+import { Bot, FilePenLine, FileSearch2, Gift, ScanSearch, ShieldCheck, UserRound } from "lucide-vue-next"
 import { computed, onMounted, ref, watch } from "vue"
 import { RouterLink, useRoute, useRouter } from "vue-router"
 
+import { userHttp } from "../lib/http"
 import { clearUserSession, getUserToken } from "../lib/session"
 
 const props = defineProps({
@@ -141,6 +139,8 @@ const emit = defineEmits(["buy"])
 const router = useRouter()
 const route = useRoute()
 const hasUserToken = ref(false)
+const DEFAULT_HEADER_NOTICE_TEXT = "平台系统持续优化中，任务提交后请在个人中心查看处理进度。"
+const headerNoticeText = ref(DEFAULT_HEADER_NOTICE_TEXT)
 
 const coreMenus = [
   { path: "/app/rewrite", label: "降AIGC率", icon: FilePenLine },
@@ -154,8 +154,8 @@ const labMenus = [
 ]
 
 const accountMenus = [
-  { path: "/app/profile", label: "个人中心", icon: UserRound },
   { path: "/app/referral", label: "推广福利", icon: Gift },
+  { path: "/app/profile", label: "个人中心", icon: UserRound },
 ]
 
 const menus = [...coreMenus, ...labMenus, ...accountMenus]
@@ -169,16 +169,29 @@ const shouldHideTopbar = computed(() => {
   if (props.hideTopbar) return true
   return isRouteMatch(route.path, "/app/profile") || isRouteMatch(route.path, "/app/referral")
 })
-const remainingCredits = computed(() => {
-  if (typeof props.credits !== "number") return "-- 积分"
-  return `${props.credits.toLocaleString()} 积分`
+const remainingCreditsNumber = computed(() => {
+  if (typeof props.credits !== "number") return "--"
+  return props.credits.toLocaleString()
 })
 
-onMounted(syncTokenState)
+onMounted(() => {
+  syncTokenState()
+  loadHeaderNotice()
+})
 watch(
   () => route.fullPath,
   () => syncTokenState()
 )
+
+async function loadHeaderNotice() {
+  try {
+    const data = await userHttp.get("/auth/options")
+    const text = String(data?.header_notice_text || "").trim()
+    headerNoticeText.value = text || DEFAULT_HEADER_NOTICE_TEXT
+  } catch {
+    headerNoticeText.value = DEFAULT_HEADER_NOTICE_TEXT
+  }
+}
 
 function syncTokenState() {
   hasUserToken.value = Boolean(getUserToken())
@@ -238,9 +251,9 @@ function isRouteMatch(currentPath, targetPath) {
   align-items: center;
   gap: 14px;
   padding: 0 18px;
-  background: linear-gradient(114deg, #081a3a 0%, #0d3f83 50%, #0d93be 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 28px rgba(9, 20, 38, 0.34);
+  background: var(--header-gradient-deep);
+  border-bottom: 1px solid var(--header-border-deep);
+  box-shadow: var(--header-shadow-deep);
 }
 
 .header-left {
@@ -264,9 +277,9 @@ function isRouteMatch(currentPath, targetPath) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.24);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.46);
+  background: rgba(255, 255, 255, 0.96);
+  color: #5f37c4;
+  border: 1px solid rgba(255, 255, 255, 0.88);
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
@@ -282,37 +295,39 @@ function isRouteMatch(currentPath, targetPath) {
 .brand-copy strong {
   font-size: 16px;
   line-height: 1.2;
-  color: #f4f8ff;
+  color: var(--header-ink-deep);
   letter-spacing: 0.02em;
 }
 
 .brand-copy span {
   font-size: 11px;
   line-height: 1.2;
-  color: rgba(228, 237, 253, 0.88);
+  color: #7e6aa8;
   letter-spacing: 0.03em;
+  display: none;
 }
 
 .header-topup {
   height: 31px;
   padding: 0 13px;
   border-radius: 10px;
-  border: 1px solid #f4c77b;
-  background: var(--btn-money-bg);
-  color: var(--btn-money-ink);
+  border: 1px solid #dac7f7;
+  background: #ffffff;
+  color: #5c3fc0;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
-  box-shadow: 0 6px 14px rgba(183, 127, 37, 0.28);
+  box-shadow: 0 1px 0 rgba(92, 63, 176, 0.08);
   cursor: pointer;
   transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .header-topup:hover {
-  background: var(--btn-money-bg-hover);
-  border-color: #efbd66;
+  background: #f8f3ff;
+  border-color: #cdb1ff;
+  color: #4f35af;
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(183, 127, 37, 0.34);
+  box-shadow: 0 5px 10px rgba(84, 56, 152, 0.16);
 }
 
 .header-topup:active {
@@ -325,8 +340,8 @@ function isRouteMatch(currentPath, targetPath) {
   height: 30px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid #dbcaf8;
+  background: rgba(255, 255, 255, 0.72);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -337,8 +352,8 @@ function isRouteMatch(currentPath, targetPath) {
   height: 18px;
   padding: 0 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #0d4f90;
+  background: #efe5ff;
+  color: #5b39b3;
   font-size: 11px;
   font-weight: 700;
   line-height: 18px;
@@ -346,7 +361,7 @@ function isRouteMatch(currentPath, targetPath) {
 
 .header-notice__text {
   min-width: 0;
-  color: #e7f1ff;
+  color: #624f86;
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
@@ -359,7 +374,7 @@ function isRouteMatch(currentPath, targetPath) {
   min-width: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #ecf4ff;
+  color: var(--header-ink-deep);
   letter-spacing: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -382,21 +397,21 @@ function isRouteMatch(currentPath, targetPath) {
   height: 31px;
   padding: 0 12px;
   border-radius: 10px;
-  border: 1px solid var(--btn-ghost-border);
-  background: var(--btn-ghost-bg);
-  color: var(--btn-ghost-ink);
+  border: 1px solid #dac7f7;
+  background: #ffffff;
+  color: #5c3fc0;
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1;
-  box-shadow: 0 1px 0 rgba(44, 60, 98, 0.05);
+  box-shadow: 0 1px 0 rgba(92, 63, 176, 0.08);
   cursor: pointer;
   transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
 }
 
 .header-link:hover {
-  background: var(--btn-ghost-hover-bg);
-  color: #3e4b6e;
-  border-color: #bcc8e6;
+  background: #f8f3ff;
+  color: #4f35af;
+  border-color: #cdb1ff;
   transform: translateY(-1px);
 }
 
@@ -405,16 +420,16 @@ function isRouteMatch(currentPath, targetPath) {
 }
 
 .header-link--muted {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f6f9ff;
-  border: 1px solid rgba(255, 255, 255, 0.48);
-  box-shadow: none;
+  background: #ffffff;
+  color: #5c3fc0;
+  border: 1px solid #dac7f7;
+  box-shadow: 0 1px 0 rgba(92, 63, 176, 0.08);
 }
 
 .header-link--muted:hover {
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.66);
+  background: #f8f3ff;
+  color: #4f35af;
+  border-color: #cdb1ff;
 }
 
 .content-wrap {
@@ -441,92 +456,83 @@ function isRouteMatch(currentPath, targetPath) {
 }
 
 .sider-credits-card {
-  position: relative;
-  margin: 0 10px 10px;
-  padding: 30px 12px 12px;
-  border-radius: 12px;
-  border: 1px solid #b9c9de;
-  background: linear-gradient(155deg, #f6faff 0%, #e7effb 48%, #dce9fa 100%);
-  box-shadow: 0 10px 22px rgba(29, 51, 84, 0.16);
+  margin: 8px 10px 14px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #c7d8ec;
+  background: linear-gradient(160deg, #f7fbff 0%, #eef5ff 54%, #e7f0fc 100%);
+  box-shadow: 0 10px 22px rgba(24, 50, 84, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.sider-credits-card__buy {
-  position: absolute;
-  left: 9px;
-  top: 7px;
-  height: 22px;
-  line-height: 20px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid #efc57b;
-  background: var(--btn-money-bg);
-  color: var(--btn-money-ink);
-  font-size: 11px;
+.sider-credits-card__buy-block {
+  width: 100%;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #d0c2ff;
+  background: linear-gradient(135deg, #f4eeff 0%, #ece4ff 100%);
+  color: #5d44ce;
+  font-size: 13px;
   font-weight: 700;
-  box-shadow: 0 4px 10px rgba(188, 132, 42, 0.24);
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
 }
 
-.sider-credits-card__buy:hover {
-  background: var(--btn-money-bg-hover);
-  border-color: #e8b95f;
+.sider-credits-card__buy-block:hover {
+  background: #ece3ff;
+  border-color: #b9a1ff;
+  color: #4f38bd;
   transform: translateY(-1px);
 }
 
-.sider-credits-card__head {
+.sider-credits-card__balance {
   display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sider-credits-card__icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  color: #2853b5;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid #cad8ed;
-  flex-shrink: 0;
+  gap: 6px;
+  min-height: 82px;
+  border-radius: 10px;
+  border: 1px solid #d3e0f1;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 10px 12px;
 }
 
-.sider-credits-card__label {
+.sider-credits-card__balance-label {
   margin: 0;
   font-size: 12px;
-  color: #486182;
-  line-height: 1.3;
-  font-weight: 600;
+  color: #5a6f8a;
+  line-height: 1.4;
 }
 
-.sider-credits-card__meta {
-  margin-left: auto;
-  height: 18px;
-  line-height: 18px;
-  padding: 0 6px;
-  border-radius: 999px;
-  border: 1px solid #c8d6ea;
-  background: rgba(255, 255, 255, 0.78);
-  color: #58708f;
-  font-size: 11px;
-}
-
-.sider-credits-card__value {
-  margin: 8px 0 0;
-  font-size: 22px;
+.sider-credits-card__balance-value {
+  margin: 0;
+  display: inline-flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 4px;
   line-height: 1.2;
+  min-width: 0;
+}
+
+.sider-credits-card__balance-number {
+  font-size: clamp(16px, 1.15vw, 21px);
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: #1f3f68;
+  color: #1f426f;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-.sider-credits-card__hint {
-  margin: 6px 0 0;
-  font-size: 11px;
-  line-height: 1.45;
-  color: #5f7593;
+.sider-credits-card__balance-unit {
+  font-size: 12px;
+  line-height: 1.2;
+  color: #5a6f8a;
+  font-weight: 600;
 }
 
 .el-menu {
@@ -562,6 +568,7 @@ function isRouteMatch(currentPath, targetPath) {
   border-radius: 10px;
   border-left: 3px solid transparent;
   font-size: 14px;
+  font-weight: 600;
   line-height: 1.45;
   color: #2f445f;
   background: transparent;

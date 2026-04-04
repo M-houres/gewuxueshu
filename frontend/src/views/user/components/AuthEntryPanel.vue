@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="login">
     <div class="login_top_con">
       <div class="login_header_box">
@@ -7,7 +7,6 @@
             <span class="login_brand_logo">格</span>
             <div class="login_brand_text">
               <strong>格物学术</strong>
-              <span>论文服务平台</span>
             </div>
           </div>
           <div class="login_header_r">
@@ -15,110 +14,121 @@
             <span class="line"></span>
             <span class="text">AIGC检测</span>
             <span class="line"></span>
-            <span class="text">论文优化</span>
+            <span class="text">文本优化</span>
             <span class="line"></span>
             <span class="text">答辩服务</span>
           </div>
         </div>
       </div>
 
-      <main class="content">
-        <section class="content_carousel loopOneImg">
-          <div class="content_carousel_item">
-            <div class="content_carousel_item_img">
-              <img :src="posterImage" :class="posterClass" alt="intro" />
+      <main class="auth-board">
+        <div class="auth-board__inner">
+          <section class="auth-board__intro">
+            <h1 class="auth-board__title">格物学术</h1>
+            <p class="auth-board__lead">
+              面向学术场景的综合服务平台，支持 AIGC 检测、降 AIGC 率、降重复率与答辩服务，流程清晰、结果可追踪。
+            </p>
+            <div class="auth-board__points">
+              <p>1. 平台化上传与任务管理，进度实时可查。</p>
+              <p>2. 支持多平台策略配置，适配不同学术场景。</p>
+              <p>3. 积分计费透明，检测与处理记录统一归档。</p>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="login_form_box">
-          <div class="login_form">
-            <div class="login_info">
-              <div class="login_form_title">
-                <div class="login_type_tab">
-                  <div class="login_type_tab_box">
-                    <div
-                      v-if="phoneLoginEnabled"
-                      class="login_type_tab_item"
-                      :class="{ active: mode === 'phone' }"
-                      @click="switchMode('phone')"
-                    >
-                      验证码登录
+          <section class="auth-board__form">
+            <div class="auth-form">
+              <div class="auth-form__inner">
+                <div class="login_form_title">
+                  <div v-if="showLoginTypeTabs" class="login_type_tab">
+                    <div class="login_type_tab_box">
+                      <div
+                        v-if="phoneLoginEnabled"
+                        class="login_type_tab_item"
+                        :class="{ active: mode === 'phone' }"
+                        @click="switchMode('phone')"
+                      >
+                        验证码登录
+                      </div>
+                      <div
+                        v-if="wechatLoginEnabled"
+                        class="login_type_tab_item"
+                        :class="{ active: mode === 'wx' }"
+                        @click="switchMode('wx')"
+                      >
+                        微信扫码
+                      </div>
                     </div>
-                    <div
-                      v-if="wechatLoginEnabled"
-                      class="login_type_tab_item"
-                      :class="{ active: mode === 'wx' }"
-                      @click="switchMode('wx')"
-                    >
-                      微信扫码
+                  </div>
+                  <p class="login_mode_hint">{{ loginModeHint }}</p>
+                </div>
+
+                <form v-if="mode === 'phone'" class="login_form_body" @submit.prevent="submitPhoneAuth">
+                  <div class="login_input_box">
+                    <input v-model.trim="phone" type="tel" maxlength="11" placeholder="请输入11位手机号" />
+                  </div>
+
+                  <div class="loginCodeBox">
+                    <div class="code_input">
+                      <input v-model.trim="code" maxlength="8" placeholder="请输入验证码" />
+                    </div>
+                    <div class="msgBtn" :class="{ disabledBtn: sending || countdown > 0 }">
+                      <span @click="sendCode">{{ countdown > 0 ? `${countdown}s` : "获取验证码" }}</span>
                     </div>
                   </div>
+
+                  <label class="isReadBox">
+                    <input v-model="agreedPolicy" type="checkbox" />
+                    <span class="userAgreementInfo">我已阅读并同意服务协议与隐私政策</span>
+                  </label>
+
+                  <button class="login_sub" :disabled="loading">
+                    {{ loading ? "处理中..." : primaryButtonText }}
+                  </button>
+
+                  <div v-if="hasWechatEntry" class="third-login-row">
+                    <span class="third-login-row__line"></span>
+                    <button type="button" class="third-login-btn" @click="switchMode('wx')">微信扫码登录</button>
+                    <span class="third-login-row__line"></span>
+                  </div>
+                </form>
+
+                <div v-else class="login_form_wechat_box">
+                  <div class="imgCodeBox">
+                    <img v-if="wxQrcodeDataUrl" :src="wxQrcodeDataUrl" alt="微信二维码" class="imgCode_img" />
+                    <span v-else>二维码生成中</span>
+                  </div>
+                  <div class="wx_status_line">{{ wxStatusText }}，剩余 {{ wxCountdown }} 秒</div>
+                  <div class="wx_actions">
+                    <button type="button" @click="loadWxQrcode">刷新二维码</button>
+                    <button v-if="wxMockEnabled" type="button" @click="mockWxAuthorize">模拟授权</button>
+                  </div>
+                </div>
+
+                <p v-if="errorText" class="msg msg--error">{{ errorText }}</p>
+                <p v-if="hintText" class="msg msg--ok">{{ hintText }}</p>
+
+                <div class="registPwdBox">
+                  <RouterLink :to="alternateEntryLink">{{ alternateEntryText }}</RouterLink>
+                  <span class="registPwdLine"></span>
+                  <button type="button" class="guest-link" @click="enterGuest">游客先浏览</button>
                 </div>
               </div>
 
-              <form v-if="mode === 'phone'" class="login_form_body" @submit.prevent="submitPhoneAuth">
-                <div class="login_input_box">
-                  <input v-model.trim="phone" type="tel" maxlength="11" placeholder="请输入11位手机号" />
-                </div>
-
-                <div class="loginCodeBox">
-                  <div class="code_input">
-                    <input v-model.trim="code" maxlength="8" placeholder="请输入验证码" />
-                  </div>
-                  <div class="msgBtn" :class="{ disabledBtn: sending || countdown > 0 }">
-                    <span @click="sendCode">{{ countdown > 0 ? `${countdown}s` : "获取验证码" }}</span>
-                  </div>
-                </div>
-
-                <label class="isReadBox">
-                  <input v-model="agreedPolicy" type="checkbox" />
-                  <span class="userAgreementInfo">我已阅读并同意服务协议与隐私政策</span>
-                </label>
-
-                <button class="login_sub" :disabled="loading">
-                  {{ loading ? "处理中..." : primaryButtonText }}
-                </button>
-              </form>
-
-              <div v-else class="login_form_wechat_box">
-                <div class="imgCodeBox">
-                  <img v-if="wxQrcodeDataUrl" :src="wxQrcodeDataUrl" alt="微信二维码" class="imgCode_img" />
-                  <span v-else>二维码生成中</span>
-                </div>
-                <div class="wx_status_line">{{ wxStatusText }}，剩余 {{ wxCountdown }} 秒</div>
-                <div class="wx_actions">
-                  <button type="button" @click="loadWxQrcode">刷新二维码</button>
-                  <button v-if="wxMockEnabled" type="button" @click="mockWxAuthorize">模拟授权</button>
-                </div>
-              </div>
-
-              <p v-if="errorText" class="msg msg--error">{{ errorText }}</p>
-              <p v-if="hintText" class="msg msg--ok">{{ hintText }}</p>
-
-              <div class="registPwdBox">
-                <RouterLink :to="alternateEntryLink">{{ alternateEntryText }}</RouterLink>
-                <span class="registPwdLine"></span>
-                <button type="button" class="guest-link" @click="enterGuest">游客先浏览</button>
+              <div class="login_bot_wechat_box">
+                <span><img :src="loginFooterGzhImg" alt="" />微信公众号通知</span>
               </div>
             </div>
-
-            <div class="login_bot_wechat_box">
-              <span><img :src="loginFooterGzhImg" alt="" />微信公众号通知</span>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue"
+import { computed, onMounted, onUnmounted, ref, watch } from "vue"
 import { RouterLink, useRoute, useRouter } from "vue-router"
 
-import detectPosterImage from "../../../assets/illustrations/detect-lab.svg"
-import reviewPosterImage from "../../../assets/illustrations/review-workbench.svg"
 import loginFooterGzhImg from "../../../assets/cnki/login_footer_gzh_img.png"
 import { getDeviceFingerprint } from "../../../lib/device"
 import { userHttp } from "../../../lib/http"
@@ -168,8 +178,23 @@ const wxStatusText = computed(() => {
   if (wxStatus.value === "expired") return "二维码已过期"
   return "等待扫码授权"
 })
-const posterImage = computed(() => (isRegisterPage.value ? reviewPosterImage : detectPosterImage))
-const posterClass = computed(() => (isRegisterPage.value ? "poster-register" : "poster-login"))
+const showLoginTypeTabs = computed(() => phoneLoginEnabled.value && wechatLoginEnabled.value)
+const hasWechatEntry = computed(() => wechatLoginEnabled.value)
+const loginModeHint = computed(() => {
+  if (showLoginTypeTabs.value) return "支持手机号验证码与微信扫码登录"
+  if (wechatLoginEnabled.value) return "当前为微信扫码登录"
+  return "当前为手机号验证码登录"
+})
+
+watch([phoneLoginEnabled, wechatLoginEnabled], ([phoneEnabled, wxEnabled]) => {
+  if (mode.value === "wx" && !wxEnabled) {
+    mode.value = "phone"
+    return
+  }
+  if (mode.value === "phone" && !phoneEnabled && wxEnabled) {
+    mode.value = "wx"
+  }
+})
 
 onMounted(async () => {
   await loadAuthOptions()
@@ -233,6 +258,7 @@ async function loadAuthOptions() {
     wxMockEnabled.value = Boolean(data.wx_mock_enabled)
     phoneLoginEnabled.value = data.phone_login_enabled !== false
     if (!phoneLoginEnabled.value && wechatLoginEnabled.value) mode.value = "wx"
+    if (!wechatLoginEnabled.value && phoneLoginEnabled.value) mode.value = "phone"
   } catch {
     wechatLoginEnabled.value = false
     wxMockEnabled.value = false
@@ -399,8 +425,9 @@ function enterGuest() {
 }
 
 .login_header_box {
-  background: #ffffff;
-  border-bottom: 1px solid var(--border);
+  background: var(--header-gradient-deep);
+  border-bottom: 1px solid var(--header-border-deep);
+  box-shadow: var(--header-shadow-deep);
 }
 
 .login_header {
@@ -428,10 +455,11 @@ function enterGuest() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary);
+  color: #5f37c4;
   font-size: 14px;
   font-weight: 700;
-  background: var(--primary-light);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.88);
 }
 
 .login_brand_text {
@@ -440,7 +468,7 @@ function enterGuest() {
 }
 
 .login_brand_text strong {
-  color: var(--primary);
+  color: var(--header-ink-deep);
   font-size: 16px;
   line-height: 1.1;
 }
@@ -450,6 +478,7 @@ function enterGuest() {
   font-size: 10px;
   line-height: 1.1;
   letter-spacing: 0.06em;
+  display: none;
 }
 
 .login_header_r {
@@ -461,78 +490,101 @@ function enterGuest() {
 }
 
 .login_header_r .text {
-  color: var(--text-sub);
+  color: rgba(247, 237, 255, 0.94);
   font-size: 13px;
   line-height: 1.3;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .login_header_r .line {
   width: 1px;
   height: 14px;
   margin: 0 10px;
-  background: var(--border);
+  background: rgba(255, 255, 255, 0.34);
 }
 
-.content {
+.auth-board {
   width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 24px 16px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
-  gap: 24px;
-  align-items: stretch;
+  min-height: calc(100vh - 56px);
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.content_carousel {
+.auth-board__inner {
+  display: flex;
   width: 100%;
-  min-height: 0;
-  background: transparent;
-}
-
-.content_carousel_item,
-.content_carousel_item_img {
-  width: 100%;
-  height: 100%;
-}
-
-.content_carousel_item_img {
-  margin: 0;
-}
-
-.content_carousel_item_img img {
-  width: 100%;
-  height: 100%;
-  min-height: 520px;
-  object-fit: cover;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
-}
-
-.login_form_box {
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  position: static;
-  transform: none;
-  display: block;
-}
-
-.login_form {
-  width: 100%;
-  border-radius: var(--radius-card);
-  background: #ffffff;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border);
+  max-width: 1060px;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 14px 36px rgba(59, 40, 107, 0.14);
+  border: 1px solid #d7d1ea;
+  background: #ffffff;
+}
+
+.auth-board__intro {
+  flex: 1;
+  padding: 44px 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(152deg, #f8f4ff 0%, #f1e9ff 52%, #e8ddff 100%);
+  border-right: 1px solid #ddd4f1;
+}
+
+.auth-board__title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #2c1762;
+}
+
+.auth-board__lead {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.85;
+  color: #5b4f79;
+  max-width: 500px;
+}
+
+.auth-board__points {
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.auth-board__points p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #56486f;
+}
+
+.auth-board__form {
+  width: 420px;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.auth-form {
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-.login_info {
-  padding: 24px;
+.auth-form__inner {
+  padding: 28px 28px 24px;
+}
+
+.login_mode_hint {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6d5896;
 }
 
 .login_type_tab_box {
@@ -643,6 +695,35 @@ function enterGuest() {
   box-shadow: none;
 }
 
+.third-login-row {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.third-login-row__line {
+  flex: 1;
+  height: 1px;
+  background: #ddd3f4;
+}
+
+.third-login-btn {
+  border: 0;
+  background: transparent;
+  color: #5748c4;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.third-login-btn:hover {
+  color: #4637a6;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .login_form_wechat_box {
   display: grid;
   gap: 10px;
@@ -709,6 +790,11 @@ function enterGuest() {
   line-height: 1.4;
 }
 
+.registPwdBox a,
+.guest-link {
+  color: var(--primary);
+}
+
 .registPwdLine {
   width: 1px;
   height: 12px;
@@ -718,19 +804,17 @@ function enterGuest() {
 .guest-link {
   border: 0;
   background: transparent;
-  color: var(--primary);
   cursor: pointer;
 }
 
 .login_bot_wechat_box {
-  min-height: 36px;
-  line-height: 36px;
+  min-height: 38px;
+  line-height: 38px;
   text-align: center;
-  background: #f5f4ff;
-  border-top: 1px solid var(--border);
-  border-radius: 0;
+  background: #f3ecff;
+  border-top: 1px solid #ddd0fb;
   font-size: 12px;
-  color: var(--text-sub);
+  color: #5f5682;
 }
 
 .login_bot_wechat_box img {
@@ -740,18 +824,32 @@ function enterGuest() {
 }
 
 @media (max-width: 1080px) {
-  .content {
-    grid-template-columns: 1fr;
-    gap: 14px;
+  .auth-board {
+    min-height: auto;
+    padding: 16px 12px;
   }
 
-  .content_carousel_item_img img {
-    min-height: 280px;
+  .auth-board__inner {
+    flex-direction: column;
+    max-width: 540px;
   }
 
-  .login_form {
-    width: min(520px, 100%);
-    margin: 0 auto;
+  .auth-board__intro {
+    padding: 24px 20px;
+    border-right: none;
+    border-bottom: 1px solid #dde4f0;
+  }
+
+  .auth-board__title {
+    font-size: 24px;
+  }
+
+  .auth-board__lead {
+    max-width: none;
+  }
+
+  .auth-board__form {
+    width: 100%;
   }
 }
 
@@ -782,16 +880,26 @@ function enterGuest() {
     gap: 8px 10px;
   }
 
-  .content {
-    padding: 12px;
+  .auth-board__title {
+    font-size: 21px;
+    line-height: 1.3;
   }
 
-  .content_carousel_item_img img {
-    min-height: 220px;
+  .auth-board__lead {
+    font-size: 14px;
+    line-height: 1.7;
   }
 
-  .login_info {
-    padding: 16px 14px 14px;
+  .auth-board__points p {
+    font-size: 13px;
+  }
+
+  .auth-form__inner {
+    padding: 18px 14px 14px;
+  }
+
+  .third-login-row {
+    gap: 6px;
   }
 
   .registPwdBox {

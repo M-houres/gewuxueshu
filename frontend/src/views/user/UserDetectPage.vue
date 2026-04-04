@@ -130,8 +130,8 @@
             <div class="uploadLit_content_right">
               <section class="aigc-side__law">
                 对于代写、剽窃、伪造等学术不端行为，《中华人民共和国学位法》第三十七条进行了明确规定。
-                <a href="javascript:void(0)">详情&gt;&gt;</a>
-                <a href="javascript:void(0)">相关报道&gt;&gt;</a>
+                <a href="https://www.news.cn/legal/20240426/8fc9b903147a477a9dab550518d4ff80/c.html" target="_blank" rel="noopener noreferrer">详情&gt;&gt;</a>
+                <a href="https://news.cctv.com/2024/04/26/ARTIxCmi4wUMPigs46qnoMeJ240426.shtml" target="_blank" rel="noopener noreferrer">相关报道&gt;&gt;</a>
               </section>
 
               <section class="aigc-side__brand">
@@ -334,3 +334,4 @@ async function afterPaid() {
   await refreshUser()
 }
 </script>
+

@@ -228,6 +228,21 @@
               <label class="space-y-1 text-sm md:col-span-2"><span>微信回调地址</span><input v-model="forms.login.wechat_redirect_uri" class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2" /></label>
             </div>
             <section class="rounded-2xl border border-[#dce4eb] bg-[#f8fbff] p-4">
+              <div class="text-sm font-semibold text-[#1f2c35]">顶部公告文案</div>
+              <div class="mt-1 text-xs leading-5 text-[#5f6d79]">前台最上方横幅右侧公告会实时读取这里的内容。</div>
+              <label class="mt-3 block space-y-1 text-sm">
+                <span>公告内容（最多 140 字）</span>
+                <textarea
+                  v-model.trim="forms.login.header_notice_text"
+                  rows="3"
+                  maxlength="140"
+                  class="w-full rounded-xl border border-[#ccd5dd] px-3 py-2"
+                  placeholder="例如：平台系统持续优化中，任务提交后请在个人中心查看处理进度。"
+                ></textarea>
+              </label>
+              <div class="mt-1 text-right text-xs text-[#6a7681]">{{ String(forms.login.header_notice_text || "").length }}/140</div>
+            </section>
+            <section class="rounded-2xl border border-[#dce4eb] bg-[#f8fbff] p-4">
               <div class="text-sm font-semibold text-[#1f2c35]">新用户与风控参数</div>
               <div class="mt-1 text-xs leading-5 text-[#5f6d79]">保存后立即生效，用于控制注册赠送积分和登录风控阈值。</div>
               <div class="mt-3 grid gap-3 md:grid-cols-2">
@@ -486,6 +501,7 @@ const forms = ref({
     wechat_app_id: "",
     wechat_app_secret: "",
     wechat_redirect_uri: "",
+    header_notice_text: "平台系统持续优化中，任务提交后请在个人中心查看处理进度。",
     new_user_initial_credits: 2000,
     max_code_retry: 3,
     phone_lock_minutes: 5,
@@ -548,6 +564,7 @@ async function loadTab(category) {
   if (category === "login") {
     forms.value.login.sms_region = forms.value.login.sms_region || "ap-guangzhou"
     forms.value.login.sms_aliyun_region_id = forms.value.login.sms_aliyun_region_id || "cn-hangzhou"
+    forms.value.login.header_notice_text = String(forms.value.login.header_notice_text || "平台系统持续优化中，任务提交后请在个人中心查看处理进度。").slice(0, 140)
     forms.value.login.new_user_initial_credits = Number(forms.value.login.new_user_initial_credits ?? 2000)
     forms.value.login.max_code_retry = Number(forms.value.login.max_code_retry ?? 3)
     forms.value.login.phone_lock_minutes = Number(forms.value.login.phone_lock_minutes ?? 5)
@@ -641,6 +658,9 @@ function validateCurrent() {
     }
     if (Number(cfg.login_ip_10m_limit) < 1) {
       return "登录请求 IP 限流不能小于 1"
+    }
+    if (String(cfg.header_notice_text || "").length > 140) {
+      return "顶部公告文案不能超过 140 字"
     }
   }
   return ""

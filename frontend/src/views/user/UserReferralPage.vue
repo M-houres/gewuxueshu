@@ -1,10 +1,10 @@
 <template>
   <UserShell title="推广福利" subtitle="邀请码、邀请记录与奖励流水" :credits="userCredits" @buy="showBuy = !showBuy">
     <section v-if="isGuest" class="rounded-2xl border border-[#d9dee4] bg-white p-5">
-      <h3 class="text-base font-semibold">登录后可启用推广能力</h3>
+      <h3 class="text-base font-bold text-[#111827]">登录后可启用推广能力</h3>
       <p class="mt-2 text-sm leading-6 text-[#556470]">可以先了解奖励规则。生成邀请码、邀请二维码和查看奖励流水时再登录即可。</p>
-      <button class="mt-4 rounded-lg bg-[#0f7a5f] px-4 py-2 text-sm text-white" @click="goLogin">
-        登录后继续
+      <button type="button" class="scholar-button" style="margin-top: 16px" @click="goLogin">
+        登录后进入推广福利
       </button>
     </section>
 

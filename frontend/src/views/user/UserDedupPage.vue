@@ -61,6 +61,29 @@
                   </section>
 
                   <section class="aigc-group">
+                    <h3 class="aigc-group__title">查重报告<span class="service-optional-tag">选填</span></h3>
+                    <label
+                      class="aigc-upload aigc-upload--green aigc-upload--compact"
+                      :class="{ 'is-dragging': dragReport, 'is-error': fieldErrors.report }"
+                      @dragenter.prevent="dragReport = true"
+                      @dragover.prevent="dragReport = true"
+                      @dragleave.prevent="dragReport = false"
+                      @drop.prevent="onReportDrop"
+                    >
+                      <input class="hidden" type="file" accept=".docx,.pdf" @change="onReportInput" />
+                      <div class="aigc-upload__inner">
+                        <p class="aigc-upload__title">请上传查重全文报告（非截图/节选）</p>
+                        <p class="aigc-upload__subtitle">全文报告支持 .docx / .pdf</p>
+                      </div>
+                    </label>
+                    <p v-if="reportFile" class="aigc-upload__file">
+                      {{ reportFile.name }}（{{ humanSize(reportFile.size) }}）
+                      <button type="button" @click="clearReport">移除</button>
+                    </p>
+                    <p v-if="fieldErrors.report" class="aigc-field-error">{{ fieldErrors.report }}</p>
+                  </section>
+
+                  <section class="aigc-group">
                     <div class="aigc-field-row aigc-field-row--platform">
                       <label class="aigc-field-row__label"><span class="aigc-required">*</span>平台选择</label>
                       <div class="aigc-field-row__body">
@@ -116,29 +139,6 @@
                     <p v-if="fieldErrors.authors" class="aigc-field-error">{{ fieldErrors.authors }}</p>
                   </section>
 
-                  <section class="aigc-group">
-                    <h3 class="aigc-group__title">查重报告<span class="service-optional-tag">选填</span></h3>
-                    <label
-                      class="aigc-upload aigc-upload--green aigc-upload--compact"
-                      :class="{ 'is-dragging': dragReport, 'is-error': fieldErrors.report }"
-                      @dragenter.prevent="dragReport = true"
-                      @dragover.prevent="dragReport = true"
-                      @dragleave.prevent="dragReport = false"
-                      @drop.prevent="onReportDrop"
-                    >
-                      <input class="hidden" type="file" accept=".docx,.pdf" @change="onReportInput" />
-                      <div class="aigc-upload__inner">
-                        <p class="aigc-upload__title">请上传查重全文报告（非截图/节选）</p>
-                        <p class="aigc-upload__subtitle">全文报告支持 .docx / .pdf</p>
-                      </div>
-                    </label>
-                    <p v-if="reportFile" class="aigc-upload__file">
-                      {{ reportFile.name }}（{{ humanSize(reportFile.size) }}）
-                      <button type="button" @click="clearReport">移除</button>
-                    </p>
-                    <p v-if="fieldErrors.report" class="aigc-field-error">{{ fieldErrors.report }}</p>
-                  </section>
-
                   <div class="submitBtnCon">
                     <button class="aigc-submit-action__button" type="button" :disabled="submitting" @click="submitTask">
                       {{ submitting ? "提交中..." : "提交降重" }}
@@ -153,8 +153,8 @@
             <div class="uploadLit_content_right">
               <section class="aigc-side__law">
                 对于代写、剽窃、伪造等学术不端行为，《中华人民共和国学位法》第三十七条进行了明确规定。
-                <a href="javascript:void(0)">详情&gt;&gt;</a>
-                <a href="javascript:void(0)">相关报道&gt;&gt;</a>
+                <a href="https://www.news.cn/legal/20240426/8fc9b903147a477a9dab550518d4ff80/c.html" target="_blank" rel="noopener noreferrer">详情&gt;&gt;</a>
+                <a href="https://news.cctv.com/2024/04/26/ARTIxCmi4wUMPigs46qnoMeJ240426.shtml" target="_blank" rel="noopener noreferrer">相关报道&gt;&gt;</a>
               </section>
 
               <section class="aigc-side__brand">

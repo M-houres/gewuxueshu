@@ -38,6 +38,10 @@
   --btn-money-bg: linear-gradient(135deg, #ffd892 0%, #ffbf66 100%);
   --btn-money-bg-hover: linear-gradient(135deg, #ffcd7a 0%, #ffb24a 100%);
   --btn-money-ink: #5e3b00;
+  --header-gradient-deep: linear-gradient(112deg, #3f1d88 0%, #5e2cc6 48%, #7344df 100%);
+  --header-border-deep: #6f47c7;
+  --header-shadow-deep: 0 10px 22px rgba(43, 17, 95, 0.34);
+  --header-ink-deep: #f5ecff;
 
   --font-sans: "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
 
@@ -83,7 +87,7 @@ body {
 
 .uploadPage_content {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   max-width: 1220px;
   margin: 0 auto;
   padding-bottom: 4px;
@@ -94,22 +98,22 @@ body {
   margin: 0 auto;
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .aigc-page-head__title {
   margin: 0;
   text-align: center;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.35;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-main);
 }
 
 .aigc-page-head__notice {
   width: min(100%, 1160px);
   margin: 0;
-  padding: 10px 14px;
+  padding: 8px 12px;
   text-align: center;
   border-radius: 8px;
   border: 1px solid #d8d4ff;
@@ -167,7 +171,7 @@ body {
   margin-top: 0;
   display: grid;
   grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr);
-  gap: 16px;
+  gap: 14px;
   align-items: stretch;
 }
 
@@ -201,7 +205,7 @@ body {
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  padding: 28px 30px !important;
+  padding: 24px 24px !important;
   height: 100%;
 }
 
@@ -231,10 +235,10 @@ body {
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-card);
-  padding: 24px 22px;
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .uploadLit_content_right::before {
@@ -246,11 +250,11 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 .aigc-group {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .aigc-group:last-child {
@@ -258,7 +262,7 @@ body {
 }
 
 .aigc-group__title {
-  margin: 0 0 12px;
+  margin: 0 0 9px;
   font-size: 14px;
   font-weight: 400;
   color: var(--text-main);
@@ -350,7 +354,7 @@ body {
   display: block;
   border: 1px solid #d9d1ff;
   border-radius: 10px;
-  padding: 36px 20px 28px;
+  padding: 30px 16px 20px;
   text-align: center;
   background: #f5f4ff;
   cursor: pointer;
@@ -373,7 +377,7 @@ body {
 }
 
 .aigc-upload--compact {
-  padding: 22px 16px 18px;
+  padding: 16px 12px 12px;
 }
 
 .aigc-upload--compact .aigc-upload__inner {
@@ -605,7 +609,7 @@ textarea + .aigc-counter {
 }
 
 .submitBtnCon {
-  margin-top: 8px;
+  margin-top: 4px;
   padding: 4px 0 0;
   display: flex;
   justify-content: center;
@@ -662,7 +666,7 @@ textarea + .aigc-counter {
   font-size: 13px;
   color: #4f5f76;
   line-height: 1.7;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid #d8d4ff;
   border-radius: 8px;
   background: #efefff;
@@ -734,8 +738,8 @@ textarea + .aigc-counter {
 
 .aigc-feature-item {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
   align-items: start;
   padding: 0;
   border: 0;
@@ -747,8 +751,8 @@ textarea + .aigc-counter {
 }
 
 .aigc-feature-item__dot {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: #e6edfc;
   border: 1px solid #cad6eb;
   border-radius: 10px;
@@ -774,21 +778,21 @@ textarea + .aigc-counter {
 }
 
 .uploadPage_content--compact .uploadLit_content_l > .uploadLit_tabCon > .uploadFormContent > .uploadForm_con {
-  padding: 24px 26px !important;
+  padding: 20px 22px !important;
 }
 
 .uploadPage_content--compact .uploadLit_content_right {
-  padding: 20px 20px;
-  gap: 14px;
+  padding: 16px 16px;
+  gap: 12px;
 }
 
 .uploadPage_content--compact .aigc-group {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .uploadPage_content--compact .features-list,
 .uploadPage_content--compact .aigc-feature-list {
-  gap: 16px;
+  gap: 12px;
 }
 
 .uploadPage_content--compact .aigc-side__law {

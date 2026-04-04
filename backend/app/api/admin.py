@@ -134,6 +134,7 @@ CONFIG_FIELD_LABELS = {
         "wechat_app_id": "微信AppID",
         "wechat_app_secret": "微信AppSecret",
         "wechat_redirect_uri": "微信回调地址",
+        "header_notice_text": "顶部公告文案",
         "new_user_initial_credits": "新用户初始积分",
         "max_code_retry": "验证码最大重试次数",
         "phone_lock_minutes": "验证码错误锁定分钟数",
@@ -182,6 +183,7 @@ CONFIG_DEFAULTS = {
         "wechat_app_id": "",
         "wechat_app_secret": "",
         "wechat_redirect_uri": "",
+        "header_notice_text": "平台系统持续优化中，任务提交后请在个人中心查看处理进度。",
         "new_user_initial_credits": settings.initial_credits,
         "max_code_retry": settings.max_code_retry,
         "phone_lock_minutes": settings.phone_lock_minutes,
@@ -602,6 +604,11 @@ def _normalize_category_payload(category: str, payload: dict) -> dict:
         base["wechat_app_id"] = _as_text(raw.get("wechat_app_id", base["wechat_app_id"]), default="", max_len=128)
         base["wechat_app_secret"] = _as_text(raw.get("wechat_app_secret", base["wechat_app_secret"]), default="", max_len=256)
         base["wechat_redirect_uri"] = _as_text(raw.get("wechat_redirect_uri", base["wechat_redirect_uri"]), default="", max_len=256)
+        base["header_notice_text"] = _as_text(
+            raw.get("header_notice_text", base.get("header_notice_text", "平台系统持续优化中，任务提交后请在个人中心查看处理进度。")),
+            default="平台系统持续优化中，任务提交后请在个人中心查看处理进度。",
+            max_len=140,
+        )
         base["new_user_initial_credits"] = _as_int(
             raw.get("new_user_initial_credits", base["new_user_initial_credits"]),
             default=settings.initial_credits,

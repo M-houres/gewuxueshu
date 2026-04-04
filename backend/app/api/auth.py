@@ -31,6 +31,7 @@ router = APIRouter()
 settings = get_settings()
 logger = logging.getLogger("app.api.auth")
 WX_LOGIN_TTL_SECONDS = 120
+DEFAULT_HEADER_NOTICE_TEXT = "平台系统持续优化中，任务提交后请在个人中心查看处理进度。"
 _LOGIN_CONFIG_DEFAULTS = {
     "sms_provider": "custom_webhook",
     "sms_api_key": "",
@@ -47,6 +48,7 @@ _LOGIN_CONFIG_DEFAULTS = {
     "wechat_app_id": "",
     "wechat_app_secret": "",
     "wechat_redirect_uri": "",
+    "header_notice_text": DEFAULT_HEADER_NOTICE_TEXT,
     "new_user_initial_credits": 2000,
     "max_code_retry": 3,
     "phone_lock_minutes": 5,
@@ -465,6 +467,9 @@ def auth_options(db: Session = Depends(db_dep)) -> APIResp:
     login_cfg = _get_login_config(db)
     debug_enabled = bool(login_cfg.get("debug_code_enabled"))
     phone_login_enabled = _sms_provider_ready(login_cfg) or (settings.app_env != "prod" and debug_enabled)
+    header_notice_text = str(login_cfg.get("header_notice_text", DEFAULT_HEADER_NOTICE_TEXT) or "").strip()
+    if not header_notice_text:
+        header_notice_text = DEFAULT_HEADER_NOTICE_TEXT
     return ok(
         data={
             "wechat_login_enabled": _wechat_login_enabled(login_cfg),
@@ -474,6 +479,7 @@ def auth_options(db: Session = Depends(db_dep)) -> APIResp:
             "wx_mock_enabled": _wechat_mock_enabled(),
             "phone_login_enabled": phone_login_enabled,
             "new_user_initial_credits": _int_from_login_cfg(login_cfg, "new_user_initial_credits", settings.initial_credits, min_value=0, max_value=1_000_000),
+            "header_notice_text": header_notice_text,
         }
     )
 
